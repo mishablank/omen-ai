@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Crash Monitor</title>
+<style>
+  :root {
+    --surface-1: #fcfcfb; --page: #f9f9f7;
+    --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --baseline: #c3c2b7; --border: rgba(11,11,11,0.10);
+    --bull: #2a78d6; --crash: #e34948; --reg: #eda100; --aqua: #1baf7a; --violet: #4a3aa7;
+    --bull-wash: rgba(42,120,214,0.10);
+    --delta-up: #006300; --delta-down: #d03b3b;
+    --good: #0ca30c; --warn: #fab219; --serious: #ec835a; --crit: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface-1: #1a1a19; --page: #0d0d0d;
+      --text-primary: #ffffff; --text-secondary: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --baseline: #383835; --border: rgba(255,255,255,0.10);
+      --bull: #3987e5; --crash: #e66767; --reg: #c98500; --aqua: #199e70; --violet: #9085e9;
+      --bull-wash: rgba(57,135,229,0.12);
+      --delta-up: #0ca30c; --delta-down: #e66767;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--page); color: var(--text-primary); padding: 22px 20px 48px; max-width: 1160px; margin: 0 auto; }
+  a { color: inherit; }
+  header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  header h1 { font-size: 22px; font-weight: 650; letter-spacing: -0.01em; }
+  .chip { font-size: 12px; font-weight: 650; padding: 4px 12px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; }
+  .chip i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .chip.calm { background: rgba(12,163,12,0.12); } .chip.calm i { background: var(--good); }
+  .chip.elevated { background: rgba(250,178,25,0.16); } .chip.elevated i { background: var(--warn); }
+  .chip.stressed { background: rgba(208,59,59,0.14); } .chip.stressed i { background: var(--crit); }
+  header p.sub { color: var(--text-secondary); font-size: 13.5px; margin-top: 4px; flex-basis: 100%; line-height: 1.5; }
+  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 16px 0 14px; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface-1); }
+  .seg button { font: inherit; font-size: 12.5px; padding: 6px 11px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; }
+  .seg button.active { background: var(--bull-wash); color: var(--text-primary); font-weight: 600; }
+  .toolbar .grow { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .status { font-size: 12px; color: var(--muted); }
+  .btn { font: inherit; font-size: 12px; color: var(--text-secondary); background: var(--surface-1); border: 1px solid var(--border); border-radius: 7px; padding: 6px 10px; cursor: pointer; }
+  .btn:hover { color: var(--text-primary); }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 15px 17px; }
+  .tile .label { font-size: 12.5px; color: var(--text-secondary); display: flex; align-items: center; gap: 7px; }
+  .tile .key { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+  .tile .value { font-size: 38px; font-weight: 600; line-height: 1.15; margin-top: 4px; }
+  .tile .delta { font-size: 12.5px; margin-top: 2px; color: var(--muted); }
+  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-top: 16px; }
+  .card h2 { font-size: 14.5px; font-weight: 650; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .card .cap { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+  .grid2 .card { margin-top: 16px; }
+  .up { color: var(--delta-up); } .down { color: var(--delta-down); } .dim { color: var(--muted); }
+  .legend { display: flex; gap: 16px; font-size: 12.5px; color: var(--text-secondary); margin-top: 10px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i.line { width: 14px; height: 2.5px; border-radius: 2px; display: inline-block; }
+  .chartwrap { position: relative; margin-top: 8px; }
+  .chartwrap svg { width: 100%; height: auto; display: block; }
+  .tip { position: absolute; pointer-events: none; display: none; background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.15); white-space: nowrap; z-index: 5; }
+  .tip .t { color: var(--muted); margin-bottom: 3px; }
+  .tip .row { display: flex; align-items: center; gap: 6px; }
+  .tip .row i { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+  th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); font-weight: 600; padding: 8px 8px 6px; border-bottom: 1px solid var(--grid); }
+  td { padding: 9px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td a:hover { text-decoration: underline; }
+  .flag { font-size: 11px; margin-left: 4px; cursor: help; }
+  .bar { height: 6px; border-radius: 3px; margin-top: 5px; background: var(--grid); overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 3px; }
+  .hbar { display: grid; grid-template-columns: 118px 1fr 54px; gap: 8px; align-items: center; font-size: 12.5px; margin-top: 7px; }
+  .hbar .track { height: 10px; background: var(--grid); border-radius: 5px; overflow: hidden; }
+  .hbar .track i { display: block; height: 100%; border-radius: 5px; }
+  .hbar .v { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+  .hbar .k { color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stack .row { display: flex; align-items: center; gap: 9px; padding: 7px 0; border-bottom: 1px solid var(--grid); font-size: 13px; }
+  .stack .row:last-child { border-bottom: none; }
+  .stack .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .stack .name { flex: 1; color: var(--text-secondary); }
+  .stack .val { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .sub { font-size: 11.5px; color: var(--muted); }
+  .statrow { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 12px; }
+  .stat .l { font-size: 11.5px; color: var(--muted); }
+  .stat .v { font-size: 19px; font-weight: 600; margin-top: 1px; font-variant-numeric: tabular-nums; }
+  .stat .v small { font-size: 12px; font-weight: 400; color: var(--muted); }
+  .note { font-size: 11.5px; color: var(--muted); margin-top: 9px; line-height: 1.55; }
+  /* gauge */
+  .gauge { display: grid; grid-template-columns: 220px 1fr; gap: 22px; align-items: center; margin-top: 6px; }
+  @media (max-width: 700px) { .gauge { grid-template-columns: 1fr; } }
+  .gaugeNum { font-size: 60px; font-weight: 600; line-height: 1; }
+  .gaugeNum small { font-size: 15px; color: var(--muted); font-weight: 400; }
+  .meter { height: 12px; border-radius: 6px; margin-top: 12px; background: linear-gradient(90deg, var(--good) 0%, var(--good) 35%, var(--warn) 45%, var(--warn) 60%, var(--crit) 75%, var(--crit) 100%); position: relative; opacity: 0.85; }
+  .meter .mk { position: absolute; top: -4px; width: 3px; height: 20px; background: var(--text-primary); border-radius: 2px; transform: translateX(-50%); }
+  .meterlab { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 5px; }
+  .cats { display: flex; flex-direction: column; gap: 0; }
+  .cat { display: grid; grid-template-columns: 150px 1fr 40px; gap: 10px; align-items: center; font-size: 12.5px; padding: 5px 0; }
+  .cat .track { height: 8px; background: var(--grid); border-radius: 4px; overflow: hidden; }
+  .cat .track i { display: block; height: 100%; border-radius: 4px; }
+  .cat .cv { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+  .banner { font-size: 12.5px; padding: 9px 12px; border-radius: 8px; margin-top: 12px; display: none; }
+  .banner.show { display: block; }
+  .banner.warn { background: rgba(250,178,25,0.14); color: var(--text-primary); }
+  .err { color: var(--delta-down); font-size: 13px; margin-top: 10px; display: none; }
+  code { font-size: 11.5px; background: var(--grid); padding: 1px 5px; border-radius: 4px; }
+  footer { margin-top: 22px; font-size: 12px; color: var(--muted); line-height: 1.6; }
+  /* back-link to the OMEN landing page */
+  .backlink { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; white-space: nowrap; }
+  .backlink:hover { color: var(--text-primary); }
+  /* influencer sentiment board */
+  .inf { display: grid; grid-template-columns: 200px 1fr 96px; gap: 12px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--grid); font-size: 13px; }
+  .inf:last-child { border-bottom: none; }
+  @media (max-width: 700px) { .inf { grid-template-columns: 1fr 96px; } .inf .mid { grid-column: 1 / -1; } }
+  .inf .who a { font-weight: 600; text-decoration: none; }
+  .inf .who a:hover { text-decoration: underline; }
+  .inf .who .sub { margin-top: 1px; }
+  .inf .take { font-size: 12px; color: var(--text-secondary); line-height: 1.45; margin-top: 4px; }
+  .inf .mid { min-width: 0; }
+  .ibar { position: relative; display: block; height: 10px; background: var(--grid); border-radius: 5px; overflow: hidden; }
+  .ibar::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--baseline); }
+  .ibar i { position: absolute; top: 0; bottom: 0; }
+  .ibar i.pos { left: 50%; background: var(--bull); border-radius: 0 5px 5px 0; }
+  .ibar i.neg { right: 50%; background: var(--crash); border-radius: 5px 0 0 5px; }
+  .inf .score { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+  .inf .score .lab { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="backlink" href="omen-ai-index.html">&larr; OMEN</a>
+  <h1>AI Crash Monitor</h1>
+  <span class="chip calm" id="regime"><i></i>Loading</span>
+  <p class="sub">A blended crash-pressure gauge over Polymarket odds plus options skew, the volatility complex, credit stress, and equity drawdowns. Three prediction-market indexes underneath: <strong style="color:var(--bull)">Bull</strong> (YES = acceleration), <strong style="color:var(--crash)">Crash</strong> (YES = AI market distress), <strong style="color:var(--reg)">Regulation</strong> (YES = government clampdown).</p>
+</header>
+
+<div class="toolbar">
+  <div class="seg" id="weightSeg" title="Constituent weighting"><button data-v="equal" class="active">Equal weight</button><button data-v="volume">Volume weight</button></div>
+  <div class="seg" id="basisSeg" title="Probability basis"><button data-v="raw" class="active">Raw odds</button><button data-v="hazard">Deadline-adjusted</button></div>
+  <div class="seg" id="rangeSeg"><button data-v="7">7d</button><button data-v="30" class="active">30d</button><button data-v="90">90d</button></div>
+  <div class="grow">
+    <button class="btn" id="alertBtn" title="Browser notification when the regime escalates">Enable alerts</button>
+    <span class="status" id="status">Loading&hellip;</span>
+  </div>
+</div>
+
+<div id="dataAge" class="banner warn"></div>
+
+<div class="card" style="margin-top:14px">
+  <h2>AI Crash-Pressure Gauge <span class="sub" style="font-weight:400">&ndash; blended 0&ndash;100 across five independent signal families</span></h2>
+  <div class="gauge">
+    <div>
+      <div class="gaugeNum"><span id="gaugeVal">&ndash;</span><small>/100</small></div>
+      <div class="meter"><span class="mk" id="gaugeMk" style="left:0%"></span></div>
+      <div class="meterlab"><span>Calm</span><span>Elevated</span><span>Stressed</span></div>
+    </div>
+    <div class="cats" id="cats"></div>
+  </div>
+  <div class="note" id="gaugeNote"></div>
+</div>
+
+<div class="tiles">
+  <div class="tile"><div class="label"><span class="key" style="background:var(--bull)"></span>AI-Bull Index</div><div class="value" id="bullVal">&ndash;</div><div class="delta" id="bullDelta"></div></div>
+  <div class="tile"><div class="label"><span class="key" style="background:var(--crash)"></span>AI-Crash Index</div><div class="value" id="crashVal">&ndash;</div><div class="delta" id="crashDelta"></div></div>
+  <div class="tile"><div class="label"><span class="key" style="background:var(--reg)"></span>AI-Regulation Index</div><div class="value" id="regVal">&ndash;</div><div class="delta" id="regDelta"></div></div>
+  <div class="tile"><div class="label">Net sentiment (bull &minus; crash)</div><div class="value" id="netVal">&ndash;</div><div class="delta dim">Positive = leans toward acceleration</div></div>
+  <div class="tile"><div class="label"><span class="key" style="background:var(--violet)"></span>Influencer net sentiment</div><div class="value" id="infVal">&ndash;</div><div class="delta dim" id="infTileSub"></div></div>
+</div>
+
+<div class="card">
+  <h2>Composite index history <span class="sub" id="chainBadge" style="font-weight:400"></span></h2>
+  <div class="cap" id="chartCap"></div>
+  <div class="chartwrap" id="mainWrap"><svg id="chart" viewBox="0 0 1000 320" role="img" aria-label="AI index history"></svg><div class="tip" id="mainTip"></div></div>
+  <div class="legend"><span><i class="line" style="background:var(--bull)"></i>Bull</span><span><i class="line" style="background:var(--crash)"></i>Crash</span><span><i class="line" style="background:var(--reg)"></i>Regulation</span></div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <h2>Crash signal stack</h2>
+    <div class="cap">Independent early-warning probabilities from prediction markets. These feed the gauge&rsquo;s prediction-market family.</div>
+    <div class="stack" id="stack"></div>
+  </div>
+  <div class="card">
+    <h2>Momentum &amp; divergence</h2>
+    <div class="cap">Crashes come from acceleration, not a high static level. Z-scores are vs. the trailing 90-day chain-linked distribution (fixed equal-weight/raw basis, so toggles don&rsquo;t move them).</div>
+    <div class="statrow" id="momStats"></div>
+    <div class="note" id="divNote"></div>
+    <div class="note" id="spikeNote"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Influencer sentiment board <span class="sub" id="infCount" style="font-weight:400"></span></h2>
+  <div class="cap">Where prominent financial &amp; tech voices stand on the AI trade. Score is &minus;100 (max bearish) to +100 (max bullish). <strong>Curated editorial snapshot</strong> &ndash; hand-set from each voice&rsquo;s recent public commentary, not scraped live. Edit the <code>INFLUENCERS</code> array to update.</div>
+  <div class="toolbar" style="margin:12px 0 4px">
+    <div class="seg" id="infSeg"><button data-v="all" class="active">All</button><button data-v="bull">Bulls</button><button data-v="bear">Bears</button><button data-v="macro">Macro / markets</button><button data-v="tech">Tech / AI</button></div>
+    <div class="grow"><span class="status" id="infAsof"></span></div>
+  </div>
+  <div id="infList"></div>
+  <div class="statrow" id="infStats"></div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <h2>Volatility complex <span class="sub" id="volAge" style="font-weight:400"></span></h2>
+    <div class="cap">Options-market crash pricing. Term structure &gt; 1 (backwardation) and rising put skew are the classic pre-drawdown tells.</div>
+    <div class="statrow" id="volStats"></div>
+    <div class="note" id="volNote"></div>
+  </div>
+  <div class="card">
+    <h2>Credit stress</h2>
+    <div class="cap">High-yield credit often cracks before equity in capex-heavy bubbles. HY/IG = HYG&divide;LQD; falling = risk-off. CRWV/ORCL are AI-capex-levered names.</div>
+    <div class="statrow" id="creditStats"></div>
+    <div class="note" id="creditNote"></div>
+  </div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <h2 id="nvdaTitle">NVDA market-implied tail</h2>
+    <div class="cap">Probability NVDA touches each level this month, from Polymarket bracket markets. A fattening downside tail is the leading signal.</div>
+    <div id="nvdaLadder"></div>
+  </div>
+  <div class="card">
+    <h2 id="h100Title">H100 GPU rental forecast</h2>
+    <div class="cap">Market-implied distribution of the Ornn H100 rent index. A sustained H100 rent &le; $1.00 is one of the bubble market&rsquo;s crash triggers.</div>
+    <div class="statrow" id="h100Stats"></div>
+    <div id="h100Dist"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Cross-venue check &ndash; Kalshi <span class="sub" style="font-weight:400">overlapping AI &amp; macro markets</span></h2>
+  <div class="cap" id="kalshiCap">Where the same event trades on two venues, disagreement is a confidence signal.</div>
+  <table id="kalshiTable"></table>
+</div>
+
+<div class="card">
+  <h2>Equity check &ndash; NVDA &amp; SOXX vs. the crash index</h2>
+  <div class="cap">Closes rebased to 100 at window start. Shown on its own axis &ndash; different units never share one.</div>
+  <div class="chartwrap" id="eqWrap"><svg id="eqChart" viewBox="0 0 1000 220" role="img" aria-label="Equity rebased"></svg><div class="tip" id="eqTip"></div></div>
+  <div class="legend" id="eqLegend"></div>
+  <div class="statrow" id="eqStats"></div>
+</div>
+
+<div class="card">
+  <h2>Does the crash index lead prices? <span class="sub" style="font-weight:400">&ndash; event study with permutation test</span></h2>
+  <div class="cap">Correlation of <em>non-overlapping</em> crash-index changes with the equity&rsquo;s subsequent return. Because the &ldquo;bubble burst&rdquo; market <em>resolves on</em> NVDA/SOXX drawdowns, that market is reflexive with the very prices we test &ndash; so the crash-<em>ex-bubble</em> row is the cleaner read. p is a permutation test (2,000 shuffles); n is independent windows.</div>
+  <table id="leadlagTable"></table>
+  <div class="note" id="leadlagNote"></div>
+</div>
+
+<div class="card">
+  <h2>Constituents <span class="sub" id="coverage" style="font-weight:400"></span></h2>
+  <div class="cap">Price = order-book midpoint. &#9888; spread &gt; 6&cent; (thin). &#9889; 24h volume &ge; 2&times; weekly run-rate. &dagger; structural question &ndash; deadline-adjustment not applied (only one-time-event markets are annualized).</div>
+  <div id="coverageNote" class="note"></div>
+</div>
+<div class="grid2" style="margin-top:0">
+  <div class="card"><h2 style="font-size:13px">AI-Bull</h2><table id="bullTable"></table></div>
+  <div class="card"><h2 style="font-size:13px">AI-Crash</h2><table id="crashTable"></table></div>
+</div>
+<div class="card"><h2 style="font-size:13px">AI-Regulation</h2><table id="regTable"></table></div>
+
+<div class="card">
+  <h2>Durable snapshots</h2>
+  <div class="cap" id="snapCap"></div>
+  <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
+    <button class="btn" id="snapExport">Export localStorage CSV</button>
+    <span class="sub" id="snapServer"></span>
+  </div>
+</div>
+
+<p class="err" id="err"></p>
+
+<footer id="foot"></footer>
+
+<script>
+"use strict";
+
+/* ================= Constituents ================= */
+// htype: "event" = one-time catalyst (hazard annualization defensible); "structural" = ongoing state (not annualized)
+const CONSTITUENTS = [
+  { id:"676829",  side:"bull",  htype:"event",      label:"GPT-6 released by Dec 31, 2026" },
+  { id:"653788",  side:"bull",  htype:"structural", label:"OpenAI announces AGI before 2027" },
+  { id:"676837",  side:"bull",  htype:"event",      label:"AI wins IMO gold medal in 2026" },
+  { id:"1087074", side:"bull",  htype:"structural", label:"Any model hits 1550 Chatbot Arena by Dec 31" },
+  { id:"656312",  side:"bull",  htype:"event",      label:"OpenAI IPO by Dec 31, 2026" },
+  { id:"656313",  side:"bull",  htype:"event",      label:"OpenAI $1t+ IPO before 2027" },
+  { id:"2413330", side:"bull",  htype:"event",      label:"Anthropic IPO by Dec 31, 2026" },
+  { id:"2109881", side:"bull",  htype:"structural", label:"Anthropic market cap flips BTC by Dec 31" },
+  { id:"676804",  side:"bull",  htype:"event",      label:"OpenAI consumer hardware product by Dec 31, 2026" },
+  { id:"2487206", side:"bull",  htype:"event",      label:"Next Mythos-class model by Sep 30, 2026" },
+  { id:"2255930", side:"bull",  htype:"event",      label:"AI data center in space by Dec 31, 2027" },
+
+  { id:"691340",  side:"crash", htype:"structural", label:"AI bubble burst in 2026 (3+ crash triggers)", reflexive:true },
+  { id:"676827",  side:"crash", htype:"event",      label:"OpenAI acquired before 2027" },
+  { id:"676846",  side:"crash", htype:"event",      label:"Anthropic acquired before 2027" },
+
+  { id:"2787889", side:"reg",   htype:"structural", label:"US gov removes access to a major AI model in 2026" },
+  { id:"2787891", side:"reg",   htype:"structural", label:"US gov removes access to an Anthropic model in 2026" },
+  { id:"2787890", side:"reg",   htype:"structural", label:"US gov removes access to a Chinese AI model in 2026" },
+  { id:"2698575", side:"reg",   htype:"event",      label:"Trump orders federal review of AI releases by Jul 31" },
+  { id:"676842",  side:"reg",   htype:"event",      label:"US enacts AI safety bill before 2027" },
+  { id:"2839991", side:"reg",   htype:"event",      label:"Any state enacts data center moratorium by Dec 31" },
+];
+/* ================= Influencer sentiment board (curated editorial snapshot) =================
+   score: -100 (max bearish on the AI trade) … +100 (max bullish). cat: "macro" | "tech".
+   Hand-set from each voice's public commentary — update scores/takes and INF_ASOF when you refresh it. */
+const INF_ASOF = "2026-07-11";
+const INFLUENCERS = [
+  { name:"Cathie Wood",          org:"ARK Invest",            cat:"tech",  score:  85, url:"https://x.com/CathieDWood",   take:"Disruptive-innovation maximalist: AI, robotics and autonomy still early; expects a deflationary boom." },
+  { name:"Marc Andreessen",      org:"a16z",                  cat:"tech",  score:  80, url:"https://x.com/pmarca",        take:"“AI will save the world” camp — maximal builder optimism, anti-doomer, pro-acceleration." },
+  { name:"Dan Ives",             org:"Wedbush Securities",    cat:"tech",  score:  80, url:"https://x.com/DivesTech",     take:"Table-pounding bull on the AI supply chain; frames the buildout as a fourth industrial revolution." },
+  { name:"Tom Lee",              org:"Fundstrat",             cat:"macro", score:  75, url:"https://x.com/fundstrat",     take:"Persistent bull: AI-driven earnings are durable and drawdowns in the leaders are buyable dips." },
+  { name:"Raoul Pal",            org:"Real Vision",           cat:"macro", score:  70, url:"https://x.com/RaoulGMI",      take:"“Exponential age” thesis — AI plus crypto adoption swamps the macro noise; stay long the trend." },
+  { name:"David Sacks",          org:"Craft / AI & crypto czar", cat:"tech", score: 60, url:"https://x.com/DavidSacks",   take:"Pro-acceleration on policy; argues the US must win the AI race and dismisses most bubble talk." },
+  { name:"Chamath Palihapitiya", org:"Social Capital",        cat:"tech",  score:  55, url:"https://x.com/chamath",       take:"Bullish on the compute buildout; positioned in energy and infrastructure levered to AI demand." },
+  { name:"Torsten Sløk",         org:"Apollo Global",         cat:"macro", score: -45, url:"https://www.apolloacademy.com/", take:"Has argued the top AI names are more stretched than the dot-com leaders were at the peak." },
+  { name:"Jim Covello",          org:"Goldman Sachs",         cat:"tech",  score: -50, url:"https://www.goldmansachs.com/insights", take:"Asks what trillion-dollar problem AI actually solves; sees limited ROI on the capex wave." },
+  { name:"Michael Green",        org:"Simplify Asset Mgmt",   cat:"macro", score: -55, url:"https://x.com/profplum99",    take:"Passive-flow market structure plus concentrated AI capex leaves the index fragile to any unwind." },
+  { name:"Jim Chanos",           org:"Chanos & Co.",          cat:"macro", score: -60, url:"https://x.com/RealJimChanos", take:"Points at AI capex circularity — vendor-financed demand echoing the classic bubble pattern." },
+  { name:"Gary Marcus",          org:"NYU / author",          cat:"tech",  score: -70, url:"https://x.com/GaryMarcus",    take:"Longtime LLM skeptic: diminishing returns from scaling and a valuation reckoning ahead." },
+  { name:"Michael Burry",        org:"Scion Asset Mgmt",      cat:"macro", score: -80, url:"https://x.com/michaeljburry", take:"Disclosed bearish positions against AI leaders; questions GPU depreciation accounting." },
+  { name:"Ed Zitron",            org:"Where's Your Ed At",    cat:"tech",  score: -85, url:"https://x.com/edzitron",      take:"“Rot economy” critic: argues the unit economics never close and the industry is subprime." },
+];
+
+const SIDES = ["bull","crash","reg"];
+const SIDE_COLOR = { bull:"var(--bull)", crash:"var(--crash)", reg:"var(--reg)" };
+const SIDE_NAME = { bull:"Bull", crash:"Crash", reg:"Regulation" };
+const BUBBLE_ID = "691340";
+const FUNDING_IDS = ["656312","2413330"];
+const GAMMA = "https://gamma-api.polymarket.com", CLOB = "https://clob.polymarket.com";
+
+let weighting="equal", basis="raw", rangeDays=30;
+let markets = new Map(), histories = new Map(), historiesFine = new Map();
+let nvda=null, h100=null, mkt=null, snapshotsCsv=null;
+let coverage = { loaded:0, total:CONSTITUENTS.length, excluded:[], suggestions:[], failedHist:[] };
+let sig = {}, lastRegime=null, alertsOn=false;
+
+const $ = id => document.getElementById(id);
+const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
+const fmtVol = v => v>=1e6 ? "$"+(v/1e6).toFixed(1)+"M" : v>=1e3 ? "$"+(v/1e3).toFixed(0)+"K" : "$"+Math.round(v);
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ================= Fetching ================= */
+function parseMarket(m){
+  const prices=JSON.parse(m.outcomePrices||"[]"), tokens=JSON.parse(m.clobTokenIds||"[]");
+  const bid=parseFloat(m.bestBid), ask=parseFloat(m.bestAsk), hasBook=isFinite(bid)&&isFinite(ask)&&ask>0;
+  const last=parseFloat(prices[0]??"0");
+  return { id:String(m.id), question:m.question, yes:hasBook?(bid+ask)/2:last, spread:hasBook?ask-bid:null,
+    d1:m.oneDayPriceChange??null, d7:m.oneWeekPriceChange??null,
+    volume:parseFloat(m.volumeNum??m.volume??0), vol24:parseFloat(m.volume24hr??0), vol1wk:parseFloat(m.volume1wk??0),
+    endDate:m.endDate?Date.parse(m.endDate):null, yesToken:tokens[0]||null, closed:!!m.closed||m.active===false,
+    url:m.events&&m.events[0]?`https://polymarket.com/event/${m.events[0].slug}`:`https://polymarket.com/market/${m.slug}` };
+}
+async function fetchMarkets(){
+  const qs=CONSTITUENTS.map(c=>"id="+c.id).join("&");
+  const res=await fetch(`${GAMMA}/markets?${qs}&limit=${CONSTITUENTS.length}`);
+  if(!res.ok) throw new Error("Gamma API "+res.status);
+  const seen=new Set();
+  for(const m of await res.json()){ markets.set(String(m.id), parseMarket(m)); seen.add(String(m.id)); }
+  // coverage: closed or missing constituents are excluded from the live index
+  coverage.excluded=[]; coverage.loaded=0;
+  for(const c of CONSTITUENTS){
+    const m=markets.get(c.id);
+    if(!m||m.closed) coverage.excluded.push({c, reason: m?"resolved/closed":"not returned"});
+    else coverage.loaded++;
+  }
+}
+async function fetchHistories(fine){
+  const store=fine?historiesFine:histories, interval=fine?"1w":"max", fidelity=fine?60:720;
+  coverage.failedHist=[];
+  await Promise.all(CONSTITUENTS.map(async c=>{
+    const m=markets.get(c.id); if(!m||!m.yesToken) return;
+    try{
+      const res=await fetch(`${CLOB}/prices-history?market=${m.yesToken}&interval=${interval}&fidelity=${fidelity}`);
+      if(!res.ok){ coverage.failedHist.push(c.id); return; }
+      const j=await res.json();
+      if(j.history&&j.history.length) store.set(c.id,j.history); else coverage.failedHist.push(c.id);
+    }catch(e){ coverage.failedHist.push(c.id); }
+  }));
+}
+async function discoverEvent(query, titleRe, exclRe){
+  const res=await fetch(`${GAMMA}/public-search?q=${encodeURIComponent(query)}&limit_per_type=10&events_status=active`);
+  if(!res.ok) return null;
+  const d=await res.json();
+  const cands=(d.events||[]).filter(e=>titleRe.test(e.title)&&!(exclRe&&exclRe.test(e.title)));
+  if(!cands.length) return null;
+  cands.sort((a,b)=>Date.parse(a.endDate||8e15)-Date.parse(b.endDate||8e15));
+  const r=await fetch(`${GAMMA}/events/${cands[0].id}`); return r.ok?r.json():null;
+}
+async function fetchNvda(){
+  const ev=await discoverEvent("What will NVIDIA (NVDA) hit", /NVIDIA \(NVDA\) hit in \w+ \d{4}/i, /week of/i);
+  if(!ev){ nvda=null; return; }
+  const lows=[], highs=[];
+  for(const m of ev.markets||[]){ if(m.closed) continue;
+    const mm=(m.question||"").match(/hit \((LOW|HIGH)\) \$([\d.]+)/i); if(!mm) continue;
+    const p=parseFloat(JSON.parse(m.outcomePrices||'["0"]')[0]);
+    (mm[1].toUpperCase()==="LOW"?lows:highs).push({strike:parseFloat(mm[2]),p}); }
+  lows.sort((a,b)=>b.strike-a.strike); highs.sort((a,b)=>a.strike-b.strike);
+  nvda={ title:ev.title, url:`https://polymarket.com/event/${ev.slug}`, lows, highs };
+}
+async function fetchH100(){
+  const ev=await discoverEvent("GPU rental prices (H100) end of", /GPU rental prices \(H100\) end of \w+\?/i, /2026\?/);
+  if(!ev){ h100=null; return; }
+  const b=[];
+  for(const m of ev.markets||[]){ if(m.closed) continue;
+    const q=m.question||"", p=parseFloat(JSON.parse(m.outcomePrices||'["0"]')[0]); let lo=null,hi=null,mm;
+    if((mm=q.match(/between \$([\d.]+) and \$([\d.]+)/i))){lo=+mm[1];hi=+mm[2];}
+    else if((mm=q.match(/less than \$([\d.]+)/i))){hi=+mm[1];}
+    else if((mm=q.match(/at least \$([\d.]+)/i))){lo=+mm[1];}
+    else continue;
+    b.push({lo,hi,p}); }
+  b.sort((x,y)=>(x.lo??-1)-(y.lo??-1));
+  h100={ title:ev.title, url:`https://polymarket.com/event/${ev.slug}`, brackets:b };
+}
+async function fetchMkt(){ try{ const r=await fetch("market-data.json",{cache:"no-store"}); if(r.ok) mkt=await r.json(); }catch(e){ mkt=null; } }
+async function fetchSnapshots(){ try{ const r=await fetch("snapshots.csv",{cache:"no-store"}); if(r.ok) snapshotsCsv=await r.text(); }catch(e){ snapshotsCsv=null; } }
+// best-effort successor discovery for excluded core constituents
+async function findSuccessors(){
+  coverage.suggestions=[];
+  for(const {c} of coverage.excluded){
+    try{
+      const res=await fetch(`${GAMMA}/public-search?q=${encodeURIComponent(c.label.split(" by ")[0].split(" (")[0])}&limit_per_type=5&events_status=active`);
+      if(!res.ok) continue;
+      const d=await res.json();
+      const hit=(d.events||[]).find(e=>!CONSTITUENTS.some(x=>markets.get(x.id)&&e.title&&e.title.toLowerCase().includes("")&&false));
+      const first=(d.events||[])[0];
+      if(first) coverage.suggestions.push({label:c.label, title:first.title, id:first.id, slug:first.slug});
+    }catch(e){}
+  }
+}
+
+/* ================= Index math (chain-linked, membership-aware) ================= */
+const weightOf = id => weighting==="equal" ? 1 : Math.max(markets.get(id)?.volume??0, 1);
+function adjustP(p, endMs, atMs, htype){
+  if(basis!=="hazard" || !endMs || htype!=="event") return p;
+  const days=Math.max((endMs-atMs)/86400000, 7), pc=clamp(p,0.001,0.995);
+  return Math.min(1-Math.pow(1-pc, 365/days), 0.995);
+}
+function indexNow(side){
+  let num=0,den=0,now=Date.now();
+  for(const c of CONSTITUENTS){ if(c.side!==side) continue; const m=markets.get(c.id);
+    if(!m||m.closed) continue; const w=weightOf(c.id); num+=w*adjustP(m.yes,m.endDate,now,c.htype); den+=w; }
+  return den?(num/den)*100:null;
+}
+// fixed methodology (equal, raw, skip closed) for regime/snapshot comparability
+function indexNowFixed(side){
+  let num=0,den=0; for(const c of CONSTITUENTS){ if(c.side!==side) continue; const m=markets.get(c.id);
+    if(!m||m.closed) continue; num+=m.yes; den++; } return den?(num/den)*100:0;
+}
+// core chain-linker: returns {buckets, vals} in probability units, composition-neutral, anchored to present
+function chainedSeries(side, opts){
+  const { store, bucketSec, days, weighted, hazard, exclude } = opts;
+  const nowSec=Math.floor(Date.now()/1000), startSec=nowSec-days*86400;
+  const buckets=[]; for(let t=Math.ceil(startSec/bucketSec)*bucketSec; t<=nowSec; t+=bucketSec) buckets.push(t);
+  const mem=CONSTITUENTS.filter(c=>c.side===side && store.has(c.id) && !(exclude&&exclude.has(c.id)));
+  const cur=new Map(); for(const c of mem) cur.set(c.id,{i:0,h:store.get(c.id)});
+  const wf = id => weighted ? Math.max(markets.get(id)?.volume??0,1) : 1;
+  // value of member at bucket time t, or null if market didn't exist yet (no backfill)
+  function valAt(c,t){ const o=cur.get(c.id), h=o.h; if(h[0].t>t) return null;
+    while(o.i+1<h.length && h[o.i+1].t<=t) o.i++; while(o.i>0 && h[o.i].t>t) o.i--;
+    let p=h[o.i].p; const m=markets.get(c.id); return adjustP(p, m?.endDate, t*1000, hazard?c.htype:"none"); }
+  // reset pointers each pass
+  const reset=()=>{ for(const o of cur.values()) o.i=0; };
+  reset();
+  const raw=[], present=[];
+  for(const t of buckets){ let num=0,den=0; const set=[];
+    for(const c of mem){ const v=valAt(c,t); if(v==null) continue; const w=wf(c.id); num+=w*v; den+=w; set.push(c.id); }
+    raw.push(den?num/den*100:null); present.push(new Set(set)); }
+  // chain-link: only common-member moves shift the line; entries/exits don't jump it
+  const L=new Array(buckets.length).fill(null);
+  let started=false;
+  for(let i=0;i<buckets.length;i++){
+    if(raw[i]==null){ continue; }
+    if(!started){ L[i]=raw[i]; started=true; continue; }
+    // previous non-null
+    let j=i-1; while(j>=0&&L[j]==null) j--;
+    if(j<0){ L[i]=raw[i]; continue; }
+    const common=[...present[i]].filter(id=>present[j].has(id));
+    if(!common.length){ L[i]=L[j]+(raw[i]-raw[j]); continue; }
+    reset();
+    const avg=(t)=>{ let n=0,d=0; for(const id of common){ const c=CONSTITUENTS.find(x=>x.id===id);
+      const v=valAt(c,t); if(v==null) continue; const w=wf(id); n+=w*v; d+=w; } return d?n/d*100:null; };
+    const a2=avg(buckets[i]), a1=avg(buckets[j]);
+    L[i]=(a2!=null&&a1!=null)?L[j]+(a2-a1):L[j];
+  }
+  // anchor last to raw(last) so current value reads in probability units
+  let last=buckets.length-1; while(last>=0&&L[last]==null) last--;
+  if(last>=0 && raw[last]!=null){ const off=raw[last]-L[last]; for(let i=0;i<L.length;i++) if(L[i]!=null) L[i]+=off; }
+  return { buckets, vals:L, raw };
+}
+function buildComposite(){
+  const useFine=rangeDays<=7&&historiesFine.size, store=useFine?historiesFine:histories;
+  const bucketSec=(useFine?60:720)*60;
+  const s={}; for(const side of SIDES) s[side]=chainedSeries(side,{store,bucketSec,days:rangeDays,weighted:weighting==="volume",hazard:basis==="hazard"});
+  return { buckets:s.bull.buckets, bull:s.bull.vals, crash:s.crash.vals, reg:s.reg.vals };
+}
+// fixed daily chained series for signals & lead-lag
+function dailyChained(side, days, exclude){
+  return chainedSeries(side,{store:histories, bucketSec:86400, days, weighted:false, hazard:false, exclude});
+}
+
+/* ================= Signals & gauge ================= */
+function nvdaTailProb(){ return (nvda&&nvda.lows.length)?nvda.lows[nvda.lows.length-1].p*100:null; }
+function h100Sub2(){ if(!h100) return null; let p=0; for(const b of h100.brackets) if(b.hi!=null&&b.hi<=2.0) p+=b.p; return p*100; }
+function h100Expected(){ if(!h100) return null; let ev=0,pt=0; for(const b of h100.brackets){ const mid=b.lo==null?b.hi-0.15:b.hi==null?b.lo+0.15:(b.lo+b.hi)/2; ev+=b.p*mid; pt+=b.p; } return pt?ev/pt:null; }
+function fundingDelta(){ let best=null; for(const id of FUNDING_IDS){ const m=markets.get(id); if(m&&m.d7!=null&&(!best||m.yes>best.yes)) best=m; } return best?best.d7*100:null; }
+function drawdown(series){ if(!series||!series.length) return null; const hi=Math.max(...series.map(p=>p.c)); return (series[series.length-1].c/hi-1)*100; }
+
+function computeSignals(){
+  const s={};
+  for(const side of SIDES){ const ser=dailyChained(side,90).vals.filter(v=>v!=null);
+    if(ser.length<15){ s[side]=null; continue; }
+    const mean=ser.reduce((a,b)=>a+b,0)/ser.length, sd=Math.sqrt(ser.reduce((a,b)=>a+(b-mean)**2,0)/ser.length)||1;
+    const last=ser[ser.length-1], wk=ser[Math.max(0,ser.length-8)];
+    s[side]={z:(last-mean)/sd, d7:last-wk, last}; }
+  s.spikes=CONSTITUENTS.map(c=>{ const m=markets.get(c.id); if(!m||m.closed||m.vol24<1000||!m.vol1wk) return null;
+    const r=m.vol24/(m.vol1wk/7); return r>=2?{c,m,ratio:r}:null; }).filter(Boolean).sort((a,b)=>b.ratio-a.ratio);
+  const bubble=markets.get(BUBBLE_ID);
+  s.stack=[
+    {name:"AI bubble burst in 2026 (Polymarket)", v:bubble&&!bubble.closed?bubble.yes*100:null, sub:"3+ triggers: NVDA −50% ATH, SOXX −40%, lab bankruptcy/acquisition, H100 ≤ $1, supplier collapse"},
+    {name:"NVDA deep-downside touch this month", v:nvdaTailProb(), sub:"lowest listed strike, monthly bracket markets"},
+    {name:"H100 rent below $2.00 at month end", v:h100Sub2(), sub:"GPU rental bracket markets"},
+    {name:"Funding window: IPO odds 7d change", v:fundingDelta(), sub:"max of OpenAI / Anthropic 2026 IPO; sharp drop = funding window closing", isDelta:true},
+  ];
+  s.gauge=computeGauge();
+  sig=s; return s;
+}
+// blended crash-pressure gauge: 5 signal families, each 0-100, gauge = mean of available families
+function computeGauge(){
+  const sc=(x,lo,hi)=>x==null?null:clamp((x-lo)/(hi-lo)*100,0,100);
+  const bubble=markets.get(BUBBLE_ID);
+  const fam={};
+  // 1) prediction markets
+  const pm=[ sc(bubble&&!bubble.closed?bubble.yes*100:null,0,40), sc(nvdaTailProb(),0,25), sc(h100Sub2(),0,30) ].filter(v=>v!=null);
+  fam.pred={ label:"Prediction markets", v: pm.length?pm.reduce((a,b)=>a+b)/pm.length:null };
+  // 2) options skew (25d risk reversal, in vol pts)
+  const nrr=mkt?.skew?.NVDA?.rr, srr=mkt?.skew?.SOXX?.rr;
+  const opt=[ sc(nrr!=null?nrr*100:null,1,10), sc(srr!=null?srr*100:null,4,15) ].filter(v=>v!=null);
+  fam.opt={ label:"Options skew", v: opt.length?opt.reduce((a,b)=>a+b)/opt.length:null };
+  // 3) volatility indices
+  const V=mkt?.vol||{}; const ts=(V.VIX&&V.VIX3M)?V.VIX.last/V.VIX3M.last:null;
+  const vol=[ sc(ts,0.82,1.05), sc(V.VXN?.last,18,40), sc(V.SKEW?.last,115,160), sc(V.VVIX?.last,90,130) ].filter(v=>v!=null);
+  fam.vol={ label:"Volatility complex", v: vol.length?vol.reduce((a,b)=>a+b)/vol.length:null };
+  // 4) credit
+  const C=mkt?.credit||{}; const hygDD=drawdown(C.HYG);
+  let hyig=null; if(C.HYG&&C.LQD){ const r=C.HYG.map((p,i)=>C.LQD[i]?p.c/C.LQD[i].c:null).filter(x=>x!=null);
+    if(r.length){ const hi=Math.max(...r); hyig=(r[r.length-1]/hi-1)*100; } }
+  const cr=[ sc(hygDD!=null?-hygDD:null,0,8), sc(hyig!=null?-hyig:null,0,6) ].filter(v=>v!=null);
+  fam.credit={ label:"Credit stress", v: cr.length?cr.reduce((a,b)=>a+b)/cr.length:null };
+  // 5) equity drawdown vs bubble triggers
+  const E=mkt?.equity||{}; const nDD=drawdown(E.NVDA), sDD=drawdown(E.SOXX);
+  const eq=[ sc(nDD!=null?-nDD:null,0,50), sc(sDD!=null?-sDD:null,0,40) ].filter(v=>v!=null);
+  fam.equity={ label:"Equity drawdown", v: eq.length?eq.reduce((a,b)=>a+b)/eq.length:null };
+  const avail=Object.values(fam).filter(f=>f.v!=null);
+  const score=avail.length?avail.reduce((a,f)=>a+f.v,0)/avail.length:null;
+  return { score, fam };
+}
+function computeRegime(){
+  const g=sig.gauge?.score, z=sig.crash?sig.crash.z:0, level=indexNowFixed("crash");
+  const stackMax=Math.max(...sig.stack.filter(x=>x.v!=null&&!x.isDelta).map(x=>x.v),0);
+  if((g!=null&&g>=55)||level>=40||(level>=25&&z>=2)||stackMax>=25) return "stressed";
+  if((g!=null&&g>=35)||level>=25||z>=1.5||stackMax>=15) return "elevated";
+  return "calm";
+}
+
+/* ================= Lead-lag (non-overlapping + permutation) ================= */
+function pearson(xs,ys){ const n=xs.length; if(n<3) return null;
+  const mx=xs.reduce((a,b)=>a+b)/n, my=ys.reduce((a,b)=>a+b)/n; let sxy=0,sxx=0,syy=0;
+  for(let i=0;i<n;i++){ const dx=xs[i]-mx, dy=ys[i]-my; sxy+=dx*dy; sxx+=dx*dx; syy+=dy*dy; }
+  return (sxx&&syy)?sxy/Math.sqrt(sxx*syy):null; }
+function permP(xs,ys,robs,K){ if(robs==null) return null; let c=0; const y=ys.slice();
+  for(let k=0;k<K;k++){ for(let i=y.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [y[i],y[j]]=[y[j],y[i]]; }
+    const r=pearson(xs,y); if(r!=null&&Math.abs(r)>=Math.abs(robs)) c++; } return c/K; }
+function leadLag(sym, lag, exclBubble){
+  if(!mkt?.equity?.[sym]) return null;
+  const px=mkt.equity[sym]; if(px.length<20) return null;
+  const excl = exclBubble ? new Set([BUBBLE_ID]) : null;
+  const daily=dailyChained("crash",120,excl);
+  const byDate=new Map(); daily.buckets.forEach((t,i)=>{ if(daily.vals[i]!=null) byDate.set(new Date(t*1000).toISOString().slice(0,10), daily.vals[i]); });
+  // build price index by date
+  const pIdx=new Map(px.map((p,i)=>[p.d,i]));
+  const xs=[], ys=[];
+  // non-overlapping windows stepping by `lag`
+  for(let i=1;i<px.length-lag;i+=lag){
+    const dPrev=byDate.get(px[i-1].d), dCur=byDate.get(px[i].d);
+    if(dPrev==null||dCur==null) continue;
+    xs.push(dCur-dPrev); ys.push(px[i+lag].c/px[i].c-1);
+  }
+  const r=pearson(xs,ys); if(r==null) return {r:null,n:xs.length,p:null};
+  return { r, n:xs.length, p: xs.length>=6?permP(xs,ys,r,2000):null };
+}
+
+/* ================= Rendering ================= */
+function deltaSpan(v,d=1,suf=""){ if(v==null||!isFinite(v)) return '<span class="dim">&ndash;</span>';
+  const cls=v>0?"up":v<0?"down":"dim"; return `<span class="${cls}">${v>0?"+":""}${v.toFixed(d)}${suf}</span>`; }
+function hbar(label,p,color){ const w=clamp(p,0,100); return `<div class="hbar"><span class="k">${label}</span><span class="track"><i style="width:${w}%;background:${color}"></i></span><span class="v">${p.toFixed(1)}%</span></div>`; }
+
+function renderGauge(){
+  const g=sig.gauge; if(!g||g.score==null){ $("gaugeVal").textContent="–"; return; }
+  $("gaugeVal").textContent=g.score.toFixed(0);
+  $("gaugeMk").style.left=clamp(g.score,0,100)+"%";
+  const order=["pred","opt","vol","credit","equity"];
+  $("cats").innerHTML=order.map(k=>{ const f=g.fam[k]; const v=f.v;
+    const col=v==null?"var(--muted)":v>=55?"var(--crit)":v>=35?"var(--warn)":"var(--good)";
+    return `<div class="cat"><span>${f.label}</span><span class="track"><i style="width:${v==null?0:clamp(v,0,100)}%;background:${col}"></i></span><span class="cv">${v==null?"n/a":v.toFixed(0)}</span></div>`;
+  }).join("");
+  const top=order.map(k=>g.fam[k]).filter(f=>f.v!=null).sort((a,b)=>b.v-a.v)[0];
+  $("gaugeNote").innerHTML=`Highest-pressure family right now: <strong>${top?top.label+" ("+top.v.toFixed(0)+")":"–"}</strong>. Each family is normalized 0&ndash;100 against calm/stress reference levels (see footer); the gauge is their equal-weighted mean so no single family dominates by having more sub-signals.`;
+}
+function renderTiles(){
+  const v={}; for(const s of SIDES) v[s]=indexNow(s);
+  $("bullVal").textContent=v.bull!=null?v.bull.toFixed(1):"–";
+  $("crashVal").textContent=v.crash!=null?v.crash.toFixed(1):"–";
+  $("regVal").textContent=v.reg!=null?v.reg.toFixed(1):"–";
+  $("netVal").textContent=(v.bull!=null&&v.crash!=null)?(v.bull>=v.crash?"+":"")+(v.bull-v.crash).toFixed(1):"–";
+  for(const [s,el] of [["bull","bullDelta"],["crash","crashDelta"],["reg","regDelta"]]){ const gg=sig[s];
+    $(el).innerHTML=gg?`7d ${deltaSpan(gg.d7)} pts &middot; z ${deltaSpan(gg.z,2)}`:'<span class="dim">history pending</span>'; }
+}
+function renderRegime(){
+  const r=computeRegime(), el=$("regime");
+  el.className="chip "+r;
+  el.innerHTML=`<i></i>${r==="calm"?"Calm":r==="elevated"?"Elevated":"Stressed"} crash regime`;
+  document.title=(r==="stressed"?"🔴 STRESSED – ":r==="elevated"?"⚠ Elevated – ":"")+"AI Crash Monitor";
+  const rank={calm:0,elevated:1,stressed:2};
+  if(alertsOn && lastRegime!=null && rank[r]>rank[lastRegime] && "Notification" in window && Notification.permission==="granted"){
+    new Notification("AI Crash Monitor: regime escalated to "+r.toUpperCase(), { body:`Crash-pressure gauge ${sig.gauge?.score?.toFixed(0)??"?"}/100.` });
+  }
+  lastRegime=r;
+}
+function renderStack(){
+  $("stack").innerHTML=sig.stack.map(s=>{ let dot="var(--good)";
+    if(s.v!=null){ if(s.isDelta) dot=s.v<=-5?"var(--crit)":s.v<=-2?"var(--warn)":"var(--good)"; else dot=s.v>=25?"var(--crit)":s.v>=15?"var(--warn)":"var(--good)"; }
+    const val=s.v==null?"&ndash;":(s.isDelta?(s.v>0?"+":"")+s.v.toFixed(1)+" pts":s.v.toFixed(1)+"%");
+    return `<div class="row"><span class="dot" style="background:${dot}"></span><span class="name">${s.name}<div class="sub">${s.sub}</div></span><span class="val">${val}</span></div>`;
+  }).join("");
+}
+function renderMomentum(){
+  $("momStats").innerHTML=SIDES.map(s=>{ const g=sig[s];
+    return `<div class="stat"><div class="l">${SIDE_NAME[s]} 90d z</div><div class="v">${g?(g.z>0?"+":"")+g.z.toFixed(2):"–"}</div></div>
+      <div class="stat"><div class="l">${SIDE_NAME[s]} 7d Δ</div><div class="v">${g?(g.d7>0?"+":"")+g.d7.toFixed(1):"–"}</div></div>`; }).join("");
+  const b=sig.bull, c=sig.crash; let d="Divergence: insufficient history.";
+  if(b&&c){ if(c.d7>1&&b.d7<-1) d="Divergence: <strong>risk-off rotation</strong> &ndash; crash odds rising while bull odds fall. The classic pre-drawdown pattern.";
+    else if(c.d7>1) d="Divergence: crash odds rising without bull deterioration &ndash; hedging demand; watch for follow-through.";
+    else if(c.d7<-1&&b.d7<-1) d="Divergence: both falling &ndash; disengagement/cooling, not crash positioning.";
+    else if(b.d7>1&&c.d7<=0) d="Divergence: risk-on &ndash; bull rising, crash flat/falling.";
+    else d="Divergence: no meaningful bull/crash divergence this week."; }
+  $("divNote").innerHTML=d;
+  $("spikeNote").innerHTML=sig.spikes.length?"&#9889; Unusual 24h volume: "+sig.spikes.slice(0,4).map(s=>`${esc(s.c.label)} (${s.ratio.toFixed(1)}× run-rate, ${fmtVol(s.m.vol24)})`).join("; "):"No unusual 24h volume across constituents.";
+}
+function renderVol(){
+  if(!mkt?.vol){ $("volStats").innerHTML='<div class="sub">market-data.json not loaded &ndash; run the fetcher.</div>'; $("volNote").innerHTML=""; return; }
+  const V=mkt.vol, ts=(V.VIX&&V.VIX3M)?V.VIX.last/V.VIX3M.last:null;
+  const nrr=mkt.skew?.NVDA?.rr, srr=mkt.skew?.SOXX?.rr;
+  const skewChg=(sym)=>{ const h=mkt.skew?.[sym]?.history; if(!h||h.length<2) return null; return (h[h.length-1].rr-h[0].rr)*100; };
+  const cell=(l,v,extra="")=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}${extra}</div></div>`;
+  $("volStats").innerHTML=[
+    cell("VIX term (VIX/VIX3M)", ts!=null?ts.toFixed(2):"–", ts!=null?` <small>${ts>=1?"backwardation":"contango"}</small>`:""),
+    cell("VXN (Nasdaq IV)", V.VXN?V.VXN.last.toFixed(1):"–"),
+    cell("CBOE SKEW", V.SKEW?V.SKEW.last.toFixed(0):"–"),
+    cell("VVIX", V.VVIX?V.VVIX.last.toFixed(0):"–"),
+    cell("NVDA 25Δ risk reversal", nrr!=null?(nrr*100).toFixed(1)+" pt":"–", skewChg("NVDA")!=null?` <small>Δ${skewChg("NVDA")>0?"+":""}${skewChg("NVDA").toFixed(1)}</small>`:""),
+    cell("SOXX 25Δ risk reversal", srr!=null?(srr*100).toFixed(1)+" pt":"–", skewChg("SOXX")!=null?` <small>Δ${skewChg("SOXX")>0?"+":""}${skewChg("SOXX").toFixed(1)}</small>`:""),
+  ].join("");
+  let msg=[];
+  if(ts!=null) msg.push(ts>=1?"VIX term structure is <strong>backwardated</strong> (near-term fear elevated).":"VIX term structure in contango (calm).");
+  if(nrr!=null) msg.push(`NVDA puts are ${nrr>0?"richer":"cheaper"} than calls by ${Math.abs(nrr*100).toFixed(1)} vol pts.`);
+  $("volNote").innerHTML=msg.join(" ");
+}
+function renderCredit(){
+  if(!mkt?.credit){ $("creditStats").innerHTML='<div class="sub">market-data.json not loaded.</div>'; $("creditNote").innerHTML=""; return; }
+  const C=mkt.credit, E=mkt.equity||{};
+  const hygDD=drawdown(C.HYG); let hyig=null;
+  if(C.HYG&&C.LQD){ const r=C.HYG.map((p,i)=>C.LQD[i]?p.c/C.LQD[i].c:null).filter(x=>x!=null); if(r.length){ const hi=Math.max(...r); hyig=(r[r.length-1]/hi-1)*100; } }
+  const cell=(l,v)=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}</div></div>`;
+  $("creditStats").innerHTML=[
+    cell("HYG (high yield)", C.HYG?`$${C.HYG[C.HYG.length-1].c.toFixed(2)}`:"–"),
+    cell("HYG drawdown (6mo)", hygDD!=null?hygDD.toFixed(1)+"%":"–"),
+    cell("HY/IG ratio drawdown", hyig!=null?hyig.toFixed(1)+"%":"–"),
+    cell("CRWV drawdown", E.CRWV?drawdown(E.CRWV).toFixed(1)+"%":"–"),
+    cell("ORCL drawdown", E.ORCL?drawdown(E.ORCL).toFixed(1)+"%":"–"),
+  ].join("");
+  $("creditNote").innerHTML = hygDD!=null&&hygDD>-2 ? "High-yield credit is holding up &ndash; no early credit-stress signal." : "High-yield credit softening &ndash; watch for confirmation in equity.";
+}
+function renderNvda(){
+  if(!nvda){ $("nvdaLadder").innerHTML='<div class="note">Monthly NVDA bracket event not found right now.</div>'; return; }
+  $("nvdaTitle").innerHTML=`NVDA market-implied tail <span class="sub" style="font-weight:400">&ndash; <a href="${nvda.url}" target="_blank" rel="noopener">${esc(nvda.title)}</a></span>`;
+  const spot=mkt?.equity?.NVDA?.length?mkt.equity.NVDA[mkt.equity.NVDA.length-1].c:null;
+  let h='<div class="note" style="margin-top:8px"><strong>Downside touches</strong>'+(spot?` (last $${spot.toFixed(2)})`:"")+"</div>";
+  for(const l of nvda.lows) h+=hbar(`&le; $${l.strike}${spot?` (${((l.strike/spot-1)*100).toFixed(0)}%)`:""}`, l.p*100, "var(--crash)");
+  h+='<div class="note" style="margin-top:12px"><strong>Upside touches</strong></div>';
+  for(const l of nvda.highs) h+=hbar(`&ge; $${l.strike}${spot?` (+${((l.strike/spot-1)*100).toFixed(0)}%)`:""}`, l.p*100, "var(--bull)");
+  $("nvdaLadder").innerHTML=h;
+}
+function renderH100(){
+  if(!h100){ $("h100Dist").innerHTML='<div class="note">H100 bracket event not found right now.</div>'; $("h100Stats").innerHTML=""; return; }
+  $("h100Title").innerHTML=`H100 GPU rental forecast <span class="sub" style="font-weight:400">&ndash; <a href="${h100.url}" target="_blank" rel="noopener">${esc(h100.title)}</a></span>`;
+  const exp=h100Expected(), sub2=h100Sub2();
+  $("h100Stats").innerHTML=`<div class="stat"><div class="l">Expected price</div><div class="v">${exp!=null?"$"+exp.toFixed(2):"–"}</div></div>
+    <div class="stat"><div class="l">P(below $2.00)</div><div class="v">${sub2!=null?sub2.toFixed(1)+"%":"–"}</div></div>
+    <div class="stat"><div class="l">Bubble trigger</div><div class="v">&le; $1.00</div></div>`;
+  $("h100Dist").innerHTML=h100.brackets.map(b=>{ const label=b.lo==null?`&lt; $${b.hi.toFixed(2)}`:b.hi==null?`&ge; $${b.lo.toFixed(2)}`:`$${b.lo.toFixed(2)}&ndash;${b.hi.toFixed(2)}`;
+    return hbar(label, b.p*100, b.hi!=null&&b.hi<=2.0?"var(--crash)":"var(--bull)"); }).join("");
+}
+function renderKalshi(){
+  const K=mkt?.kalshi;
+  if(!K||!K.markets||!K.markets.length){ $("kalshiTable").innerHTML=""; $("kalshiCap").innerHTML="Kalshi data not loaded (run the fetcher)."; return; }
+  $("kalshiCap").innerHTML="Where the same event trades on two venues, disagreement is a confidence signal. "+(K.authed?"":`<strong>${esc(K.note||"Public feed exposes no live quotes.")}</strong>`);
+  let h=`<thead><tr><th>Theme</th><th>Kalshi market</th><th class="num">Kalshi YES</th></tr></thead><tbody>`;
+  for(const m of K.markets) h+=`<tr><td class="sub">${esc(m.theme)}</td><td><a href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.title)}</a>${m.subtitle?` <span class="sub">${esc(m.subtitle)}</span>`:""}</td><td class="num">${m.price!=null?(m.price*100).toFixed(1)+"%":'<span class="dim">no quote</span>'}</td></tr>`;
+  $("kalshiTable").innerHTML=h+"</tbody>";
+}
+function renderTable(side){
+  const rows=CONSTITUENTS.filter(c=>c.side===side).map(c=>({c,m:markets.get(c.id)})).filter(r=>r.m&&!r.m.closed).sort((a,b)=>b.m.yes-a.m.yes);
+  const totW=rows.reduce((s,r)=>s+weightOf(r.c.id),0), color=SIDE_COLOR[side], now=Date.now(), hz=basis==="hazard";
+  let h=`<thead><tr><th>Market</th><th class="num">YES</th>${hz?'<th class="num">1y-eq</th>':""}<th class="num">24h</th><th class="num">7d</th><th class="num">Vol</th><th class="num">Wt</th></tr></thead><tbody>`;
+  for(const {c,m} of rows){ const w=totW?(weightOf(c.id)/totW)*100:0;
+    const spike=m.vol24>=1000&&m.vol1wk&&m.vol24/(m.vol1wk/7)>=2, thin=m.spread!=null&&m.spread>0.06;
+    const padj=adjustP(m.yes,m.endDate,now,c.htype);
+    h+=`<tr><td><a href="${m.url}" target="_blank" rel="noopener">${esc(c.label)}</a>${c.htype==="structural"?'<span class="flag" title="structural question – not annualized">†</span>':""}${thin?'<span class="flag" title="wide bid/ask spread">⚠</span>':""}${spike?'<span class="flag" title="unusual 24h volume">⚡</span>':""}
+      <div class="bar" style="max-width:150px"><i style="width:${(m.yes*100).toFixed(1)}%;background:${color}"></i></div></td>
+      <td class="num">${(m.yes*100).toFixed(1)}%</td>${hz?`<td class="num dim">${c.htype==="event"?(padj*100).toFixed(1)+"%":"–"}</td>`:""}
+      <td class="num">${deltaSpan(m.d1!=null?m.d1*100:null)}</td><td class="num">${deltaSpan(m.d7!=null?m.d7*100:null)}</td>
+      <td class="num">${fmtVol(m.volume)}</td><td class="num dim">${w.toFixed(0)}%</td></tr>`; }
+  $(side+"Table").innerHTML=h+"</tbody>";
+}
+function renderCoverage(){
+  $("coverage").innerHTML=`&ndash; ${coverage.loaded}/${coverage.total} live`;
+  let notes=[];
+  if(coverage.excluded.length) notes.push("Excluded: "+coverage.excluded.map(e=>`${esc(e.c.label)} (${e.reason})`).join("; "));
+  if(coverage.failedHist.length) notes.push(coverage.failedHist.length+" market(s) missing price history this cycle (dropped from the composite, not zero-filled).");
+  if(coverage.suggestions.length) notes.push("Possible successor markets: "+coverage.suggestions.map(s=>`<a href="https://polymarket.com/event/${esc(s.slug)}" target="_blank" rel="noopener">${esc(s.title)}</a>`).join("; "));
+  $("coverageNote").innerHTML=notes.length?notes.join("<br>"):"All constituents live; none resolved or dropped.";
+}
+function renderDataAge(){
+  const el=$("dataAge");
+  if(!mkt?.updated){ el.className="banner warn show"; el.innerHTML="No <code>market-data.json</code> found &ndash; options, volatility, credit, and cross-venue panels are empty. Run <code>python3 update-market-data.py</code> (and serve over HTTP)."; $("volAge").textContent=""; return; }
+  const ageH=(Date.now()-Date.parse(mkt.updated))/3600000;
+  $("volAge").innerHTML=`&middot; data ${ageH<1?"<1h":Math.round(ageH)+"h"} old`;
+  if(ageH>36){ el.className="banner warn show"; el.innerHTML=`Market data is <strong>${Math.round(ageH/24)} day(s) old</strong>. Drawdown, skew and vol readings may be stale &ndash; rerun <code>python3 update-market-data.py</code> (or <code>--watch 600</code> for live).`; }
+  else el.className="banner warn";
+}
+
+/* charts */
+function lineChart(svgId,tipId,wrapId,data,H){
+  const svg=$(svgId), tip=$(tipId), wrap=$(wrapId);
+  const W=1000,mL=46,mR=16,mT=14,mB=30,iw=W-mL-mR,ih=H-mT-mB;
+  const {buckets,series}=data; if(!buckets.length){ svg.innerHTML=""; return; }
+  const all=series.flatMap(s=>s.vals).filter(v=>v!=null); if(!all.length){ svg.innerHTML=""; return; }
+  let lo=Math.min(...all),hi=Math.max(...all); const pad=Math.max((hi-lo)*0.12,1);
+  lo=Math.floor((lo-pad)/5)*5; hi=Math.ceil((hi+pad)/5)*5;
+  const x=i=>mL+(i/(buckets.length-1))*iw, y=v=>mT+ih-((v-lo)/(hi-lo))*ih;
+  let g=""; const step=(hi-lo)<=15?5:(hi-lo)<=40?10:20;
+  for(let v=lo;v<=hi;v+=step) g+=`<line x1="${mL}" y1="${y(v)}" x2="${W-mR}" y2="${y(v)}" stroke="var(--grid)"/><text x="${mL-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)" style="font-variant-numeric:tabular-nums">${v}</text>`;
+  for(let k=0;k<6;k++){ const i=Math.round((k/5)*(buckets.length-1)); const d=new Date(buckets[i]*1000);
+    g+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="11" fill="var(--muted)">${d.toLocaleDateString(undefined,{month:"short",day:"numeric"})}</text>`; }
+  g+=`<line x1="${mL}" y1="${mT+ih}" x2="${W-mR}" y2="${mT+ih}" stroke="var(--baseline)"/>`;
+  const path=arr=>arr.map((v,i)=>v==null?"":`${i===0||arr[i-1]==null?"M":"L"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
+  for(const s of series){ g+=`<path d="${path(s.vals)}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    const last=s.vals.length-1; if(s.vals[last]!=null) g+=`<circle cx="${x(last)}" cy="${y(s.vals[last])}" r="4.5" fill="${s.color}" stroke="var(--surface-1)" stroke-width="2"/>`; }
+  g+=`<g class="xh"></g><rect class="hit" x="${mL}" y="${mT}" width="${iw}" height="${ih}" fill="transparent"/>`;
+  svg.innerHTML=g;
+  const hit=svg.querySelector(".hit"), xh=svg.querySelector(".xh");
+  hit.onmousemove=ev=>{ const rect=svg.getBoundingClientRect();
+    let i=Math.round((((ev.clientX-rect.left)/rect.width)*W-mL)/iw*(buckets.length-1)); i=clamp(i,0,buckets.length-1);
+    let xg=`<line x1="${x(i)}" y1="${mT}" x2="${x(i)}" y2="${mT+ih}" stroke="var(--baseline)"/>`, rows="";
+    for(const s of series){ if(s.vals[i]==null) continue;
+      xg+=`<circle cx="${x(i)}" cy="${y(s.vals[i])}" r="4" fill="${s.color}" stroke="var(--surface-1)" stroke-width="2"/>`;
+      rows+=`<div class="row"><i style="background:${s.color}"></i>${s.name} ${s.vals[i].toFixed(1)}</div>`; }
+    xh.innerHTML=xg; tip.style.display="block";
+    tip.innerHTML=`<div class="t">${new Date(buckets[i]*1000).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric"})}</div>`+rows;
+    const wr=wrap.getBoundingClientRect(); let tx=(x(i)/W)*wr.width+14; if(tx+tip.offsetWidth>wr.width-4) tx=(x(i)/W)*wr.width-tip.offsetWidth-14;
+    tip.style.left=tx+"px"; tip.style.top="16px"; };
+  hit.onmouseleave=()=>{ xh.innerHTML=""; tip.style.display="none"; };
+}
+function renderMainChart(){
+  const comp=buildComposite();
+  lineChart("chart","mainTip","mainWrap",{buckets:comp.buckets,series:[
+    {vals:comp.bull,color:"var(--bull)",name:"Bull"},{vals:comp.crash,color:"var(--crash)",name:"Crash"},{vals:comp.reg,color:"var(--reg)",name:"Regulation"}]},320);
+  $("chartCap").textContent=`Chain-linked composite (${weighting} weight, ${basis==="hazard"?"deadline-adjusted":"raw"} odds), last ${rangeDays} days.`;
+  $("chainBadge").textContent="– composition-neutral, back-adjusted";
+}
+function renderEquity(){
+  if(!mkt?.equity?.NVDA){ $("eqLegend").innerHTML=""; $("eqStats").innerHTML='<div class="sub">Run the fetcher to enable the equity overlay.</div>'; return; }
+  const cutoff=new Date(Date.now()-rangeDays*86400000).toISOString().slice(0,10);
+  const syms=["NVDA","SOXX"], wins=syms.map(s=>mkt.equity[s].filter(p=>p.d>=cutoff));
+  const dates=wins[0].map(p=>p.d), buckets=dates.map(d=>Math.floor(Date.parse(d)/1000)), colors=["var(--bull)","var(--reg)"];
+  const series=syms.map((sym,si)=>{ const byD=new Map(wins[si].map(p=>[p.d,p.c])), base=wins[si][0]?.c;
+    return {name:sym,color:colors[si],vals:dates.map(d=>byD.has(d)&&base?byD.get(d)/base*100:null)}; });
+  lineChart("eqChart","eqTip","eqWrap",{buckets,series},220);
+  $("eqLegend").innerHTML=series.map(s=>`<span><i class="line" style="background:${s.color}"></i>${s.name} (rebased)</span>`).join("");
+  let stats=""; const trig={NVDA:-50,SOXX:-40};
+  for(const sym of syms){ const dd=drawdown(mkt.equity[sym]), last=mkt.equity[sym][mkt.equity[sym].length-1].c;
+    stats+=`<div class="stat"><div class="l">${sym} last</div><div class="v">$${last.toFixed(2)}</div></div>
+      <div class="stat"><div class="l">${sym} drawdown (trigger ${trig[sym]}%)</div><div class="v">${dd.toFixed(1)}%</div></div>`; }
+  $("eqStats").innerHTML=stats;
+}
+function renderLeadLag(){
+  if(!mkt?.equity?.NVDA){ $("leadlagTable").innerHTML=""; $("leadlagNote").innerHTML="Run the fetcher to enable the lead-lag study."; return; }
+  const lags=[1,5,21];
+  let h=`<thead><tr><th>Predictor</th>${lags.map(l=>`<th class="num">NVDA +${l}d</th>`).join("")}${lags.map(l=>`<th class="num">SOXX +${l}d</th>`).join("")}</tr></thead><tbody>`;
+  for(const [name,excl] of [["Crash index (full)",false],["Crash ex-bubble (cleaner)",true]]){
+    h+=`<tr><td>${name}</td>`;
+    for(const sym of ["NVDA","SOXX"]) for(const l of lags){ const r=leadLag(sym,l,excl);
+      h+=`<td class="num">${r&&r.r!=null?`r=${r.r.toFixed(2)}<div class="sub">n=${r.n}${r.p!=null?", p="+r.p.toFixed(2):""}</div>`:'<span class="dim">–</span>'}</td>`; }
+    h+=`</tr>`; }
+  $("leadlagTable").innerHTML=h+"</tbody>";
+  $("leadlagNote").innerHTML=`Negative r = rising crash odds precede falling prices (predictive). Windows are non-overlapping (n shrinks fast at longer lags &ndash; the 21-day row is descriptive at best). p &lt; 0.05 would be notable; expect most cells to be insignificant, which is the honest result. The full-crash-index row is contaminated because the bubble market resolves on these very prices; the ex-bubble row removes that reflexivity. Equity through ${esc(mkt.updated_date||"?")}.`;
+}
+
+/* influencer sentiment board (static curated data — rendered once, filterable) */
+let infFilter="all";
+function infLabel(s){ return s>=60?"Strong bull":s>=15?"Bullish":s>-15?"Neutral":s>-60?"Bearish":"Strong bear"; }
+function renderInfluencers(){
+  const rows=INFLUENCERS.filter(p=> infFilter==="all" ? true
+    : infFilter==="bull" ? p.score>=15
+    : infFilter==="bear" ? p.score<=-15
+    : p.cat===infFilter).slice().sort((a,b)=>b.score-a.score);
+  $("infList").innerHTML=rows.map(p=>{
+    const w=clamp(Math.abs(p.score),0,100)/2;
+    const bar=p.score>=0?`<i class="pos" style="width:${w}%"></i>`:`<i class="neg" style="width:${w}%"></i>`;
+    const col=p.score>=15?"var(--delta-up)":p.score<=-15?"var(--delta-down)":"var(--muted)";
+    return `<div class="inf">
+      <span class="who"><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.name)}</a><div class="sub">${esc(p.org)} &middot; ${p.cat==="macro"?"macro / markets":"tech / AI"}</div></span>
+      <span class="mid"><span class="ibar">${bar}</span><div class="take">${esc(p.take)}</div></span>
+      <span class="score" style="color:${col}">${p.score>0?"+":""}${p.score}<span class="lab">${infLabel(p.score)}</span></span>
+    </div>`;
+  }).join("")||'<div class="note">No voices match this filter.</div>';
+  // aggregates always over the full roster, not the filtered view
+  const all=INFLUENCERS.map(p=>p.score);
+  const mean=all.reduce((a,b)=>a+b,0)/all.length;
+  const bulls=all.filter(s=>s>=15).length, bears=all.filter(s=>s<=-15).length, neut=all.length-bulls-bears;
+  const top=INFLUENCERS.reduce((a,p)=>p.score>a.score?p:a), bot=INFLUENCERS.reduce((a,p)=>p.score<a.score?p:a);
+  $("infStats").innerHTML=[
+    `<div class="stat"><div class="l">Mean score</div><div class="v">${mean>0?"+":""}${mean.toFixed(0)}</div></div>`,
+    `<div class="stat"><div class="l">Bulls / bears / neutral</div><div class="v">${bulls} / ${bears} / ${neut}</div></div>`,
+    `<div class="stat"><div class="l">Most bullish</div><div class="v">${esc(top.name)} <small>+${top.score}</small></div></div>`,
+    `<div class="stat"><div class="l">Most bearish</div><div class="v">${esc(bot.name)} <small>${bot.score}</small></div></div>`,
+  ].join("");
+  $("infCount").innerHTML=`&ndash; ${INFLUENCERS.length} voices, showing ${rows.length}`;
+  $("infAsof").textContent="Snapshot "+INF_ASOF;
+  $("infVal").textContent=(mean>0?"+":"")+mean.toFixed(0);
+  $("infTileSub").textContent=`${bulls} bulls · ${bears} bears · snapshot ${INF_ASOF}`;
+}
+
+/* snapshots */
+const SNAP_KEY="ai-crash-monitor-snaps-v3";
+function takeSnapshot(){
+  let store={}; try{ store=JSON.parse(localStorage.getItem(SNAP_KEY)||"{}"); }catch(e){}
+  const today=new Date().toISOString().slice(0,10), comp=CONSTITUENTS.filter(c=>{const m=markets.get(c.id);return m&&!m.closed;}).map(c=>c.id).join(",");
+  const save={comp}; for(const s of SIDES) save[s]=+indexNowFixed(s).toFixed(2);
+  if(sig.gauge?.score!=null) save.gauge=+sig.gauge.score.toFixed(1);
+  store[today]=save; try{ localStorage.setItem(SNAP_KEY,JSON.stringify(store)); }catch(e){}
+  const days=Object.keys(store).sort(), breaks=days.filter((d,i)=>i>0&&store[d].comp!==store[days[i-1]].comp).length;
+  $("snapCap").innerHTML=`Daily snapshot (equal weight, raw odds, gauge) kept in this browser. <strong>${days.length}</strong> day(s)${days.length?" since "+days[0]:""}${breaks?`; ${breaks} composition change(s) flagged for chain-linking`:""}. The history chart above is already chain-linked, so composition turnover doesn&rsquo;t create artificial steps.`;
+  const server = snapshotsCsv ? snapshotsCsv.trim().split("\n").length-1 : 0;
+  $("snapServer").innerHTML = snapshotsCsv ? `Server-side <code>snapshots.csv</code>: ${server} row(s) (durable, cross-machine &ndash; append with <code>python3 update-market-data.py --snapshot</code>).` : `No server-side snapshots.csv yet &ndash; run <code>update-market-data.py --snapshot</code> for durable, cross-machine history.`;
+}
+$("snapExport").onclick=()=>{ let store={}; try{ store=JSON.parse(localStorage.getItem(SNAP_KEY)||"{}"); }catch(e){}
+  const days=Object.keys(store).sort(); let csv="date,bull,crash,regulation,gauge,composition_changed\n";
+  for(let i=0;i<days.length;i++){ const d=days[i],s=store[d]; csv+=`${d},${s.bull},${s.crash},${s.reg},${s.gauge??""},${i>0&&s.comp!==store[days[i-1]].comp?1:0}\n`; }
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="ai-crash-snapshots.csv"; a.click(); };
+
+/* ================= Orchestration ================= */
+function renderAll(){
+  computeSignals();
+  renderGauge(); renderTiles(); renderRegime(); renderStack(); renderMomentum();
+  renderVol(); renderCredit(); renderNvda(); renderH100(); renderKalshi();
+  renderMainChart(); renderEquity(); renderLeadLag();
+  for(const s of SIDES) renderTable(s);
+  renderCoverage(); renderDataAge(); takeSnapshot();
+}
+async function refreshPrices(){
+  try{ await fetchMarkets(); await fetchMkt(); renderAll();
+    $("status").textContent="Updated "+new Date().toLocaleTimeString(); $("err").style.display="none";
+  }catch(e){ $("err").textContent="Fetch failed: "+e.message+" (retrying next cycle)"; $("err").style.display="block"; }
+}
+async function refreshHistories(){ await fetchHistories(false); if(rangeDays<=7) await fetchHistories(true); renderAll(); }
+
+function segHandler(id,fn){ $(id).addEventListener("click",async e=>{ const b=e.target.closest("button"); if(!b) return;
+  for(const btn of $(id).querySelectorAll("button")) btn.classList.toggle("active",btn===b); await fn(b.dataset.v); }); }
+segHandler("weightSeg",v=>{ weighting=v; renderAll(); });
+segHandler("basisSeg",v=>{ basis=v; renderAll(); });
+segHandler("rangeSeg",async v=>{ rangeDays=parseInt(v,10);
+  if(rangeDays<=7&&!historiesFine.size){ $("status").textContent="Loading fine history…"; await fetchHistories(true); }
+  renderAll(); $("status").textContent="Updated "+new Date().toLocaleTimeString(); });
+segHandler("infSeg",v=>{ infFilter=v; renderInfluencers(); });
+renderInfluencers(); // static curated data — render immediately, independent of network fetches
+
+$("alertBtn").onclick=async()=>{ if(!("Notification" in window)){ alert("This browser has no Notification API."); return; }
+  const perm=await Notification.requestPermission(); alertsOn=perm==="granted";
+  $("alertBtn").textContent=alertsOn?"Alerts on":"Alerts blocked";
+  if(alertsOn) new Notification("AI Crash Monitor","Alerts enabled. You'll be notified when the crash regime escalates."); };
+
+$("foot").innerHTML=`<strong>Methodology.</strong> Composite = 100×Σ(wᵢ·pᵢ)/Σwᵢ over constituents live at each timestamp; the history line is <strong>chain-linked</strong> (only common-member moves shift it, so markets entering/leaving cause no step) and back-adjusted to read in probability units. Closed/resolved markets are dropped from the live index (see coverage). <strong>Deadline-adjusted</strong> basis annualizes only one-time-event markets (pᵢ→1−(1−p)^(365/days)); structural questions (†) are left raw. <strong>Crash-Pressure Gauge</strong> blends five equally-weighted families, each normalized 0–100 vs. calm→stress refs: prediction markets (bubble 0–40%, NVDA tail 0–25%, H100&lt;$2 0–30%), options skew (NVDA RR 1–10pt, SOXX 4–15pt), vol complex (VIX/VIX3M 0.82–1.05, VXN 18–40, SKEW 115–160, VVIX 90–130), credit (HYG & HY/IG drawdown 0 to −8%/−6%), equity drawdown (NVDA 0→−50%, SOXX 0→−40%). Regime: stressed at gauge≥55 / crash≥40 / crash≥25 with z≥2 / any stack≥25%; elevated at gauge≥35 / crash≥25 / z≥1.5 / stack≥15%. Lead-lag uses non-overlapping windows and a 2,000-shuffle permutation test; the bubble market is reflexive with NVDA/SOXX so the ex-bubble row is the cleaner read &ndash; treat all of it as descriptive. Live Polymarket data refreshes every 60s; market-data.json (equity/vol/skew/credit/Kalshi) every 10min from the local fetcher; NVDA/H100 events re-discovered hourly. Sources: Polymarket Gamma + CLOB, Yahoo Finance, CBOE delayed quotes, Kalshi public API. Constituents curated 2026-07-10; not investment advice.`;
+
+(async()=>{
+  try{
+    await fetchMarkets();
+    await Promise.all([fetchHistories(false), fetchNvda(), fetchH100(), fetchMkt(), fetchSnapshots()]);
+    if(coverage.excluded.length) await findSuccessors();
+    renderAll();
+    $("status").textContent="Updated "+new Date().toLocaleTimeString();
+    setInterval(refreshPrices,60_000);
+    setInterval(refreshHistories,600_000);
+    setInterval(()=>{ fetchMkt().then(()=>{ renderVol(); renderCredit(); renderEquity(); renderLeadLag(); renderGauge(); renderRegime(); renderDataAge(); }); },600_000);
+    setInterval(()=>{ fetchNvda(); fetchH100(); },3_600_000);
+  }catch(e){ $("err").textContent="Initialization failed: "+e.message; $("err").style.display="block"; }
+})();
+</script>
+</body>
+</html>
