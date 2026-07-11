@@ -34,17 +34,17 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
-        run: python3 update-market-data.py --snapshot --alert
+        run: python3 omen/update-market-data.py --snapshot --alert
 
       - name: Refresh influencer sentiment (optional; needs XAI_API_KEY)
         if: ${{ env.XAI_API_KEY != '' }}
-        run: python3 update-influencers.py
+        run: python3 omen/update-influencers.py
 
       - name: Commit refreshed data
         run: |
           git config user.name "ai-crash-monitor bot"
           git config user.email "actions@github.com"
-          for f in market-data.json snapshots.csv alert-state.json influencers.json; do
+          for f in omen/market-data.json omen/snapshots.csv omen/alert-state.json omen/influencers.json; do
             [ -f "$f" ] && git add -f "$f"
           done
           if git diff --cached --quiet; then

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Influencer Sentiment Board &middot; AI Crash Monitor</title>
+<style>
+  :root {
+    --surface-1: #fcfcfb; --page: #f9f9f7;
+    --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --baseline: #c3c2b7; --border: rgba(11,11,11,0.10);
+    --bull: #2a78d6; --crash: #e34948; --reg: #eda100; --aqua: #1baf7a; --violet: #4a3aa7;
+    --bull-wash: rgba(42,120,214,0.10); --crash-wash: rgba(227,73,72,0.10);
+    --delta-up: #006300; --delta-down: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface-1: #1a1a19; --page: #0d0d0d;
+      --text-primary: #ffffff; --text-secondary: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --baseline: #383835; --border: rgba(255,255,255,0.10);
+      --bull: #3987e5; --crash: #e66767; --reg: #c98500; --aqua: #199e70; --violet: #9085e9;
+      --bull-wash: rgba(57,135,229,0.14); --crash-wash: rgba(230,103,103,0.14);
+      --delta-up: #0ca30c; --delta-down: #e66767;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--page); color: var(--text-primary); padding: 22px 20px 48px; max-width: 1160px; margin: 0 auto; }
+  a { color: inherit; }
+  header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  header h1 { font-size: 22px; font-weight: 650; letter-spacing: -0.01em; }
+  header p.sub { color: var(--text-secondary); font-size: 13.5px; margin-top: 4px; flex-basis: 100%; line-height: 1.5; }
+  .backlink { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; white-space: nowrap; }
+  .backlink:hover { color: var(--text-primary); }
+  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 16px 0 10px; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface-1); }
+  .seg button { font: inherit; font-size: 12.5px; padding: 6px 11px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; }
+  .seg button.active { background: var(--bull-wash); color: var(--text-primary); font-weight: 600; }
+  .toolbar .grow { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .status { font-size: 12px; color: var(--muted); }
+  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-top: 16px; }
+  .card h2 { font-size: 14.5px; font-weight: 650; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .card .cap { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+  .badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(250,178,25,0.10); color: var(--text-secondary); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; }
+  .sub { font-size: 11.5px; color: var(--muted); }
+  .statrow { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 12px; }
+  .stat .l { font-size: 11.5px; color: var(--muted); }
+  .stat .v { font-size: 19px; font-weight: 600; margin-top: 1px; }
+  .stat .v small { font-size: 12px; font-weight: 400; color: var(--muted); }
+  .note { font-size: 11.5px; color: var(--muted); margin-top: 9px; line-height: 1.55; }
+  footer { margin-top: 22px; font-size: 12px; color: var(--muted); line-height: 1.6; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.92em; background: var(--grid); border-radius: 4px; padding: 1px 5px; }
+  /* influencer sentiment board */
+  .inf { display: grid; grid-template-columns: 220px 1fr 96px; gap: 14px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--grid); font-size: 13px; }
+  .inf:last-child { border-bottom: none; }
+  @media (max-width: 700px) { .inf { grid-template-columns: 1fr 84px; } .inf .mid { grid-column: 1 / -1; } }
+  .inf .who a { font-weight: 600; text-decoration: none; }
+  .inf .who a:hover { text-decoration: underline; }
+  .inf .who .sub { margin-top: 1px; }
+  .inf .take { font-size: 12px; color: var(--text-secondary); line-height: 1.45; }
+  .inf .mid { min-width: 0; }
+  .inf .stance { justify-self: end; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 650; letter-spacing: 0.02em; border-radius: 999px; padding: 4px 12px; border: 1px solid transparent; }
+  .pill i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .pill.bull { background: var(--bull-wash); color: var(--bull); border-color: rgba(42,120,214,0.30); }
+  .pill.bear { background: var(--crash-wash); color: var(--crash); border-color: rgba(227,73,72,0.30); }
+  .pill.neutral { background: var(--grid); color: var(--text-secondary); }
+  .pill.bull i { background: var(--bull); }
+  .pill.bear i { background: var(--crash); }
+  .pill.neutral i { background: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="backlink" href="index.html">&larr; OMEN</a>
+  <h1>Influencer Sentiment Board</h1>
+  <p class="sub">Where prominent financial &amp; tech voices stand on the AI trade &mdash; each read as simply <strong style="color:var(--bull)">Bull</strong> or <strong style="color:var(--crash)">Bear</strong>. This is a hand-set editorial snapshot, or auto-scored into <code>influencers.json</code> by <code>update-influencers.py</code> when an <code>XAI_API_KEY</code> is configured.</p>
+</header>
+
+<div class="card">
+  <h2>Voices on the AI trade <span class="badge">curated</span> <span class="sub" id="infCount" style="font-weight:400"></span></h2>
+  <div class="cap">Direction only &mdash; no numeric score. Bull = expects the AI trade / buildout to keep working; Bear = expects a valuation or capex reckoning.</div>
+  <div class="toolbar" style="margin:12px 0 4px">
+    <div class="seg" id="infSeg"><button data-v="all" class="active">All</button><button data-v="bull">Bulls</button><button data-v="bear">Bears</button><button data-v="macro">Macro / markets</button><button data-v="tech">Tech / AI</button></div>
+    <div class="grow"><span class="status" id="infAsof"></span></div>
+  </div>
+  <div id="infList"></div>
+  <div class="statrow" id="infStats"></div>
+</div>
+
+<footer>
+  <p>Constituents are a curated editorial roster, not scraped live. Edit the <code>INFLUENCERS</code> array in this file, or run <code>update-influencers.py</code> to regenerate <code>influencers.json</code>. Not investment advice.</p>
+</footer>
+
+<script>
+/* ================= Influencer sentiment board =================
+   Fallback data if influencers.json is absent. score drives direction + ordering only;
+   it is never shown. cat: "macro" | "tech". */
+let INF_ASOF = "2026-07-11";
+let INFLUENCERS = [
+  { name:"Cathie Wood",          org:"ARK Invest",            cat:"tech",  score:  85, url:"https://x.com/CathieDWood",   take:"Disruptive-innovation maximalist: AI, robotics and autonomy still early; expects a deflationary boom." },
+  { name:"Marc Andreessen",      org:"a16z",                  cat:"tech",  score:  80, url:"https://x.com/pmarca",        take:"“AI will save the world” camp — maximal builder optimism, anti-doomer, pro-acceleration." },
+  { name:"Dan Ives",             org:"Wedbush Securities",    cat:"tech",  score:  80, url:"https://x.com/DivesTech",     take:"Table-pounding bull on the AI supply chain; frames the buildout as a fourth industrial revolution." },
+  { name:"Tom Lee",              org:"Fundstrat",             cat:"macro", score:  75, url:"https://x.com/fundstrat",     take:"Persistent bull: AI-driven earnings are durable and drawdowns in the leaders are buyable dips." },
+  { name:"Raoul Pal",            org:"Real Vision",           cat:"macro", score:  70, url:"https://x.com/RaoulGMI",      take:"“Exponential age” thesis — AI plus crypto adoption swamps the macro noise; stay long the trend." },
+  { name:"David Sacks",          org:"Craft / AI & crypto czar", cat:"tech", score: 60, url:"https://x.com/DavidSacks",   take:"Pro-acceleration on policy; argues the US must win the AI race and dismisses most bubble talk." },
+  { name:"Chamath Palihapitiya", org:"Social Capital",        cat:"tech",  score:  55, url:"https://x.com/chamath",       take:"Bullish on the compute buildout; positioned in energy and infrastructure levered to AI demand." },
+  { name:"Torsten Sløk",         org:"Apollo Global",         cat:"macro", score: -45, url:"https://www.apolloacademy.com/", take:"Has argued the top AI names are more stretched than the dot-com leaders were at the peak." },
+  { name:"Jim Covello",          org:"Goldman Sachs",         cat:"tech",  score: -50, url:"https://www.goldmansachs.com/insights", take:"Asks what trillion-dollar problem AI actually solves; sees limited ROI on the capex wave." },
+  { name:"Michael Green",        org:"Simplify Asset Mgmt",   cat:"macro", score: -55, url:"https://x.com/profplum99",    take:"Passive-flow market structure plus concentrated AI capex leaves the index fragile to any unwind." },
+  { name:"Jim Chanos",           org:"Chanos & Co.",          cat:"macro", score: -60, url:"https://x.com/RealJimChanos", take:"Points at AI capex circularity — vendor-financed demand echoing the classic bubble pattern." },
+  { name:"Gary Marcus",          org:"NYU / author",          cat:"tech",  score: -70, url:"https://x.com/GaryMarcus",    take:"Longtime LLM skeptic: diminishing returns from scaling and a valuation reckoning ahead." },
+  { name:"Michael Burry",        org:"Scion Asset Mgmt",      cat:"macro", score: -80, url:"https://x.com/michaeljburry", take:"Disclosed bearish positions against AI leaders; questions GPU depreciation accounting." },
+  { name:"Ed Zitron",            org:"Where's Your Ed At",    cat:"tech",  score: -85, url:"https://x.com/edzitron",      take:"“Rot economy” critic: argues the unit economics never close and the industry is subprime." },
+];
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const stanceOf = s => s>0 ? "bull" : s<0 ? "bear" : "neutral";
+const stanceLabel = { bull:"Bull", bear:"Bear", neutral:"Neutral" };
+
+let infFilter="all";
+function renderInfluencers(){
+  const rows=INFLUENCERS.filter(p=> infFilter==="all" ? true
+    : infFilter==="bull" ? p.score>0
+    : infFilter==="bear" ? p.score<0
+    : p.cat===infFilter).slice().sort((a,b)=>b.score-a.score);
+  $("infList").innerHTML=rows.map(p=>{
+    const st=stanceOf(p.score);
+    return `<div class="inf">
+      <span class="who"><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.name)}</a><div class="sub">${esc(p.org)} &middot; ${p.cat==="macro"?"macro / markets":"tech / AI"}</div></span>
+      <span class="mid"><div class="take">${esc(p.take)}</div></span>
+      <span class="stance"><span class="pill ${st}"><i></i>${stanceLabel[st]}</span></span>
+    </div>`;
+  }).join("")||'<div class="note">No voices match this filter.</div>';
+  // aggregates always over the full roster, not the filtered view
+  const bulls=INFLUENCERS.filter(p=>p.score>0).length;
+  const bears=INFLUENCERS.filter(p=>p.score<0).length;
+  const neut=INFLUENCERS.length-bulls-bears;
+  const top=INFLUENCERS.reduce((a,p)=>p.score>a.score?p:a);
+  const bot=INFLUENCERS.reduce((a,p)=>p.score<a.score?p:a);
+  $("infStats").innerHTML=[
+    `<div class="stat"><div class="l">Split</div><div class="v">${bulls} <small>bull</small> / ${bears} <small>bear</small>${neut?` / ${neut} <small>neutral</small>`:""}</div></div>`,
+    `<div class="stat"><div class="l">Most bullish</div><div class="v">${esc(top.name)}</div></div>`,
+    `<div class="stat"><div class="l">Most bearish</div><div class="v">${esc(bot.name)}</div></div>`,
+  ].join("");
+  $("infCount").innerHTML=`&ndash; ${INFLUENCERS.length} voices, showing ${rows.length}`;
+  $("infAsof").textContent="Snapshot "+INF_ASOF;
+}
+
+async function fetchInfluencers(){
+  try{
+    const r=await fetch("influencers.json",{cache:"no-store"});
+    if(r.ok){ const j=await r.json();
+      if(Array.isArray(j.influencers)&&j.influencers.length){ INFLUENCERS=j.influencers; INF_ASOF=j.asof||INF_ASOF; } }
+  }catch(e){}
+  renderInfluencers();
+}
+
+function segHandler(id,fn){ $(id).addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return;
+  for(const btn of $(id).querySelectorAll("button")) btn.classList.toggle("active",btn===b); fn(b.dataset.v); }); }
+segHandler("infSeg",v=>{ infFilter=v; renderInfluencers(); });
+
+renderInfluencers();     // fallback data renders immediately
+fetchInfluencers();      // influencers.json may override
+</script>
+</body>
+</html>
