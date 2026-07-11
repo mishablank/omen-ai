@@ -13,6 +13,7 @@
     --bull-wash: rgba(42,120,214,0.10);
     --delta-up: #006300; --delta-down: #d03b3b;
     --good: #0ca30c; --warn: #fab219; --serious: #ec835a; --crit: #d03b3b;
+    --good-wash: rgba(12,163,12,0.07); --warn-wash: rgba(250,178,25,0.10); --crit-wash: rgba(208,59,59,0.08);
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -22,6 +23,7 @@
       --bull: #3987e5; --crash: #e66767; --reg: #c98500; --aqua: #199e70; --violet: #9085e9;
       --bull-wash: rgba(57,135,229,0.12);
       --delta-up: #0ca30c; --delta-down: #e66767;
+      --good-wash: rgba(12,163,12,0.09); --warn-wash: rgba(250,178,25,0.10); --crit-wash: rgba(230,103,103,0.10);
     }
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,8 +36,9 @@
   .chip.calm { background: rgba(12,163,12,0.12); } .chip.calm i { background: var(--good); }
   .chip.elevated { background: rgba(250,178,25,0.16); } .chip.elevated i { background: var(--warn); }
   .chip.stressed { background: rgba(208,59,59,0.14); } .chip.stressed i { background: var(--crit); }
+  #regimeWhy { font-size: 12px; color: var(--text-secondary); }
   header p.sub { color: var(--text-secondary); font-size: 13.5px; margin-top: 4px; flex-basis: 100%; line-height: 1.5; }
-  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 16px 0 14px; }
+  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 16px 0 10px; }
   .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface-1); }
   .seg button { font: inherit; font-size: 12.5px; padding: 6px 11px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; }
   .seg button.active { background: var(--bull-wash); color: var(--text-primary); font-weight: 600; }
@@ -43,12 +46,19 @@
   .status { font-size: 12px; color: var(--muted); }
   .btn { font: inherit; font-size: 12px; color: var(--text-secondary); background: var(--surface-1); border: 1px solid var(--border); border-radius: 7px; padding: 6px 10px; cursor: pointer; }
   .btn:hover { color: var(--text-primary); }
+  /* consolidated data-freshness strip */
+  .fresh { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; font-size: 11.5px; color: var(--text-secondary); background: var(--surface-1); border: 1px solid var(--border); border-radius: 9px; padding: 7px 12px; margin-bottom: 14px; }
+  .fresh span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .fresh i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; }
   .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
-  .tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 15px 17px; }
+  .tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 15px 17px 12px; }
   .tile .label { font-size: 12.5px; color: var(--text-secondary); display: flex; align-items: center; gap: 7px; }
   .tile .key { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
-  .tile .value { font-size: 38px; font-weight: 600; line-height: 1.15; margin-top: 4px; }
+  .tile .value { font-size: 36px; font-weight: 600; line-height: 1.15; margin-top: 4px; }
+  .tile .value small { font-size: 16px; font-weight: 500; color: var(--muted); }
   .tile .delta { font-size: 12.5px; margin-top: 2px; color: var(--muted); }
+  .spark { width: 100%; height: 26px; display: block; margin-top: 8px; }
+  .badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: var(--warn-wash); color: var(--text-secondary); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; }
   .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-top: 16px; }
   .card h2 { font-size: 14.5px; font-weight: 650; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .card .cap { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
@@ -65,8 +75,12 @@
   .tip .t { color: var(--muted); margin-bottom: 3px; }
   .tip .row { display: flex; align-items: center; gap: 6px; }
   .tip .row i { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+  .tscroll { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
   th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); font-weight: 600; padding: 8px 8px 6px; border-bottom: 1px solid var(--grid); }
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { color: var(--text-primary); }
+  th .arrow { font-size: 9px; }
   td { padding: 9px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
   tr:last-child td { border-bottom: none; }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -93,23 +107,25 @@
   /* gauge */
   .gauge { display: grid; grid-template-columns: 220px 1fr; gap: 22px; align-items: center; margin-top: 6px; }
   @media (max-width: 700px) { .gauge { grid-template-columns: 1fr; } }
-  .gaugeNum { font-size: 60px; font-weight: 600; line-height: 1; }
+  .gaugeNum { font-size: 54px; font-weight: 600; line-height: 1; }
   .gaugeNum small { font-size: 15px; color: var(--muted); font-weight: 400; }
-  .meter { height: 12px; border-radius: 6px; margin-top: 12px; background: linear-gradient(90deg, var(--good) 0%, var(--good) 35%, var(--warn) 45%, var(--warn) 60%, var(--crit) 75%, var(--crit) 100%); position: relative; opacity: 0.85; }
+  /* meter bands match the regime thresholds: calm <35, elevated 35-55, stressed >=55 */
+  .meter { height: 12px; border-radius: 6px; margin-top: 12px; background: linear-gradient(90deg, var(--good) 0%, var(--good) 32%, var(--warn) 38%, var(--warn) 52%, var(--crit) 58%, var(--crit) 100%); position: relative; opacity: 0.85; }
   .meter .mk { position: absolute; top: -4px; width: 3px; height: 20px; background: var(--text-primary); border-radius: 2px; transform: translateX(-50%); }
-  .meterlab { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 5px; }
+  .meterlab { position: relative; height: 14px; font-size: 11px; color: var(--muted); margin-top: 5px; }
+  .meterlab span { position: absolute; transform: translateX(-50%); }
   .cats { display: flex; flex-direction: column; gap: 0; }
   .cat { display: grid; grid-template-columns: 150px 1fr 40px; gap: 10px; align-items: center; font-size: 12.5px; padding: 5px 0; }
   .cat .track { height: 8px; background: var(--grid); border-radius: 4px; overflow: hidden; }
   .cat .track i { display: block; height: 100%; border-radius: 4px; }
   .cat .cv { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
-  .banner { font-size: 12.5px; padding: 9px 12px; border-radius: 8px; margin-top: 12px; display: none; }
-  .banner.show { display: block; }
-  .banner.warn { background: rgba(250,178,25,0.14); color: var(--text-primary); }
   .err { color: var(--delta-down); font-size: 13px; margin-top: 10px; display: none; }
   code { font-size: 11.5px; background: var(--grid); padding: 1px 5px; border-radius: 4px; }
+  details { margin-top: 8px; }
+  details summary { cursor: pointer; font-size: 12.5px; color: var(--text-secondary); }
+  details summary:hover { color: var(--text-primary); }
+  details[open] summary { margin-bottom: 6px; }
   footer { margin-top: 22px; font-size: 12px; color: var(--muted); line-height: 1.6; }
-  /* back-link to the OMEN landing page */
   .backlink { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; white-space: nowrap; }
   .backlink:hover { color: var(--text-primary); }
   /* influencer sentiment board */
@@ -136,6 +152,7 @@
   <a class="backlink" href="omen-ai-index.html">&larr; OMEN</a>
   <h1>AI Crash Monitor</h1>
   <span class="chip calm" id="regime"><i></i>Loading</span>
+  <span id="regimeWhy"></span>
   <p class="sub">A blended crash-pressure gauge over Polymarket odds plus options skew, the volatility complex, credit stress, and equity drawdowns. Three prediction-market indexes underneath: <strong style="color:var(--bull)">Bull</strong> (YES = acceleration), <strong style="color:var(--crash)">Crash</strong> (YES = AI market distress), <strong style="color:var(--reg)">Regulation</strong> (YES = government clampdown).</p>
 </header>
 
@@ -149,7 +166,7 @@
   </div>
 </div>
 
-<div id="dataAge" class="banner warn"></div>
+<div class="fresh" id="freshStrip"></div>
 
 <div class="card" style="margin-top:14px">
   <h2>AI Crash-Pressure Gauge <span class="sub" style="font-weight:400">&ndash; blended 0&ndash;100 across five independent signal families</span></h2>
@@ -157,26 +174,26 @@
     <div>
       <div class="gaugeNum"><span id="gaugeVal">&ndash;</span><small>/100</small></div>
       <div class="meter"><span class="mk" id="gaugeMk" style="left:0%"></span></div>
-      <div class="meterlab"><span>Calm</span><span>Elevated</span><span>Stressed</span></div>
+      <div class="meterlab"><span style="left:17%">Calm</span><span style="left:45%">Elevated</span><span style="left:77%">Stressed</span></div>
     </div>
     <div class="cats" id="cats"></div>
   </div>
+  <div class="chartwrap" id="gaugeWrap"><svg id="gaugeChart" viewBox="0 0 1000 190" role="img" aria-label="Gauge history"></svg><div class="tip" id="gaugeTip"></div></div>
   <div class="note" id="gaugeNote"></div>
 </div>
 
-<div class="tiles">
-  <div class="tile"><div class="label"><span class="key" style="background:var(--bull)"></span>AI-Bull Index</div><div class="value" id="bullVal">&ndash;</div><div class="delta" id="bullDelta"></div></div>
-  <div class="tile"><div class="label"><span class="key" style="background:var(--crash)"></span>AI-Crash Index</div><div class="value" id="crashVal">&ndash;</div><div class="delta" id="crashDelta"></div></div>
-  <div class="tile"><div class="label"><span class="key" style="background:var(--reg)"></span>AI-Regulation Index</div><div class="value" id="regVal">&ndash;</div><div class="delta" id="regDelta"></div></div>
-  <div class="tile"><div class="label">Net sentiment (bull &minus; crash)</div><div class="value" id="netVal">&ndash;</div><div class="delta dim">Positive = leans toward acceleration</div></div>
-  <div class="tile"><div class="label"><span class="key" style="background:var(--violet)"></span>Influencer net sentiment</div><div class="value" id="infVal">&ndash;</div><div class="delta dim" id="infTileSub"></div></div>
+<div class="tiles" style="margin-top:16px">
+  <div class="tile"><div class="label"><span class="key" style="background:var(--bull)"></span>AI-Bull Index</div><div class="value" id="bullVal">&ndash;</div><div class="delta" id="bullDelta"></div><svg class="spark" id="bullSpark"></svg></div>
+  <div class="tile"><div class="label"><span class="key" style="background:var(--crash)"></span>AI-Crash Index</div><div class="value" id="crashVal">&ndash;</div><div class="delta" id="crashDelta"></div><svg class="spark" id="crashSpark"></svg></div>
+  <div class="tile"><div class="label"><span class="key" style="background:var(--reg)"></span>AI-Regulation Index</div><div class="value" id="regVal">&ndash;</div><div class="delta" id="regDelta"></div><svg class="spark" id="regSpark"></svg></div>
+  <div class="tile"><div class="label">Net sentiment (bull &minus; crash)</div><div class="value" id="netVal">&ndash;</div><div class="delta dim">Positive = leans toward acceleration</div><svg class="spark" id="netSpark"></svg></div>
+  <div class="tile"><div class="label"><span class="key" style="background:var(--violet)"></span>Influencer split <span class="badge">curated</span></div><div class="value" id="infVal">&ndash;</div><div class="delta dim" id="infTileSub"></div></div>
 </div>
 
 <div class="card">
   <h2>Composite index history <span class="sub" id="chainBadge" style="font-weight:400"></span></h2>
   <div class="cap" id="chartCap"></div>
-  <div class="chartwrap" id="mainWrap"><svg id="chart" viewBox="0 0 1000 320" role="img" aria-label="AI index history"></svg><div class="tip" id="mainTip"></div></div>
-  <div class="legend"><span><i class="line" style="background:var(--bull)"></i>Bull</span><span><i class="line" style="background:var(--crash)"></i>Crash</span><span><i class="line" style="background:var(--reg)"></i>Regulation</span></div>
+  <div class="chartwrap" id="mainWrap"><svg id="chart" viewBox="0 0 1000 540" role="img" aria-label="AI index history, three panels"></svg><div class="tip" id="mainTip"></div></div>
 </div>
 
 <div class="grid2">
@@ -184,6 +201,7 @@
     <h2>Crash signal stack</h2>
     <div class="cap">Independent early-warning probabilities from prediction markets. These feed the gauge&rsquo;s prediction-market family.</div>
     <div class="stack" id="stack"></div>
+    <div class="note" id="bookNote"></div>
   </div>
   <div class="card">
     <h2>Momentum &amp; divergence</h2>
@@ -195,8 +213,8 @@
 </div>
 
 <div class="card">
-  <h2>Influencer sentiment board <span class="sub" id="infCount" style="font-weight:400"></span></h2>
-  <div class="cap">Where prominent financial &amp; tech voices stand on the AI trade. Score is &minus;100 (max bearish) to +100 (max bullish). <strong>Curated editorial snapshot</strong> &ndash; hand-set from each voice&rsquo;s recent public commentary, not scraped live. Edit the <code>INFLUENCERS</code> array to update.</div>
+  <h2>Influencer sentiment board <span class="badge">curated</span> <span class="sub" id="infCount" style="font-weight:400"></span></h2>
+  <div class="cap">Where prominent financial &amp; tech voices stand on the AI trade. Score is &minus;100 (max bearish) to +100 (max bullish). Hand-set editorial snapshot &ndash; or auto-scored into <code>influencers.json</code> by <code>update-influencers.py</code> when an <code>XAI_API_KEY</code> is configured.</div>
   <div class="toolbar" style="margin:12px 0 4px">
     <div class="seg" id="infSeg"><button data-v="all" class="active">All</button><button data-v="bull">Bulls</button><button data-v="bear">Bears</button><button data-v="macro">Macro / markets</button><button data-v="tech">Tech / AI</button></div>
     <div class="grow"><span class="status" id="infAsof"></span></div>
@@ -207,16 +225,32 @@
 
 <div class="grid2">
   <div class="card">
-    <h2>Volatility complex <span class="sub" id="volAge" style="font-weight:400"></span></h2>
+    <h2>Volatility complex</h2>
     <div class="cap">Options-market crash pricing. Term structure &gt; 1 (backwardation) and rising put skew are the classic pre-drawdown tells.</div>
     <div class="statrow" id="volStats"></div>
     <div class="note" id="volNote"></div>
   </div>
   <div class="card">
     <h2>Credit stress</h2>
-    <div class="cap">High-yield credit often cracks before equity in capex-heavy bubbles. HY/IG = HYG&divide;LQD; falling = risk-off. CRWV/ORCL are AI-capex-levered names.</div>
+    <div class="cap">High-yield credit often cracks before equity in capex-heavy bubbles. HY OAS and CCC OAS are true option-adjusted spreads (FRED); HY/IG is the HYG&divide;LQD price proxy.</div>
     <div class="statrow" id="creditStats"></div>
     <div class="note" id="creditNote"></div>
+  </div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <h2>AI-complex breadth <span class="sub" id="breadthCount" style="font-weight:400"></span></h2>
+    <div class="cap">Equal-weight basket of AI-capex names (hyperscalers, semis, power, neoclouds). Narrowing breadth while the index holds is the classic late-cycle tell.</div>
+    <div class="statrow" id="breadthStats"></div>
+    <div id="breadthBars"></div>
+  </div>
+  <div class="card">
+    <h2>Insider activity &ndash; Form 4 <span class="sub" style="font-weight:400">last 90 days</span></h2>
+    <div class="cap">Open-market sells (code S) minus buys (code P) from SEC EDGAR, most recent filings per name. Option exercises, tax withholding and gifts are excluded.</div>
+    <div class="statrow" id="insiderStats"></div>
+    <div id="insiderBars"></div>
+    <div class="note" id="insiderNote"></div>
   </div>
 </div>
 
@@ -227,17 +261,18 @@
     <div id="nvdaLadder"></div>
   </div>
   <div class="card">
-    <h2 id="h100Title">H100 GPU rental forecast</h2>
-    <div class="cap">Market-implied distribution of the Ornn H100 rent index. A sustained H100 rent &le; $1.00 is one of the bubble market&rsquo;s crash triggers.</div>
+    <h2 id="h100Title">H100 GPU rent &ndash; implied vs realized</h2>
+    <div class="cap">Polymarket&rsquo;s implied month-end distribution vs the realized spot ask on vast.ai. A sustained H100 rent &le; $1.00 is one of the bubble market&rsquo;s crash triggers.</div>
     <div class="statrow" id="h100Stats"></div>
     <div id="h100Dist"></div>
   </div>
 </div>
 
 <div class="card">
-  <h2>Cross-venue check &ndash; Kalshi <span class="sub" style="font-weight:400">overlapping AI &amp; macro markets</span></h2>
-  <div class="cap" id="kalshiCap">Where the same event trades on two venues, disagreement is a confidence signal.</div>
-  <table id="kalshiTable"></table>
+  <h2>Cross-venue check <span class="sub" style="font-weight:400">&ndash; Kalshi &amp; Manifold</span></h2>
+  <div class="cap" id="kalshiCap">Where the same theme trades on several venues, disagreement is a confidence signal.</div>
+  <div class="tscroll"><table id="kalshiTable"></table></div>
+  <div class="tscroll"><table id="manifoldTable"></table></div>
 </div>
 
 <div class="card">
@@ -249,22 +284,25 @@
 </div>
 
 <div class="card">
-  <h2>Does the crash index lead prices? <span class="sub" style="font-weight:400">&ndash; event study with permutation test</span></h2>
-  <div class="cap">Correlation of <em>non-overlapping</em> crash-index changes with the equity&rsquo;s subsequent return. Because the &ldquo;bubble burst&rdquo; market <em>resolves on</em> NVDA/SOXX drawdowns, that market is reflexive with the very prices we test &ndash; so the crash-<em>ex-bubble</em> row is the cleaner read. p is a permutation test (2,000 shuffles); n is independent windows.</div>
-  <table id="leadlagTable"></table>
-  <div class="note" id="leadlagNote"></div>
+  <h2>Does the crash index lead prices?</h2>
+  <details id="leadlagDetails">
+    <summary id="leadlagSummary">Computing&hellip;</summary>
+    <div class="cap">Correlation of <em>non-overlapping</em> crash-index changes with the equity&rsquo;s subsequent return. Because the &ldquo;bubble burst&rdquo; market <em>resolves on</em> NVDA/SOXX drawdowns, that market is reflexive with the very prices we test &ndash; so the crash-<em>ex-bubble</em> row is the cleaner read. p is a permutation test (2,000 shuffles); n is independent windows. Recomputed only when history refreshes, not on every price tick.</div>
+    <div class="tscroll"><table id="leadlagTable"></table></div>
+    <div class="note" id="leadlagNote"></div>
+  </details>
 </div>
 
 <div class="card">
   <h2>Constituents <span class="sub" id="coverage" style="font-weight:400"></span></h2>
-  <div class="cap">Price = order-book midpoint. &#9888; spread &gt; 6&cent; (thin). &#9889; 24h volume &ge; 2&times; weekly run-rate. &dagger; structural question &ndash; deadline-adjustment not applied (only one-time-event markets are annualized).</div>
+  <div class="cap">Price = order-book midpoint. Click a column header to sort. &#9888; spread &gt; 6&cent; (thin). &#9889; 24h volume &ge; 2&times; weekly run-rate. &dagger; structural question &ndash; deadline-adjustment not applied (only one-time-event markets are annualized).</div>
   <div id="coverageNote" class="note"></div>
 </div>
 <div class="grid2" style="margin-top:0">
-  <div class="card"><h2 style="font-size:13px">AI-Bull</h2><table id="bullTable"></table></div>
-  <div class="card"><h2 style="font-size:13px">AI-Crash</h2><table id="crashTable"></table></div>
+  <div class="card"><h2 style="font-size:13px">AI-Bull</h2><div class="tscroll"><table id="bullTable"></table></div></div>
+  <div class="card"><h2 style="font-size:13px">AI-Crash</h2><div class="tscroll"><table id="crashTable"></table></div></div>
 </div>
-<div class="card"><h2 style="font-size:13px">AI-Regulation</h2><table id="regTable"></table></div>
+<div class="card"><h2 style="font-size:13px">AI-Regulation</h2><div class="tscroll"><table id="regTable"></table></div></div>
 
 <div class="card">
   <h2>Durable snapshots</h2>
@@ -277,7 +315,9 @@
 
 <p class="err" id="err"></p>
 
-<footer id="foot"></footer>
+<footer>
+  <details id="methodDetails"><summary><strong>Methodology &amp; sources</strong></summary><div id="foot"></div></details>
+</footer>
 
 <script>
 "use strict";
@@ -308,11 +348,16 @@ const CONSTITUENTS = [
   { id:"676842",  side:"reg",   htype:"event",      label:"US enacts AI safety bill before 2027" },
   { id:"2839991", side:"reg",   htype:"event",      label:"Any state enacts data center moratorium by Dec 31" },
 ];
-/* ================= Influencer sentiment board (curated editorial snapshot) =================
-   score: -100 (max bearish on the AI trade) … +100 (max bullish). cat: "macro" | "tech".
-   Hand-set from each voice's public commentary — update scores/takes and INF_ASOF when you refresh it. */
-const INF_ASOF = "2026-07-11";
-const INFLUENCERS = [
+
+/* Chart event annotations — add entries as news lands: { d:"YYYY-MM-DD", label:"..." } */
+const EVENTS = [
+  { d:"2026-07-10", label:"Constituent set curated" },
+];
+
+/* ================= Influencer sentiment board =================
+   Fallback data if influencers.json is absent. score: -100 … +100. cat: "macro" | "tech". */
+let INF_ASOF = "2026-07-11";
+let INFLUENCERS = [
   { name:"Cathie Wood",          org:"ARK Invest",            cat:"tech",  score:  85, url:"https://x.com/CathieDWood",   take:"Disruptive-innovation maximalist: AI, robotics and autonomy still early; expects a deflationary boom." },
   { name:"Marc Andreessen",      org:"a16z",                  cat:"tech",  score:  80, url:"https://x.com/pmarca",        take:"“AI will save the world” camp — maximal builder optimism, anti-doomer, pro-acceleration." },
   { name:"Dan Ives",             org:"Wedbush Securities",    cat:"tech",  score:  80, url:"https://x.com/DivesTech",     take:"Table-pounding bull on the AI supply chain; frames the buildout as a fourth industrial revolution." },
@@ -332,19 +377,24 @@ const INFLUENCERS = [
 const SIDES = ["bull","crash","reg"];
 const SIDE_COLOR = { bull:"var(--bull)", crash:"var(--crash)", reg:"var(--reg)" };
 const SIDE_NAME = { bull:"Bull", crash:"Crash", reg:"Regulation" };
+const RISK_UP = { bull:false, crash:true, reg:true };   // for crash/reg, a rising index is the bad direction
 const BUBBLE_ID = "691340";
 const FUNDING_IDS = ["656312","2413330"];
 const GAMMA = "https://gamma-api.polymarket.com", CLOB = "https://clob.polymarket.com";
 
 let weighting="equal", basis="raw", rangeDays=30;
 let markets = new Map(), histories = new Map(), historiesFine = new Map();
-let nvda=null, h100=null, mkt=null, snapshotsCsv=null;
+let nvda=null, h100=null, mkt=null, snapshotsCsv=null, book=null;
 let coverage = { loaded:0, total:CONSTITUENTS.length, excluded:[], suggestions:[], failedHist:[] };
 let sig = {}, lastRegime=null, alertsOn=false;
+let leadlagCache = null, gaugeHistCache = null;
+let lastPolyRefresh = null;
+const sortState = { bull:{k:"yes",dir:-1}, crash:{k:"yes",dir:-1}, reg:{k:"yes",dir:-1} };
 
 const $ = id => document.getElementById(id);
 const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
 const fmtVol = v => v>=1e6 ? "$"+(v/1e6).toFixed(1)+"M" : v>=1e3 ? "$"+(v/1e3).toFixed(0)+"K" : "$"+Math.round(v);
+const fmtUsd = v => { const a=Math.abs(v), s=v<0?"−$":"$"; return a>=1e9?s+(a/1e9).toFixed(1)+"B":a>=1e6?s+(a/1e6).toFixed(0)+"M":a>=1e3?s+(a/1e3).toFixed(0)+"K":s+Math.round(a); };
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 /* ================= Fetching ================= */
@@ -362,15 +412,14 @@ async function fetchMarkets(){
   const qs=CONSTITUENTS.map(c=>"id="+c.id).join("&");
   const res=await fetch(`${GAMMA}/markets?${qs}&limit=${CONSTITUENTS.length}`);
   if(!res.ok) throw new Error("Gamma API "+res.status);
-  const seen=new Set();
-  for(const m of await res.json()){ markets.set(String(m.id), parseMarket(m)); seen.add(String(m.id)); }
-  // coverage: closed or missing constituents are excluded from the live index
+  for(const m of await res.json()) markets.set(String(m.id), parseMarket(m));
   coverage.excluded=[]; coverage.loaded=0;
   for(const c of CONSTITUENTS){
     const m=markets.get(c.id);
     if(!m||m.closed) coverage.excluded.push({c, reason: m?"resolved/closed":"not returned"});
     else coverage.loaded++;
   }
+  lastPolyRefresh=Date.now();
 }
 async function fetchHistories(fine){
   const store=fine?historiesFine:histories, interval=fine?"1w":"max", fidelity=fine?60:720;
@@ -384,6 +433,18 @@ async function fetchHistories(fine){
       if(j.history&&j.history.length) store.set(c.id,j.history); else coverage.failedHist.push(c.id);
     }catch(e){ coverage.failedHist.push(c.id); }
   }));
+}
+async function fetchBook(){
+  try{
+    const m=markets.get(BUBBLE_ID);
+    if(!m||!m.yesToken||m.closed){ book=null; return; }
+    const res=await fetch(`${CLOB}/book?token_id=${m.yesToken}`);
+    if(!res.ok){ book=null; return; }
+    const j=await res.json(), mid=m.yes;
+    const near=side=>(side||[]).filter(o=>Math.abs(parseFloat(o.price)-mid)<=0.05)
+      .reduce((s,o)=>s+parseFloat(o.price)*parseFloat(o.size),0);
+    book={ bid:near(j.bids), ask:near(j.asks), at:Date.now() };
+  }catch(e){ book=null; }
 }
 async function discoverEvent(query, titleRe, exclRe){
   const res=await fetch(`${GAMMA}/public-search?q=${encodeURIComponent(query)}&limit_per_type=10&events_status=active`);
@@ -421,6 +482,14 @@ async function fetchH100(){
 }
 async function fetchMkt(){ try{ const r=await fetch("market-data.json",{cache:"no-store"}); if(r.ok) mkt=await r.json(); }catch(e){ mkt=null; } }
 async function fetchSnapshots(){ try{ const r=await fetch("snapshots.csv",{cache:"no-store"}); if(r.ok) snapshotsCsv=await r.text(); }catch(e){ snapshotsCsv=null; } }
+async function fetchInfluencers(){
+  try{
+    const r=await fetch("influencers.json",{cache:"no-store"});
+    if(r.ok){ const j=await r.json();
+      if(Array.isArray(j.influencers)&&j.influencers.length){ INFLUENCERS=j.influencers; INF_ASOF=j.asof||INF_ASOF; } }
+  }catch(e){}
+  renderInfluencers();
+}
 // best-effort successor discovery for excluded core constituents
 async function findSuccessors(){
   coverage.suggestions=[];
@@ -429,7 +498,6 @@ async function findSuccessors(){
       const res=await fetch(`${GAMMA}/public-search?q=${encodeURIComponent(c.label.split(" by ")[0].split(" (")[0])}&limit_per_type=5&events_status=active`);
       if(!res.ok) continue;
       const d=await res.json();
-      const hit=(d.events||[]).find(e=>!CONSTITUENTS.some(x=>markets.get(x.id)&&e.title&&e.title.toLowerCase().includes("")&&false));
       const first=(d.events||[])[0];
       if(first) coverage.suggestions.push({label:c.label, title:first.title, id:first.id, slug:first.slug});
     }catch(e){}
@@ -462,24 +530,20 @@ function chainedSeries(side, opts){
   const mem=CONSTITUENTS.filter(c=>c.side===side && store.has(c.id) && !(exclude&&exclude.has(c.id)));
   const cur=new Map(); for(const c of mem) cur.set(c.id,{i:0,h:store.get(c.id)});
   const wf = id => weighted ? Math.max(markets.get(id)?.volume??0,1) : 1;
-  // value of member at bucket time t, or null if market didn't exist yet (no backfill)
   function valAt(c,t){ const o=cur.get(c.id), h=o.h; if(h[0].t>t) return null;
     while(o.i+1<h.length && h[o.i+1].t<=t) o.i++; while(o.i>0 && h[o.i].t>t) o.i--;
     let p=h[o.i].p; const m=markets.get(c.id); return adjustP(p, m?.endDate, t*1000, hazard?c.htype:"none"); }
-  // reset pointers each pass
   const reset=()=>{ for(const o of cur.values()) o.i=0; };
   reset();
   const raw=[], present=[];
   for(const t of buckets){ let num=0,den=0; const set=[];
     for(const c of mem){ const v=valAt(c,t); if(v==null) continue; const w=wf(c.id); num+=w*v; den+=w; set.push(c.id); }
     raw.push(den?num/den*100:null); present.push(new Set(set)); }
-  // chain-link: only common-member moves shift the line; entries/exits don't jump it
   const L=new Array(buckets.length).fill(null);
   let started=false;
   for(let i=0;i<buckets.length;i++){
     if(raw[i]==null){ continue; }
     if(!started){ L[i]=raw[i]; started=true; continue; }
-    // previous non-null
     let j=i-1; while(j>=0&&L[j]==null) j--;
     if(j<0){ L[i]=raw[i]; continue; }
     const common=[...present[i]].filter(id=>present[j].has(id));
@@ -490,7 +554,6 @@ function chainedSeries(side, opts){
     const a2=avg(buckets[i]), a1=avg(buckets[j]);
     L[i]=(a2!=null&&a1!=null)?L[j]+(a2-a1):L[j];
   }
-  // anchor last to raw(last) so current value reads in probability units
   let last=buckets.length-1; while(last>=0&&L[last]==null) last--;
   if(last>=0 && raw[last]!=null){ const off=raw[last]-L[last]; for(let i=0;i<L.length;i++) if(L[i]!=null) L[i]+=off; }
   return { buckets, vals:L, raw };
@@ -501,7 +564,6 @@ function buildComposite(){
   const s={}; for(const side of SIDES) s[side]=chainedSeries(side,{store,bucketSec,days:rangeDays,weighted:weighting==="volume",hazard:basis==="hazard"});
   return { buckets:s.bull.buckets, bull:s.bull.vals, crash:s.crash.vals, reg:s.reg.vals };
 }
-// fixed daily chained series for signals & lead-lag
 function dailyChained(side, days, exclude){
   return chainedSeries(side,{store:histories, bucketSec:86400, days, weighted:false, hazard:false, exclude});
 }
@@ -519,7 +581,7 @@ function computeSignals(){
     if(ser.length<15){ s[side]=null; continue; }
     const mean=ser.reduce((a,b)=>a+b,0)/ser.length, sd=Math.sqrt(ser.reduce((a,b)=>a+(b-mean)**2,0)/ser.length)||1;
     const last=ser[ser.length-1], wk=ser[Math.max(0,ser.length-8)];
-    s[side]={z:(last-mean)/sd, d7:last-wk, last}; }
+    s[side]={z:(last-mean)/sd, d7:last-wk, last, series:ser}; }
   s.spikes=CONSTITUENTS.map(c=>{ const m=markets.get(c.id); if(!m||m.closed||m.vol24<1000||!m.vol1wk) return null;
     const r=m.vol24/(m.vol1wk/7); return r>=2?{c,m,ratio:r}:null; }).filter(Boolean).sort((a,b)=>b.ratio-a.ratio);
   const bubble=markets.get(BUBBLE_ID);
@@ -548,11 +610,12 @@ function computeGauge(){
   const V=mkt?.vol||{}; const ts=(V.VIX&&V.VIX3M)?V.VIX.last/V.VIX3M.last:null;
   const vol=[ sc(ts,0.82,1.05), sc(V.VXN?.last,18,40), sc(V.SKEW?.last,115,160), sc(V.VVIX?.last,90,130) ].filter(v=>v!=null);
   fam.vol={ label:"Volatility complex", v: vol.length?vol.reduce((a,b)=>a+b)/vol.length:null };
-  // 4) credit
+  // 4) credit: HYG/HY-IG price proxies + true FRED spreads
   const C=mkt?.credit||{}; const hygDD=drawdown(C.HYG);
   let hyig=null; if(C.HYG&&C.LQD){ const r=C.HYG.map((p,i)=>C.LQD[i]?p.c/C.LQD[i].c:null).filter(x=>x!=null);
     if(r.length){ const hi=Math.max(...r); hyig=(r[r.length-1]/hi-1)*100; } }
-  const cr=[ sc(hygDD!=null?-hygDD:null,0,8), sc(hyig!=null?-hyig:null,0,6) ].filter(v=>v!=null);
+  const oas=mkt?.fred?.HY_OAS?.last, ccc=mkt?.fred?.CCC_OAS?.last;
+  const cr=[ sc(hygDD!=null?-hygDD:null,0,8), sc(hyig!=null?-hyig:null,0,6), sc(oas,2.5,5.0), sc(ccc,8.5,14.0) ].filter(v=>v!=null);
   fam.credit={ label:"Credit stress", v: cr.length?cr.reduce((a,b)=>a+b)/cr.length:null };
   // 5) equity drawdown vs bubble triggers
   const E=mkt?.equity||{}; const nDD=drawdown(E.NVDA), sDD=drawdown(E.SOXX);
@@ -562,15 +625,73 @@ function computeGauge(){
   const score=avail.length?avail.reduce((a,f)=>a+f.v,0)/avail.length:null;
   return { score, fam };
 }
+// returns { r, why: [human-readable triggered conditions] }
 function computeRegime(){
   const g=sig.gauge?.score, z=sig.crash?sig.crash.z:0, level=indexNowFixed("crash");
-  const stackMax=Math.max(...sig.stack.filter(x=>x.v!=null&&!x.isDelta).map(x=>x.v),0);
-  if((g!=null&&g>=55)||level>=40||(level>=25&&z>=2)||stackMax>=25) return "stressed";
-  if((g!=null&&g>=35)||level>=25||z>=1.5||stackMax>=15) return "elevated";
-  return "calm";
+  let stackMax=0, stackName="";
+  for(const x of sig.stack) if(x.v!=null&&!x.isDelta&&x.v>stackMax){ stackMax=x.v; stackName=x.name; }
+  const stressed=[], elevated=[];
+  if(g!=null&&g>=55) stressed.push(`gauge ${g.toFixed(0)} ≥ 55`);
+  if(level>=40) stressed.push(`crash index ${level.toFixed(1)} ≥ 40`);
+  if(level>=25&&z>=2) stressed.push(`crash ${level.toFixed(1)} ≥ 25 with z ${z.toFixed(1)} ≥ 2`);
+  if(stackMax>=25) stressed.push(`${stackName} at ${stackMax.toFixed(1)}% ≥ 25%`);
+  if(stressed.length) return { r:"stressed", why:stressed };
+  if(g!=null&&g>=35) elevated.push(`gauge ${g.toFixed(0)} ≥ 35`);
+  if(level>=25) elevated.push(`crash index ${level.toFixed(1)} ≥ 25`);
+  if(z>=1.5) elevated.push(`crash z-score ${z.toFixed(1)} ≥ 1.5`);
+  if(stackMax>=15) elevated.push(`${stackName} at ${stackMax.toFixed(1)}% ≥ 15%`);
+  if(elevated.length) return { r:"elevated", why:elevated };
+  return { r:"calm", why:[] };
 }
 
-/* ================= Lead-lag (non-overlapping + permutation) ================= */
+/* ================= Historical gauge reconstruction =================
+   Rebuilt from series the fetcher already stores. Approximation vs the live gauge:
+   the prediction-market family uses only the bubble market back in time (NVDA-tail and
+   H100 events are rediscovered monthly and have no persistent history). */
+function computeGaugeHistory(days){
+  if(!mkt) return null;
+  const sc=(x,lo,hi)=>x==null?null:clamp((x-lo)/(hi-lo)*100,0,100);
+  const toMap=arr=>{ const m=new Map(); for(const p of arr||[]) m.set(p.d,p.c); return m; };
+  const ffill=(map,d,maxBack=6)=>{ const dt=Date.parse(d+"T00:00:00Z");
+    for(let k=0;k<=maxBack;k++){ const key=new Date(dt-k*86400000).toISOString().slice(0,10); if(map.has(key)) return map.get(key); } return null; };
+  // running drawdowns keyed by date (expanding max over the fetched window)
+  const ddMap=arr=>{ const m=new Map(); let hi=-Infinity; for(const p of arr||[]){ hi=Math.max(hi,p.c); m.set(p.d,(p.c/hi-1)*100); } return m; };
+  const nvdaDD=ddMap(mkt.equity?.NVDA), soxxDD=ddMap(mkt.equity?.SOXX), hygDD=ddMap(mkt.credit?.HYG);
+  let hyigDD=new Map();
+  if(mkt.credit?.HYG&&mkt.credit?.LQD){ const L=toMap(mkt.credit.LQD); let hi=-Infinity;
+    for(const p of mkt.credit.HYG){ const l=L.get(p.d); if(!l) continue; const r=p.c/l; hi=Math.max(hi,r); hyigDD.set(p.d,(r/hi-1)*100); } }
+  const vm={}; for(const k of ["VIX","VIX3M","VXN","SKEW","VVIX"]) vm[k]=toMap(mkt.vol?.[k]?.series);
+  const oasM=toMap(mkt.fred?.HY_OAS?.series), cccM=toMap(mkt.fred?.CCC_OAS?.series);
+  const skewM={}; for(const s of ["NVDA","SOXX"]){ const m=new Map();
+    for(const h of mkt.skew?.[s]?.history||[]) if(h.rr!=null) m.set(h.date,h.rr); skewM[s]=m; }
+  const bh=histories.get(BUBBLE_ID)||[];
+  const bubbleAt=t=>{ let p=null; for(const h of bh){ if(h.t<=t) p=h.p; else break; } return p; };
+  const out={dates:[],vals:[]};
+  const now=Date.now();
+  for(let k=days;k>=1;k--){
+    const d=new Date(now-k*86400000).toISOString().slice(0,10);
+    const endSec=Math.floor(Date.parse(d+"T23:59:59Z")/1000);
+    const fams=[];
+    const bp=bubbleAt(endSec);
+    if(bp!=null) fams.push(sc(bp*100,0,40));
+    const rrN=ffill(skewM.NVDA,d), rrS=ffill(skewM.SOXX,d);
+    const opt=[sc(rrN!=null?rrN*100:null,1,10), sc(rrS!=null?rrS*100:null,4,15)].filter(v=>v!=null);
+    if(opt.length) fams.push(opt.reduce((a,b)=>a+b)/opt.length);
+    const vix=ffill(vm.VIX,d), v3=ffill(vm.VIX3M,d);
+    const vol=[sc(vix&&v3?vix/v3:null,0.82,1.05), sc(ffill(vm.VXN,d),18,40), sc(ffill(vm.SKEW,d),115,160), sc(ffill(vm.VVIX,d),90,130)].filter(v=>v!=null);
+    if(vol.length) fams.push(vol.reduce((a,b)=>a+b)/vol.length);
+    const hd=ffill(hygDD,d), hg=ffill(hyigDD,d), oo=ffill(oasM,d), cc2=ffill(cccM,d);
+    const cr=[sc(hd!=null?-hd:null,0,8), sc(hg!=null?-hg:null,0,6), sc(oo,2.5,5.0), sc(cc2,8.5,14.0)].filter(v=>v!=null);
+    if(cr.length) fams.push(cr.reduce((a,b)=>a+b)/cr.length);
+    const nd=ffill(nvdaDD,d), sd2=ffill(soxxDD,d);
+    const eq=[sc(nd!=null?-nd:null,0,50), sc(sd2!=null?-sd2:null,0,40)].filter(v=>v!=null);
+    if(eq.length) fams.push(eq.reduce((a,b)=>a+b)/eq.length);
+    if(fams.length>=3){ out.dates.push(d); out.vals.push(fams.reduce((a,b)=>a+b)/fams.length); }
+  }
+  return out.dates.length>=10?out:null;
+}
+
+/* ================= Lead-lag (cached; recomputed only when history refreshes) ================= */
 function pearson(xs,ys){ const n=xs.length; if(n<3) return null;
   const mx=xs.reduce((a,b)=>a+b)/n, my=ys.reduce((a,b)=>a+b)/n; let sxy=0,sxx=0,syy=0;
   for(let i=0;i<n;i++){ const dx=xs[i]-mx, dy=ys[i]-my; sxy+=dx*dy; sxx+=dx*dx; syy+=dy*dy; }
@@ -578,29 +699,53 @@ function pearson(xs,ys){ const n=xs.length; if(n<3) return null;
 function permP(xs,ys,robs,K){ if(robs==null) return null; let c=0; const y=ys.slice();
   for(let k=0;k<K;k++){ for(let i=y.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [y[i],y[j]]=[y[j],y[i]]; }
     const r=pearson(xs,y); if(r!=null&&Math.abs(r)>=Math.abs(robs)) c++; } return c/K; }
-function leadLag(sym, lag, exclBubble){
-  if(!mkt?.equity?.[sym]) return null;
-  const px=mkt.equity[sym]; if(px.length<20) return null;
-  const excl = exclBubble ? new Set([BUBBLE_ID]) : null;
-  const daily=dailyChained("crash",120,excl);
-  const byDate=new Map(); daily.buckets.forEach((t,i)=>{ if(daily.vals[i]!=null) byDate.set(new Date(t*1000).toISOString().slice(0,10), daily.vals[i]); });
-  // build price index by date
-  const pIdx=new Map(px.map((p,i)=>[p.d,i]));
-  const xs=[], ys=[];
-  // non-overlapping windows stepping by `lag`
-  for(let i=1;i<px.length-lag;i+=lag){
-    const dPrev=byDate.get(px[i-1].d), dCur=byDate.get(px[i].d);
-    if(dPrev==null||dCur==null) continue;
-    xs.push(dCur-dPrev); ys.push(px[i+lag].c/px[i].c-1);
+function computeLeadLagCache(){
+  if(!mkt?.equity?.NVDA){ leadlagCache=null; return; }
+  const lags=[1,5];
+  const dailies={ full:dailyChained("crash",120,null), ex:dailyChained("crash",120,new Set([BUBBLE_ID])) };
+  const cache={ lags, rows:{} };
+  for(const [key,daily] of Object.entries(dailies)){
+    const byDate=new Map(); daily.buckets.forEach((t,i)=>{ if(daily.vals[i]!=null) byDate.set(new Date(t*1000).toISOString().slice(0,10), daily.vals[i]); });
+    cache.rows[key]={};
+    for(const sym of ["NVDA","SOXX"]){
+      const px=mkt.equity[sym]; cache.rows[key][sym]={};
+      for(const lag of lags){
+        if(!px||px.length<20){ cache.rows[key][sym][lag]=null; continue; }
+        const xs=[],ys=[];
+        for(let i=1;i<px.length-lag;i+=lag){
+          const dPrev=byDate.get(px[i-1].d), dCur=byDate.get(px[i].d);
+          if(dPrev==null||dCur==null) continue;
+          xs.push(dCur-dPrev); ys.push(px[i+lag].c/px[i].c-1);
+        }
+        const r=pearson(xs,ys);
+        cache.rows[key][sym][lag]= r==null ? {r:null,n:xs.length,p:null}
+          : { r, n:xs.length, p: xs.length>=6?permP(xs,ys,r,2000):null };
+      }
+    }
   }
-  const r=pearson(xs,ys); if(r==null) return {r:null,n:xs.length,p:null};
-  return { r, n:xs.length, p: xs.length>=6?permP(xs,ys,r,2000):null };
+  leadlagCache=cache;
 }
 
 /* ================= Rendering ================= */
-function deltaSpan(v,d=1,suf=""){ if(v==null||!isFinite(v)) return '<span class="dim">&ndash;</span>';
-  const cls=v>0?"up":v<0?"down":"dim"; return `<span class="${cls}">${v>0?"+":""}${v.toFixed(d)}${suf}</span>`; }
+// badWhenUp: color a rising value red (crash/regulation odds, spreads) instead of green
+function deltaSpan(v,d=1,suf="",badWhenUp=false){ if(v==null||!isFinite(v)) return '<span class="dim">&ndash;</span>';
+  const good=badWhenUp?v<0:v>0, cls=v===0?"dim":good?"up":"down";
+  return `<span class="${cls}">${v>0?"+":""}${v.toFixed(d)}${suf}</span>`; }
 function hbar(label,p,color){ const w=clamp(p,0,100); return `<div class="hbar"><span class="k">${label}</span><span class="track"><i style="width:${w}%;background:${color}"></i></span><span class="v">${p.toFixed(1)}%</span></div>`; }
+function spark(svgId, vals, color){
+  const svg=$(svgId); if(!svg) return;
+  const vs=(vals||[]).filter(v=>v!=null);
+  if(vs.length<3){ svg.innerHTML=""; return; }
+  const W=200,H=26,n=vals.length;
+  let lo=Math.min(...vs), hi=Math.max(...vs); if(hi-lo<0.5){ const m=(hi+lo)/2; lo=m-0.5; hi=m+0.5; }
+  const x=i=>(i/(n-1))*(W-4)+2, y=v=>H-3-((v-lo)/(hi-lo))*(H-6);
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`); svg.setAttribute("preserveAspectRatio","none");
+  let d="",prev=null;
+  vals.forEach((v,i)=>{ if(v==null){prev=null;return;} d+=(prev==null?"M":"L")+x(i).toFixed(1)+","+y(v).toFixed(1); prev=v; });
+  const lastIdx=n-1, lastV=vals[lastIdx];
+  svg.innerHTML=`<path d="${d}" fill="none" stroke="${color}" stroke-width="1.6" opacity="0.85"/>`+
+    (lastV!=null?`<circle cx="${x(lastIdx)}" cy="${y(lastV)}" r="2.4" fill="${color}"/>`:"");
+}
 
 function renderGauge(){
   const g=sig.gauge; if(!g||g.score==null){ $("gaugeVal").textContent="–"; return; }
@@ -612,7 +757,21 @@ function renderGauge(){
     return `<div class="cat"><span>${f.label}</span><span class="track"><i style="width:${v==null?0:clamp(v,0,100)}%;background:${col}"></i></span><span class="cv">${v==null?"n/a":v.toFixed(0)}</span></div>`;
   }).join("");
   const top=order.map(k=>g.fam[k]).filter(f=>f.v!=null).sort((a,b)=>b.v-a.v)[0];
-  $("gaugeNote").innerHTML=`Highest-pressure family right now: <strong>${top?top.label+" ("+top.v.toFixed(0)+")":"–"}</strong>. Each family is normalized 0&ndash;100 against calm/stress reference levels (see footer); the gauge is their equal-weighted mean so no single family dominates by having more sub-signals.`;
+  $("gaugeNote").innerHTML=`Highest-pressure family right now: <strong>${top?top.label+" ("+top.v.toFixed(0)+")":"–"}</strong>. Bands on the meter and chart match the regime thresholds (35 / 55). Each family is normalized 0&ndash;100 against calm/stress reference levels (see methodology); the gauge is their equal-weighted mean. The history line is reconstructed from stored daily series &ndash; its prediction-market family uses the bubble market only, so it can sit slightly below the live number.`;
+  renderGaugeChart();
+}
+function renderGaugeChart(){
+  const gh=gaugeHistCache, svg=$("gaugeChart");
+  if(!gh){ svg.innerHTML=""; return; }
+  const buckets=gh.dates.map(d=>Math.floor(Date.parse(d+"T12:00:00Z")/1000));
+  const vals=gh.vals.slice();
+  // anchor today's point to the live gauge so the line ends at the displayed number
+  if(sig.gauge?.score!=null){ buckets.push(Math.floor(Date.now()/1000)); vals.push(sig.gauge.score); }
+  lineChart("gaugeChart","gaugeTip","gaugeWrap",
+    {buckets, series:[{vals, color:"var(--violet)", name:"Gauge"}]}, 190,
+    { fixed:[0, Math.max(70, Math.ceil((Math.max(...vals)+8)/10)*10)],
+      bands:[{lo:0,hi:35,color:"var(--good-wash)"},{lo:35,hi:55,color:"var(--warn-wash)"},{lo:55,hi:100,color:"var(--crit-wash)"}],
+      events:EVENTS });
 }
 function renderTiles(){
   const v={}; for(const s of SIDES) v[s]=indexNow(s);
@@ -621,16 +780,27 @@ function renderTiles(){
   $("regVal").textContent=v.reg!=null?v.reg.toFixed(1):"–";
   $("netVal").textContent=(v.bull!=null&&v.crash!=null)?(v.bull>=v.crash?"+":"")+(v.bull-v.crash).toFixed(1):"–";
   for(const [s,el] of [["bull","bullDelta"],["crash","crashDelta"],["reg","regDelta"]]){ const gg=sig[s];
-    $(el).innerHTML=gg?`7d ${deltaSpan(gg.d7)} pts &middot; z ${deltaSpan(gg.z,2)}`:'<span class="dim">history pending</span>'; }
+    $(el).innerHTML=gg?`7d ${deltaSpan(gg.d7,1,"",RISK_UP[s])} pts &middot; z ${deltaSpan(gg.z,2,"",RISK_UP[s])}`:'<span class="dim">history pending</span>'; }
+  const last30=ser=>ser?ser.slice(-30):null;
+  spark("bullSpark", last30(sig.bull?.series), "var(--bull)");
+  spark("crashSpark", last30(sig.crash?.series), "var(--crash)");
+  spark("regSpark", last30(sig.reg?.series), "var(--reg)");
+  if(sig.bull?.series&&sig.crash?.series){
+    const n=Math.min(sig.bull.series.length, sig.crash.series.length);
+    const net=[]; for(let i=0;i<n;i++) net.push(sig.bull.series[sig.bull.series.length-n+i]-sig.crash.series[sig.crash.series.length-n+i]);
+    spark("netSpark", net.slice(-30), "var(--aqua)");
+  }
 }
 function renderRegime(){
-  const r=computeRegime(), el=$("regime");
+  const {r,why}=computeRegime(), el=$("regime");
   el.className="chip "+r;
   el.innerHTML=`<i></i>${r==="calm"?"Calm":r==="elevated"?"Elevated":"Stressed"} crash regime`;
+  $("regimeWhy").textContent=why.length?"— driven by: "+why.join("; "):"";
+  el.title=why.join("\n");
   document.title=(r==="stressed"?"🔴 STRESSED – ":r==="elevated"?"⚠ Elevated – ":"")+"AI Crash Monitor";
   const rank={calm:0,elevated:1,stressed:2};
   if(alertsOn && lastRegime!=null && rank[r]>rank[lastRegime] && "Notification" in window && Notification.permission==="granted"){
-    new Notification("AI Crash Monitor: regime escalated to "+r.toUpperCase(), { body:`Crash-pressure gauge ${sig.gauge?.score?.toFixed(0)??"?"}/100.` });
+    new Notification("AI Crash Monitor: regime escalated to "+r.toUpperCase(), { body:(why[0]||"")+` · gauge ${sig.gauge?.score?.toFixed(0)??"?"}/100.` });
   }
   lastRegime=r;
 }
@@ -640,6 +810,11 @@ function renderStack(){
     const val=s.v==null?"&ndash;":(s.isDelta?(s.v>0?"+":"")+s.v.toFixed(1)+" pts":s.v.toFixed(1)+"%");
     return `<div class="row"><span class="dot" style="background:${dot}"></span><span class="name">${s.name}<div class="sub">${s.sub}</div></span><span class="val">${val}</span></div>`;
   }).join("");
+  if(book&&(book.bid||book.ask)){
+    const tot=book.bid+book.ask, pctBid=tot?book.bid/tot*100:50;
+    const lean=pctBid>=55?"leaning <strong>YES</strong> (crash)":pctBid<=45?"leaning <strong>NO</strong>":"balanced";
+    $("bookNote").innerHTML=`Bubble-market order book (&plusmn;5&cent; of mid): ${fmtUsd(book.bid)} bid vs ${fmtUsd(book.ask)} ask &ndash; ${pctBid.toFixed(0)}% of near-mid depth on the bid, ${lean}. Thin books make the headline probability easy to push.`;
+  } else $("bookNote").innerHTML="";
 }
 function renderMomentum(){
   $("momStats").innerHTML=SIDES.map(s=>{ const g=sig[s];
@@ -660,6 +835,7 @@ function renderVol(){
   const nrr=mkt.skew?.NVDA?.rr, srr=mkt.skew?.SOXX?.rr;
   const skewChg=(sym)=>{ const h=mkt.skew?.[sym]?.history; if(!h||h.length<2) return null; return (h[h.length-1].rr-h[0].rr)*100; };
   const cell=(l,v,extra="")=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}${extra}</div></div>`;
+  const tN=mkt.term?.NVDA, tS=mkt.term?.SOXX;
   $("volStats").innerHTML=[
     cell("VIX term (VIX/VIX3M)", ts!=null?ts.toFixed(2):"–", ts!=null?` <small>${ts>=1?"backwardation":"contango"}</small>`:""),
     cell("VXN (Nasdaq IV)", V.VXN?V.VXN.last.toFixed(1):"–"),
@@ -667,26 +843,87 @@ function renderVol(){
     cell("VVIX", V.VVIX?V.VVIX.last.toFixed(0):"–"),
     cell("NVDA 25Δ risk reversal", nrr!=null?(nrr*100).toFixed(1)+" pt":"–", skewChg("NVDA")!=null?` <small>Δ${skewChg("NVDA")>0?"+":""}${skewChg("NVDA").toFixed(1)}</small>`:""),
     cell("SOXX 25Δ risk reversal", srr!=null?(srr*100).toFixed(1)+" pt":"–", skewChg("SOXX")!=null?` <small>Δ${skewChg("SOXX")>0?"+":""}${skewChg("SOXX").toFixed(1)}</small>`:""),
+    cell("NVDA IV term", tN?tN.ratio.toFixed(2):"–", tN?` <small>${tN.front_dte}d/${tN.back_dte}d ${tN.ratio>=1?"backwardated":"contango"}</small>`:""),
+    cell("SOXX IV term", tS?tS.ratio.toFixed(2):"–", tS?` <small>${tS.front_dte}d/${tS.back_dte}d ${tS.ratio>=1?"backwardated":"contango"}</small>`:""),
   ].join("");
   let msg=[];
   if(ts!=null) msg.push(ts>=1?"VIX term structure is <strong>backwardated</strong> (near-term fear elevated).":"VIX term structure in contango (calm).");
   if(nrr!=null) msg.push(`NVDA puts are ${nrr>0?"richer":"cheaper"} than calls by ${Math.abs(nrr*100).toFixed(1)} vol pts.`);
+  if(tN&&tN.ratio>=1) msg.push("NVDA single-name IV term is <strong>backwardated</strong> — near-dated crash pricing.");
   $("volNote").innerHTML=msg.join(" ");
 }
 function renderCredit(){
   if(!mkt?.credit){ $("creditStats").innerHTML='<div class="sub">market-data.json not loaded.</div>'; $("creditNote").innerHTML=""; return; }
-  const C=mkt.credit, E=mkt.equity||{};
+  const C=mkt.credit, E=mkt.equity||{}, F=mkt.fred||{};
   const hygDD=drawdown(C.HYG); let hyig=null;
   if(C.HYG&&C.LQD){ const r=C.HYG.map((p,i)=>C.LQD[i]?p.c/C.LQD[i].c:null).filter(x=>x!=null); if(r.length){ const hi=Math.max(...r); hyig=(r[r.length-1]/hi-1)*100; } }
-  const cell=(l,v)=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}</div></div>`;
+  const wkChg=s=>{ const ser=F[s]?.series; if(!ser||ser.length<6) return null; return ser[ser.length-1].c-ser[ser.length-6].c; };
+  const cell=(l,v,extra="")=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}${extra}</div></div>`;
   $("creditStats").innerHTML=[
-    cell("HYG (high yield)", C.HYG?`$${C.HYG[C.HYG.length-1].c.toFixed(2)}`:"–"),
+    cell("HY OAS (FRED)", F.HY_OAS?F.HY_OAS.last.toFixed(2)+"%":"–", wkChg("HY_OAS")!=null?` <small>${deltaSpan(wkChg("HY_OAS")*100,0," bp",true)} 1w</small>`:""),
+    cell("CCC OAS (FRED)", F.CCC_OAS?F.CCC_OAS.last.toFixed(2)+"%":"–", wkChg("CCC_OAS")!=null?` <small>${deltaSpan(wkChg("CCC_OAS")*100,0," bp",true)} 1w</small>`:""),
+    cell("NFCI (Chicago Fed)", F.NFCI?F.NFCI.last.toFixed(2):"–", F.NFCI?` <small>${F.NFCI.last<0?"loose":"tight"}</small>`:""),
     cell("HYG drawdown (6mo)", hygDD!=null?hygDD.toFixed(1)+"%":"–"),
     cell("HY/IG ratio drawdown", hyig!=null?hyig.toFixed(1)+"%":"–"),
     cell("CRWV drawdown", E.CRWV?drawdown(E.CRWV).toFixed(1)+"%":"–"),
     cell("ORCL drawdown", E.ORCL?drawdown(E.ORCL).toFixed(1)+"%":"–"),
   ].join("");
-  $("creditNote").innerHTML = hygDD!=null&&hygDD>-2 ? "High-yield credit is holding up &ndash; no early credit-stress signal." : "High-yield credit softening &ndash; watch for confirmation in equity.";
+  const oas=F.HY_OAS?.last;
+  $("creditNote").innerHTML = oas!=null
+    ? (oas<3.2 ? `HY OAS at ${oas.toFixed(2)}% is historically tight &ndash; credit is pricing no AI stress. A move through ~4% would be the early warning.`
+               : oas<5 ? `HY OAS at ${oas.toFixed(2)}% is off the tights &ndash; credit is starting to charge for risk.`
+               : `HY OAS at ${oas.toFixed(2)}% &ndash; credit stress is live.`)
+    : (hygDD!=null&&hygDD>-2 ? "High-yield credit is holding up &ndash; no early credit-stress signal." : "High-yield credit softening &ndash; watch for confirmation in equity.");
+}
+function renderBreadth(){
+  if(!mkt?.equity||!mkt.basket){ $("breadthStats").innerHTML='<div class="sub">Run the fetcher to enable breadth.</div>'; $("breadthBars").innerHTML=""; return; }
+  const rows=[];
+  for(const sym of mkt.basket){
+    const s=mkt.equity[sym]; if(!s||s.length<50) continue;
+    const closes=s.map(p=>p.c), last=closes[closes.length-1];
+    const ma50=closes.slice(-50).reduce((a,b)=>a+b,0)/50;
+    rows.push({sym, above:last>=ma50, dd:drawdown(s)});
+  }
+  if(!rows.length){ $("breadthStats").innerHTML='<div class="sub">No basket data.</div>'; return; }
+  const nAbove=rows.filter(r=>r.above).length, pct=nAbove/rows.length*100;
+  // equal-weight basket vs SPY over ~30 trading sessions
+  let rs=null;
+  const spy=mkt.equity[mkt.bench||"SPY"];
+  if(spy&&spy.length>31){
+    const win=31;
+    const rebase=s=>{ const w=s.slice(-win); return w[w.length-1].c/w[0].c; };
+    const basketRet=rows.map(r=>rebase(mkt.equity[r.sym])).reduce((a,b)=>a+b,0)/rows.length;
+    rs=(basketRet/rebase(spy)-1)*100;
+  }
+  const dds=rows.map(r=>r.dd).sort((a,b)=>a-b);
+  const median=dds[Math.floor(dds.length/2)];
+  const cell=(l,v,extra="")=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}${extra}</div></div>`;
+  $("breadthStats").innerHTML=[
+    cell("Above 50-day MA", `${nAbove}/${rows.length}`, ` <small>${pct.toFixed(0)}%</small>`),
+    cell("Median drawdown (6mo)", median.toFixed(1)+"%"),
+    rs!=null?cell("Basket vs SPY (30 sessions)", (rs>0?"+":"")+rs.toFixed(1)+"%"):"",
+  ].join("");
+  const worst=rows.slice().sort((a,b)=>a.dd-b.dd).slice(0,8);
+  $("breadthBars").innerHTML='<div class="note" style="margin-top:10px"><strong>Deepest drawdowns from 6-month high</strong> (✕ = below 50dma)</div>'+
+    worst.map(r=>hbar(r.sym+(r.above?"":" ✕"), Math.min(-r.dd,100), "var(--crash)")).join("");
+  $("breadthCount").innerHTML=`&ndash; ${rows.length} names`;
+}
+function renderInsiders(){
+  const I=mkt?.insiders;
+  if(!I||!Object.keys(I).length){ $("insiderStats").innerHTML='<div class="sub">Run the fetcher to enable insider data.</div>'; $("insiderBars").innerHTML=""; $("insiderNote").innerHTML=""; return; }
+  const syms=Object.keys(I);
+  const totNet=syms.reduce((s,k)=>s+I[k].net_usd,0);
+  const cell=(l,v)=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}</div></div>`;
+  $("insiderStats").innerHTML=[
+    cell("Combined net (90d)", fmtUsd(totNet)),
+    cell("Filings parsed", syms.reduce((s,k)=>s+I[k].n_parsed,0)),
+  ].join("");
+  const maxAbs=Math.max(...syms.map(k=>Math.abs(I[k].net_usd)),1);
+  $("insiderBars").innerHTML=syms.sort((a,b)=>I[a].net_usd-I[b].net_usd).map(k=>{
+    const v=I[k].net_usd, w=Math.abs(v)/maxAbs*100;
+    return `<div class="hbar"><span class="k">${k} <span class="sub">(${I[k].n_filings} filings)</span></span><span class="track"><i style="width:${w.toFixed(0)}%;background:${v<0?"var(--crash)":"var(--good)"}"></i></span><span class="v">${fmtUsd(v)}</span></div>`;
+  }).join("");
+  $("insiderNote").innerHTML="Persistent one-sided selling is normal for these names (comp plans); what matters is <em>acceleration</em> vs. their own baseline and any disappearance of buys. Counts only the most recent filings per name, so treat as a sample, not a census.";
 }
 function renderNvda(){
   if(!nvda){ $("nvdaLadder").innerHTML='<div class="note">Monthly NVDA bracket event not found right now.</div>'; return; }
@@ -699,36 +936,72 @@ function renderNvda(){
   $("nvdaLadder").innerHTML=h;
 }
 function renderH100(){
-  if(!h100){ $("h100Dist").innerHTML='<div class="note">H100 bracket event not found right now.</div>'; $("h100Stats").innerHTML=""; return; }
-  $("h100Title").innerHTML=`H100 GPU rental forecast <span class="sub" style="font-weight:400">&ndash; <a href="${h100.url}" target="_blank" rel="noopener">${esc(h100.title)}</a></span>`;
+  const spot=mkt?.gpu;
+  if(!h100&&!spot){ $("h100Dist").innerHTML='<div class="note">H100 bracket event not found and no realized spot data.</div>'; $("h100Stats").innerHTML=""; return; }
+  if(h100) $("h100Title").innerHTML=`H100 GPU rent &ndash; implied vs realized <span class="sub" style="font-weight:400">&ndash; <a href="${h100.url}" target="_blank" rel="noopener">${esc(h100.title)}</a></span>`;
   const exp=h100Expected(), sub2=h100Sub2();
-  $("h100Stats").innerHTML=`<div class="stat"><div class="l">Expected price</div><div class="v">${exp!=null?"$"+exp.toFixed(2):"–"}</div></div>
-    <div class="stat"><div class="l">P(below $2.00)</div><div class="v">${sub2!=null?sub2.toFixed(1)+"%":"–"}</div></div>
-    <div class="stat"><div class="l">Bubble trigger</div><div class="v">&le; $1.00</div></div>`;
-  $("h100Dist").innerHTML=h100.brackets.map(b=>{ const label=b.lo==null?`&lt; $${b.hi.toFixed(2)}`:b.hi==null?`&ge; $${b.lo.toFixed(2)}`:`$${b.lo.toFixed(2)}&ndash;${b.hi.toFixed(2)}`;
+  const cells=[];
+  if(exp!=null) cells.push(`<div class="stat"><div class="l">Market-implied month-end</div><div class="v">$${exp.toFixed(2)}</div></div>`);
+  if(spot) cells.push(`<div class="stat"><div class="l">Realized spot median <small>(${esc(spot.source)})</small></div><div class="v">$${spot.median_dph.toFixed(2)}<small>/hr · ${spot.n_offers} offers</small></div></div>`);
+  if(spot) cells.push(`<div class="stat"><div class="l">Realized p10 / min ask</div><div class="v">$${spot.p10_dph.toFixed(2)} / $${spot.min_dph.toFixed(2)}</div></div>`);
+  if(sub2!=null) cells.push(`<div class="stat"><div class="l">P(below $2.00)</div><div class="v">${sub2.toFixed(1)}%</div></div>`);
+  cells.push(`<div class="stat"><div class="l">Bubble trigger</div><div class="v">&le; $1.00</div></div>`);
+  $("h100Stats").innerHTML=cells.join("");
+  let h="";
+  if(exp!=null&&spot){
+    const gap=(exp/spot.median_dph-1)*100;
+    h+=`<div class="note">Market-implied month-end is <strong>${gap>0?"+":""}${gap.toFixed(0)}%</strong> vs today&rsquo;s realized spot median &ndash; ${gap>5?"the market prices firmer rents than the spot tape shows":gap<-5?"the market prices rent deflation below today&rsquo;s tape &ndash; a live crash-trigger watch":"roughly consistent with the current tape"}.</div>`;
+  }
+  if(h100) h+=h100.brackets.map(b=>{ const label=b.lo==null?`&lt; $${b.hi.toFixed(2)}`:b.hi==null?`&ge; $${b.lo.toFixed(2)}`:`$${b.lo.toFixed(2)}&ndash;${b.hi.toFixed(2)}`;
     return hbar(label, b.p*100, b.hi!=null&&b.hi<=2.0?"var(--crash)":"var(--bull)"); }).join("");
+  $("h100Dist").innerHTML=h;
 }
-function renderKalshi(){
+function renderCrossVenue(){
   const K=mkt?.kalshi;
-  if(!K||!K.markets||!K.markets.length){ $("kalshiTable").innerHTML=""; $("kalshiCap").innerHTML="Kalshi data not loaded (run the fetcher)."; return; }
-  $("kalshiCap").innerHTML="Where the same event trades on two venues, disagreement is a confidence signal. "+(K.authed?"":`<strong>${esc(K.note||"Public feed exposes no live quotes.")}</strong>`);
-  let h=`<thead><tr><th>Theme</th><th>Kalshi market</th><th class="num">Kalshi YES</th></tr></thead><tbody>`;
-  for(const m of K.markets) h+=`<tr><td class="sub">${esc(m.theme)}</td><td><a href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.title)}</a>${m.subtitle?` <span class="sub">${esc(m.subtitle)}</span>`:""}</td><td class="num">${m.price!=null?(m.price*100).toFixed(1)+"%":'<span class="dim">no quote</span>'}</td></tr>`;
-  $("kalshiTable").innerHTML=h+"</tbody>";
+  if(!K||!K.markets||!K.markets.length){ $("kalshiTable").innerHTML=""; }
+  else{
+    let h=`<thead><tr><th>Theme</th><th>Kalshi market</th><th class="num">YES</th></tr></thead><tbody>`;
+    for(const m of K.markets) h+=`<tr><td class="sub">${esc(m.theme)}</td><td><a href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.title)}</a>${m.subtitle?` <span class="sub">${esc(m.subtitle)}</span>`:""}</td><td class="num">${m.price!=null?(m.price*100).toFixed(1)+"%":'<span class="dim">no quote</span>'}</td></tr>`;
+    $("kalshiTable").innerHTML=h+"</tbody>";
+  }
+  const M=mkt?.manifold;
+  if(!M||!M.length){ $("manifoldTable").innerHTML=""; }
+  else{
+    let h=`<thead><tr><th>Search</th><th>Manifold market <span class="sub">(play-money crowd)</span></th><th class="num">Prob</th><th class="num">Bettors</th></tr></thead><tbody>`;
+    for(const m of M) h+=`<tr><td class="sub">${esc(m.theme)}</td><td><a href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.title)}</a></td><td class="num">${(m.price*100).toFixed(0)}%</td><td class="num dim">${m.bettors??"–"}</td></tr>`;
+    $("manifoldTable").innerHTML=h+"</tbody>";
+  }
+  $("kalshiCap").innerHTML="Where the same theme trades on several venues, disagreement is a confidence signal. "
+    +(K&&!K.authed?`<strong>${esc(K.note||"Kalshi public feed exposes no live quotes.")}</strong> `:"")
+    +(M&&M.length?"Manifold is play-money &ndash; treat as crowd sentiment, not capital at risk.":"");
 }
 function renderTable(side){
-  const rows=CONSTITUENTS.filter(c=>c.side===side).map(c=>({c,m:markets.get(c.id)})).filter(r=>r.m&&!r.m.closed).sort((a,b)=>b.m.yes-a.m.yes);
+  const st=sortState[side];
+  const rows=CONSTITUENTS.filter(c=>c.side===side).map(c=>({c,m:markets.get(c.id)})).filter(r=>r.m&&!r.m.closed);
+  const keyFn={ label:r=>r.c.label.toLowerCase(), yes:r=>r.m.yes, d1:r=>r.m.d1, d7:r=>r.m.d7, vol:r=>r.m.volume };
+  rows.sort((a,b)=>{ const ka=keyFn[st.k](a), kb=keyFn[st.k](b);
+    if(ka==null&&kb==null) return 0; if(ka==null) return 1; if(kb==null) return -1;
+    return ka<kb?-st.dir:ka>kb?st.dir:0; });
   const totW=rows.reduce((s,r)=>s+weightOf(r.c.id),0), color=SIDE_COLOR[side], now=Date.now(), hz=basis==="hazard";
-  let h=`<thead><tr><th>Market</th><th class="num">YES</th>${hz?'<th class="num">1y-eq</th>':""}<th class="num">24h</th><th class="num">7d</th><th class="num">Vol</th><th class="num">Wt</th></tr></thead><tbody>`;
+  const arrow=k=>st.k===k?`<span class="arrow">${st.dir<0?"▼":"▲"}</span>`:"";
+  const th=(k,label,num)=>`<th class="sortable${num?" num":""}" data-k="${k}">${label} ${arrow(k)}</th>`;
+  let h=`<thead><tr>${th("label","Market")}${th("yes","YES",1)}${hz?'<th class="num">1y-eq</th>':""}${th("d1","24h",1)}${th("d7","7d",1)}${th("vol","Vol",1)}<th class="num">Wt</th></tr></thead><tbody>`;
+  const risky=RISK_UP[side];
   for(const {c,m} of rows){ const w=totW?(weightOf(c.id)/totW)*100:0;
     const spike=m.vol24>=1000&&m.vol1wk&&m.vol24/(m.vol1wk/7)>=2, thin=m.spread!=null&&m.spread>0.06;
     const padj=adjustP(m.yes,m.endDate,now,c.htype);
     h+=`<tr><td><a href="${m.url}" target="_blank" rel="noopener">${esc(c.label)}</a>${c.htype==="structural"?'<span class="flag" title="structural question – not annualized">†</span>':""}${thin?'<span class="flag" title="wide bid/ask spread">⚠</span>':""}${spike?'<span class="flag" title="unusual 24h volume">⚡</span>':""}
       <div class="bar" style="max-width:150px"><i style="width:${(m.yes*100).toFixed(1)}%;background:${color}"></i></div></td>
       <td class="num">${(m.yes*100).toFixed(1)}%</td>${hz?`<td class="num dim">${c.htype==="event"?(padj*100).toFixed(1)+"%":"–"}</td>`:""}
-      <td class="num">${deltaSpan(m.d1!=null?m.d1*100:null)}</td><td class="num">${deltaSpan(m.d7!=null?m.d7*100:null)}</td>
+      <td class="num">${deltaSpan(m.d1!=null?m.d1*100:null,1,"",risky)}</td><td class="num">${deltaSpan(m.d7!=null?m.d7*100:null,1,"",risky)}</td>
       <td class="num">${fmtVol(m.volume)}</td><td class="num dim">${w.toFixed(0)}%</td></tr>`; }
-  $(side+"Table").innerHTML=h+"</tbody>";
+  const tbl=$(side+"Table");
+  tbl.innerHTML=h+"</tbody>";
+  tbl.querySelectorAll("th.sortable").forEach(el=>{
+    el.onclick=()=>{ const k=el.dataset.k;
+      if(st.k===k) st.dir=-st.dir; else { st.k=k; st.dir=k==="label"?1:-1; }
+      renderTable(side); };
+  });
 }
 function renderCoverage(){
   $("coverage").innerHTML=`&ndash; ${coverage.loaded}/${coverage.total} live`;
@@ -738,29 +1011,51 @@ function renderCoverage(){
   if(coverage.suggestions.length) notes.push("Possible successor markets: "+coverage.suggestions.map(s=>`<a href="https://polymarket.com/event/${esc(s.slug)}" target="_blank" rel="noopener">${esc(s.title)}</a>`).join("; "));
   $("coverageNote").innerHTML=notes.length?notes.join("<br>"):"All constituents live; none resolved or dropped.";
 }
-function renderDataAge(){
-  const el=$("dataAge");
-  if(!mkt?.updated){ el.className="banner warn show"; el.innerHTML="No <code>market-data.json</code> found &ndash; options, volatility, credit, and cross-venue panels are empty. Run <code>python3 update-market-data.py</code> (and serve over HTTP)."; $("volAge").textContent=""; return; }
-  const ageH=(Date.now()-Date.parse(mkt.updated))/3600000;
-  $("volAge").innerHTML=`&middot; data ${ageH<1?"<1h":Math.round(ageH)+"h"} old`;
-  if(ageH>36){ el.className="banner warn show"; el.innerHTML=`Market data is <strong>${Math.round(ageH/24)} day(s) old</strong>. Drawdown, skew and vol readings may be stale &ndash; rerun <code>python3 update-market-data.py</code> (or <code>--watch 600</code> for live).`; }
-  else el.className="banner warn";
+function renderFresh(){
+  const now=Date.now();
+  const dot=(state)=>`<i style="background:var(--${state})"></i>`;
+  const ageTxt=ms=>{ const h=ms/3600000; return h<1?"<1h":h<48?Math.round(h)+"h":Math.round(h/24)+"d"; };
+  const items=[];
+  items.push(`<span>${dot(lastPolyRefresh&&now-lastPolyRefresh<180000?"good":"crit")}Polymarket ${lastPolyRefresh?"live · "+new Date(lastPolyRefresh).toLocaleTimeString():"—"}</span>`);
+  if(mkt?.updated){
+    const age=now-Date.parse(mkt.updated);
+    items.push(`<span>${dot(age<2*3600000?"good":age<36*3600000?"warn":"crit")}Fetcher data ${ageTxt(age)} old</span>`);
+    if(mkt.equity?.NVDA?.length) items.push(`<span>${dot("good")}Equity through ${mkt.equity.NVDA[mkt.equity.NVDA.length-1].d}</span>`);
+    if(mkt.fred?.HY_OAS) items.push(`<span>${dot("good")}FRED ${mkt.fred.HY_OAS.last_date}</span>`);
+    if(mkt.gpu) items.push(`<span>${dot("good")}GPU spot ${mkt.gpu.date}</span>`);
+  } else {
+    items.push(`<span>${dot("crit")}<strong>market-data.json missing</strong> &ndash; run <code>python3 update-market-data.py</code> (options, vol, credit, breadth, insider panels empty)</span>`);
+  }
+  const infAge=now-Date.parse(INF_ASOF);
+  items.push(`<span>${dot(infAge<14*86400000?"good":infAge<45*86400000?"warn":"crit")}Influencers ${INF_ASOF}</span>`);
+  $("freshStrip").innerHTML=items.join("");
 }
 
-/* charts */
-function lineChart(svgId,tipId,wrapId,data,H){
+/* charts: bands = horizontal regime washes, events = vertical markers */
+function lineChart(svgId,tipId,wrapId,data,H,opts={}){
   const svg=$(svgId), tip=$(tipId), wrap=$(wrapId);
   const W=1000,mL=46,mR=16,mT=14,mB=30,iw=W-mL-mR,ih=H-mT-mB;
   const {buckets,series}=data; if(!buckets.length){ svg.innerHTML=""; return; }
   const all=series.flatMap(s=>s.vals).filter(v=>v!=null); if(!all.length){ svg.innerHTML=""; return; }
-  let lo=Math.min(...all),hi=Math.max(...all); const pad=Math.max((hi-lo)*0.12,1);
-  lo=Math.floor((lo-pad)/5)*5; hi=Math.ceil((hi+pad)/5)*5;
+  let lo,hi;
+  if(opts.fixed){ [lo,hi]=opts.fixed; }
+  else{ lo=Math.min(...all); hi=Math.max(...all); const pad=Math.max((hi-lo)*0.12,1);
+    lo=Math.floor((lo-pad)/5)*5; hi=Math.ceil((hi+pad)/5)*5; }
   const x=i=>mL+(i/(buckets.length-1))*iw, y=v=>mT+ih-((v-lo)/(hi-lo))*ih;
-  let g=""; const step=(hi-lo)<=15?5:(hi-lo)<=40?10:20;
-  for(let v=lo;v<=hi;v+=step) g+=`<line x1="${mL}" y1="${y(v)}" x2="${W-mR}" y2="${y(v)}" stroke="var(--grid)"/><text x="${mL-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)" style="font-variant-numeric:tabular-nums">${v}</text>`;
+  let g="";
+  if(opts.bands) for(const b of opts.bands){ const y1=y(clamp(b.hi,lo,hi)), y2=y(clamp(b.lo,lo,hi));
+    g+=`<rect x="${mL}" y="${y1}" width="${iw}" height="${Math.max(y2-y1,0)}" fill="${b.color}"/>`; }
+  const step=(hi-lo)<=15?5:(hi-lo)<=40?10:20;
+  for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step) g+=`<line x1="${mL}" y1="${y(v)}" x2="${W-mR}" y2="${y(v)}" stroke="var(--grid)"/><text x="${mL-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)" style="font-variant-numeric:tabular-nums">${v}</text>`;
   for(let k=0;k<6;k++){ const i=Math.round((k/5)*(buckets.length-1)); const d=new Date(buckets[i]*1000);
     g+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="11" fill="var(--muted)">${d.toLocaleDateString(undefined,{month:"short",day:"numeric"})}</text>`; }
   g+=`<line x1="${mL}" y1="${mT+ih}" x2="${W-mR}" y2="${mT+ih}" stroke="var(--baseline)"/>`;
+  if(opts.events) for(const ev of opts.events){
+    const t=Math.floor(Date.parse(ev.d+"T12:00:00Z")/1000);
+    if(t<buckets[0]||t>buckets[buckets.length-1]) continue;
+    let bi=0; for(let i=0;i<buckets.length;i++) if(Math.abs(buckets[i]-t)<Math.abs(buckets[bi]-t)) bi=i;
+    g+=`<line x1="${x(bi)}" y1="${mT}" x2="${x(bi)}" y2="${mT+ih}" stroke="var(--baseline)" stroke-dasharray="3,3"><title>${esc(ev.label)}</title></line>`;
+  }
   const path=arr=>arr.map((v,i)=>v==null?"":`${i===0||arr[i-1]==null?"M":"L"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
   for(const s of series){ g+=`<path d="${path(s.vals)}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
     const last=s.vals.length-1; if(s.vals[last]!=null) g+=`<circle cx="${x(last)}" cy="${y(s.vals[last])}" r="4.5" fill="${s.color}" stroke="var(--surface-1)" stroke-width="2"/>`; }
@@ -779,12 +1074,68 @@ function lineChart(svgId,tipId,wrapId,data,H){
     tip.style.left=tx+"px"; tip.style.top="16px"; };
   hit.onmouseleave=()=>{ xh.innerHTML=""; tip.style.display="none"; };
 }
+
+/* small multiples: one SVG, three stacked panels with independent y-scales, shared hover */
+function multiPanelChart(svgId,tipId,wrapId,buckets,panels){
+  const svg=$(svgId), tip=$(tipId), wrap=$(wrapId);
+  if(!buckets.length){ svg.innerHTML=""; return; }
+  const W=1000, PH=170, GAP=14, mL=46, mR=16, mT=8, mB=4, H=panels.length*(PH+GAP)+22;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const iw=W-mL-mR;
+  const x=i=>mL+(i/(buckets.length-1))*iw;
+  const geo=[];
+  let g="";
+  panels.forEach((p,pi)=>{
+    const top=pi*(PH+GAP)+mT, ih=PH-mT-mB;
+    const vs=p.vals.filter(v=>v!=null);
+    if(!vs.length){ geo.push(null); return; }
+    let lo=Math.min(...vs), hi=Math.max(...vs);
+    const pad=Math.max((hi-lo)*0.15,1);
+    lo=Math.floor(lo-pad); hi=Math.ceil(hi+pad);
+    const y=v=>top+ih-((v-lo)/(hi-lo))*ih;
+    geo.push({y,lo,hi,top,ih});
+    const step=(hi-lo)<=8?2:(hi-lo)<=20?5:10;
+    for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step)
+      g+=`<line x1="${mL}" y1="${y(v)}" x2="${W-mR}" y2="${y(v)}" stroke="var(--grid)"/><text x="${mL-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)" style="font-variant-numeric:tabular-nums">${v}</text>`;
+    g+=`<text x="${mL+2}" y="${top+11}" font-size="12" font-weight="650" fill="${p.color}">${p.name}</text>`;
+    const path=p.vals.map((v,i)=>v==null?"":`${i===0||p.vals[i-1]==null?"M":"L"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
+    g+=`<path d="${path}" fill="none" stroke="${p.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    const last=p.vals.length-1;
+    if(p.vals[last]!=null) g+=`<circle cx="${x(last)}" cy="${y(p.vals[last])}" r="4" fill="${p.color}" stroke="var(--surface-1)" stroke-width="2"/>`;
+    for(const ev of EVENTS){
+      const t=Math.floor(Date.parse(ev.d+"T12:00:00Z")/1000);
+      if(t<buckets[0]||t>buckets[buckets.length-1]) continue;
+      let bi=0; for(let i2=0;i2<buckets.length;i2++) if(Math.abs(buckets[i2]-t)<Math.abs(buckets[bi]-t)) bi=i2;
+      g+=`<line x1="${x(bi)}" y1="${top}" x2="${x(bi)}" y2="${top+ih}" stroke="var(--baseline)" stroke-dasharray="3,3"><title>${esc(ev.label)}</title></line>`;
+    }
+  });
+  for(let k=0;k<6;k++){ const i=Math.round((k/5)*(buckets.length-1)); const d=new Date(buckets[i]*1000);
+    g+=`<text x="${x(i)}" y="${H-6}" text-anchor="middle" font-size="11" fill="var(--muted)">${d.toLocaleDateString(undefined,{month:"short",day:"numeric"})}</text>`; }
+  g+=`<g class="xh"></g><rect class="hit" x="${mL}" y="0" width="${iw}" height="${H-18}" fill="transparent"/>`;
+  svg.innerHTML=g;
+  const hit=svg.querySelector(".hit"), xh=svg.querySelector(".xh");
+  hit.onmousemove=ev=>{ const rect=svg.getBoundingClientRect();
+    let i=Math.round((((ev.clientX-rect.left)/rect.width)*W-mL)/iw*(buckets.length-1)); i=clamp(i,0,buckets.length-1);
+    let xg="", rows="";
+    panels.forEach((p,pi)=>{ const ge=geo[pi]; if(!ge) return;
+      xg+=`<line x1="${x(i)}" y1="${ge.top}" x2="${x(i)}" y2="${ge.top+ge.ih}" stroke="var(--baseline)"/>`;
+      if(p.vals[i]!=null){ xg+=`<circle cx="${x(i)}" cy="${ge.y(p.vals[i])}" r="4" fill="${p.color}" stroke="var(--surface-1)" stroke-width="2"/>`;
+        rows+=`<div class="row"><i style="background:${p.color}"></i>${p.name} ${p.vals[i].toFixed(1)}</div>`; } });
+    xh.innerHTML=xg; tip.style.display="block";
+    tip.innerHTML=`<div class="t">${new Date(buckets[i]*1000).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric"})}</div>`+rows;
+    const wr=wrap.getBoundingClientRect(); let tx=(x(i)/W)*wr.width+14; if(tx+tip.offsetWidth>wr.width-4) tx=(x(i)/W)*wr.width-tip.offsetWidth-14;
+    tip.style.left=tx+"px";
+    tip.style.top=clamp((ev.clientY-wrap.getBoundingClientRect().top)-40,4,wr.height-60)+"px"; };
+  hit.onmouseleave=()=>{ xh.innerHTML=""; tip.style.display="none"; };
+}
 function renderMainChart(){
   const comp=buildComposite();
-  lineChart("chart","mainTip","mainWrap",{buckets:comp.buckets,series:[
-    {vals:comp.bull,color:"var(--bull)",name:"Bull"},{vals:comp.crash,color:"var(--crash)",name:"Crash"},{vals:comp.reg,color:"var(--reg)",name:"Regulation"}]},320);
-  $("chartCap").textContent=`Chain-linked composite (${weighting} weight, ${basis==="hazard"?"deadline-adjusted":"raw"} odds), last ${rangeDays} days.`;
-  $("chainBadge").textContent="– composition-neutral, back-adjusted";
+  multiPanelChart("chart","mainTip","mainWrap",comp.buckets,[
+    {vals:comp.bull,color:"var(--bull)",name:"Bull"},
+    {vals:comp.crash,color:"var(--crash)",name:"Crash"},
+    {vals:comp.reg,color:"var(--reg)",name:"Regulation"}]);
+  $("chartCap").textContent=`Chain-linked composite (${weighting} weight, ${basis==="hazard"?"deadline-adjusted":"raw"} odds), last ${rangeDays} days. Each panel has its own scale — read shapes, not cross-panel levels. Dashed verticals are annotated events (hover).`;
+  $("chainBadge").textContent="– composition-neutral, back-adjusted, small multiples";
 }
 function renderEquity(){
   if(!mkt?.equity?.NVDA){ $("eqLegend").innerHTML=""; $("eqStats").innerHTML='<div class="sub">Run the fetcher to enable the equity overlay.</div>'; return; }
@@ -793,7 +1144,7 @@ function renderEquity(){
   const dates=wins[0].map(p=>p.d), buckets=dates.map(d=>Math.floor(Date.parse(d)/1000)), colors=["var(--bull)","var(--reg)"];
   const series=syms.map((sym,si)=>{ const byD=new Map(wins[si].map(p=>[p.d,p.c])), base=wins[si][0]?.c;
     return {name:sym,color:colors[si],vals:dates.map(d=>byD.has(d)&&base?byD.get(d)/base*100:null)}; });
-  lineChart("eqChart","eqTip","eqWrap",{buckets,series},220);
+  lineChart("eqChart","eqTip","eqWrap",{buckets,series},220,{events:EVENTS});
   $("eqLegend").innerHTML=series.map(s=>`<span><i class="line" style="background:${s.color}"></i>${s.name} (rebased)</span>`).join("");
   let stats=""; const trig={NVDA:-50,SOXX:-40};
   for(const sym of syms){ const dd=drawdown(mkt.equity[sym]), last=mkt.equity[sym][mkt.equity[sym].length-1].c;
@@ -802,19 +1153,29 @@ function renderEquity(){
   $("eqStats").innerHTML=stats;
 }
 function renderLeadLag(){
-  if(!mkt?.equity?.NVDA){ $("leadlagTable").innerHTML=""; $("leadlagNote").innerHTML="Run the fetcher to enable the lead-lag study."; return; }
-  const lags=[1,5,21];
+  if(!leadlagCache){ $("leadlagSummary").innerHTML="Lead-lag study &ndash; run the fetcher to enable."; $("leadlagTable").innerHTML=""; $("leadlagNote").innerHTML=""; return; }
+  const {lags,rows}=leadlagCache;
+  // summary verdict from the cleaner ex-bubble row
+  let best=null, sigCell=null;
+  for(const sym of ["NVDA","SOXX"]) for(const l of lags){ const c=rows.ex?.[sym]?.[l];
+    if(c&&c.r!=null){ if(!best||Math.abs(c.r)>Math.abs(best.r)) best={...c,sym,l};
+      if(c.p!=null&&c.p<0.05&&(!sigCell||c.p<sigCell.p)) sigCell={...c,sym,l}; } }
+  $("leadlagSummary").innerHTML = sigCell
+    ? `<strong>Signal detected:</strong> crash index (ex-bubble) leads ${sigCell.sym} at ${sigCell.l}d &ndash; r=${sigCell.r.toFixed(2)}, p=${sigCell.p.toFixed(2)} <span class="sub">(details)</span>`
+    : best
+      ? `No significant lead detected &ndash; best ex-bubble cell: ${best.sym} +${best.l}d, r=${best.r.toFixed(2)}${best.p!=null?", p="+best.p.toFixed(2):""} <span class="sub">(event study details)</span>`
+      : `Lead-lag study: insufficient overlapping data <span class="sub">(details)</span>`;
   let h=`<thead><tr><th>Predictor</th>${lags.map(l=>`<th class="num">NVDA +${l}d</th>`).join("")}${lags.map(l=>`<th class="num">SOXX +${l}d</th>`).join("")}</tr></thead><tbody>`;
-  for(const [name,excl] of [["Crash index (full)",false],["Crash ex-bubble (cleaner)",true]]){
+  for(const [key,name] of [["full","Crash index (full)"],["ex","Crash ex-bubble (cleaner)"]]){
     h+=`<tr><td>${name}</td>`;
-    for(const sym of ["NVDA","SOXX"]) for(const l of lags){ const r=leadLag(sym,l,excl);
+    for(const sym of ["NVDA","SOXX"]) for(const l of lags){ const r=rows[key]?.[sym]?.[l];
       h+=`<td class="num">${r&&r.r!=null?`r=${r.r.toFixed(2)}<div class="sub">n=${r.n}${r.p!=null?", p="+r.p.toFixed(2):""}</div>`:'<span class="dim">–</span>'}</td>`; }
     h+=`</tr>`; }
   $("leadlagTable").innerHTML=h+"</tbody>";
-  $("leadlagNote").innerHTML=`Negative r = rising crash odds precede falling prices (predictive). Windows are non-overlapping (n shrinks fast at longer lags &ndash; the 21-day row is descriptive at best). p &lt; 0.05 would be notable; expect most cells to be insignificant, which is the honest result. The full-crash-index row is contaminated because the bubble market resolves on these very prices; the ex-bubble row removes that reflexivity. Equity through ${esc(mkt.updated_date||"?")}.`;
+  $("leadlagNote").innerHTML=`Negative r = rising crash odds precede falling prices (predictive). Windows are non-overlapping. p &lt; 0.05 would be notable; insignificant cells are the honest default. The full row is contaminated because the bubble market resolves on these very prices; the ex-bubble row removes that reflexivity. Equity through ${esc(mkt?.updated_date||"?")}.`;
 }
 
-/* influencer sentiment board (static curated data — rendered once, filterable) */
+/* influencer sentiment board (curated or auto-scored via influencers.json) */
 let infFilter="all";
 function infLabel(s){ return s>=60?"Strong bull":s>=15?"Bullish":s>-15?"Neutral":s>-60?"Bearish":"Strong bear"; }
 function renderInfluencers(){
@@ -838,15 +1199,16 @@ function renderInfluencers(){
   const bulls=all.filter(s=>s>=15).length, bears=all.filter(s=>s<=-15).length, neut=all.length-bulls-bears;
   const top=INFLUENCERS.reduce((a,p)=>p.score>a.score?p:a), bot=INFLUENCERS.reduce((a,p)=>p.score<a.score?p:a);
   $("infStats").innerHTML=[
-    `<div class="stat"><div class="l">Mean score</div><div class="v">${mean>0?"+":""}${mean.toFixed(0)}</div></div>`,
     `<div class="stat"><div class="l">Bulls / bears / neutral</div><div class="v">${bulls} / ${bears} / ${neut}</div></div>`,
+    `<div class="stat"><div class="l">Mean score <small>(bimodal &ndash; read the split)</small></div><div class="v">${mean>0?"+":""}${mean.toFixed(0)}</div></div>`,
     `<div class="stat"><div class="l">Most bullish</div><div class="v">${esc(top.name)} <small>+${top.score}</small></div></div>`,
     `<div class="stat"><div class="l">Most bearish</div><div class="v">${esc(bot.name)} <small>${bot.score}</small></div></div>`,
   ].join("");
   $("infCount").innerHTML=`&ndash; ${INFLUENCERS.length} voices, showing ${rows.length}`;
   $("infAsof").textContent="Snapshot "+INF_ASOF;
-  $("infVal").textContent=(mean>0?"+":"")+mean.toFixed(0);
-  $("infTileSub").textContent=`${bulls} bulls · ${bears} bears · snapshot ${INF_ASOF}`;
+  // tile: the split is the story, not the mean of a bimodal distribution
+  $("infVal").innerHTML=`${bulls}<small> bulls</small> : ${bears}<small> bears</small>`;
+  $("infTileSub").textContent=`mean ${mean>0?"+":""}${mean.toFixed(0)} · snapshot ${INF_ASOF}`;
 }
 
 /* snapshots */
@@ -860,7 +1222,7 @@ function takeSnapshot(){
   const days=Object.keys(store).sort(), breaks=days.filter((d,i)=>i>0&&store[d].comp!==store[days[i-1]].comp).length;
   $("snapCap").innerHTML=`Daily snapshot (equal weight, raw odds, gauge) kept in this browser. <strong>${days.length}</strong> day(s)${days.length?" since "+days[0]:""}${breaks?`; ${breaks} composition change(s) flagged for chain-linking`:""}. The history chart above is already chain-linked, so composition turnover doesn&rsquo;t create artificial steps.`;
   const server = snapshotsCsv ? snapshotsCsv.trim().split("\n").length-1 : 0;
-  $("snapServer").innerHTML = snapshotsCsv ? `Server-side <code>snapshots.csv</code>: ${server} row(s) (durable, cross-machine &ndash; append with <code>python3 update-market-data.py --snapshot</code>).` : `No server-side snapshots.csv yet &ndash; run <code>update-market-data.py --snapshot</code> for durable, cross-machine history.`;
+  $("snapServer").innerHTML = snapshotsCsv ? `Server-side <code>snapshots.csv</code>: ${server} row(s) (durable, cross-machine &ndash; the GitHub Action appends daily).` : `No server-side snapshots.csv yet &ndash; run <code>update-market-data.py --snapshot</code> for durable, cross-machine history.`;
 }
 $("snapExport").onclick=()=>{ let store={}; try{ store=JSON.parse(localStorage.getItem(SNAP_KEY)||"{}"); }catch(e){}
   const days=Object.keys(store).sort(); let csv="date,bull,crash,regulation,gauge,composition_changed\n";
@@ -871,17 +1233,25 @@ $("snapExport").onclick=()=>{ let store={}; try{ store=JSON.parse(localStorage.g
 function renderAll(){
   computeSignals();
   renderGauge(); renderTiles(); renderRegime(); renderStack(); renderMomentum();
-  renderVol(); renderCredit(); renderNvda(); renderH100(); renderKalshi();
+  renderVol(); renderCredit(); renderBreadth(); renderInsiders();
+  renderNvda(); renderH100(); renderCrossVenue();
   renderMainChart(); renderEquity(); renderLeadLag();
   for(const s of SIDES) renderTable(s);
-  renderCoverage(); renderDataAge(); takeSnapshot();
+  renderCoverage(); renderFresh(); takeSnapshot();
 }
 async function refreshPrices(){
-  try{ await fetchMarkets(); await fetchMkt(); renderAll();
+  try{ await fetchMarkets(); await fetchBook(); renderAll();
     $("status").textContent="Updated "+new Date().toLocaleTimeString(); $("err").style.display="none";
   }catch(e){ $("err").textContent="Fetch failed: "+e.message+" (retrying next cycle)"; $("err").style.display="block"; }
 }
-async function refreshHistories(){ await fetchHistories(false); if(rangeDays<=7) await fetchHistories(true); renderAll(); }
+// heavy path: histories + fetcher data + cached studies; every 10 minutes, not every tick
+async function refreshHeavy(){
+  await Promise.all([fetchHistories(false), fetchMkt(), fetchSnapshots()]);
+  if(rangeDays<=7) await fetchHistories(true);
+  computeLeadLagCache();
+  gaugeHistCache=computeGaugeHistory(90);
+  renderAll();
+}
 
 function segHandler(id,fn){ $(id).addEventListener("click",async e=>{ const b=e.target.closest("button"); if(!b) return;
   for(const btn of $(id).querySelectorAll("button")) btn.classList.toggle("active",btn===b); await fn(b.dataset.v); }); }
@@ -891,25 +1261,29 @@ segHandler("rangeSeg",async v=>{ rangeDays=parseInt(v,10);
   if(rangeDays<=7&&!historiesFine.size){ $("status").textContent="Loading fine history…"; await fetchHistories(true); }
   renderAll(); $("status").textContent="Updated "+new Date().toLocaleTimeString(); });
 segHandler("infSeg",v=>{ infFilter=v; renderInfluencers(); });
-renderInfluencers(); // static curated data — render immediately, independent of network fetches
+renderInfluencers(); // fallback data renders immediately; influencers.json may override
 
 $("alertBtn").onclick=async()=>{ if(!("Notification" in window)){ alert("This browser has no Notification API."); return; }
   const perm=await Notification.requestPermission(); alertsOn=perm==="granted";
   $("alertBtn").textContent=alertsOn?"Alerts on":"Alerts blocked";
   if(alertsOn) new Notification("AI Crash Monitor","Alerts enabled. You'll be notified when the crash regime escalates."); };
 
-$("foot").innerHTML=`<strong>Methodology.</strong> Composite = 100×Σ(wᵢ·pᵢ)/Σwᵢ over constituents live at each timestamp; the history line is <strong>chain-linked</strong> (only common-member moves shift it, so markets entering/leaving cause no step) and back-adjusted to read in probability units. Closed/resolved markets are dropped from the live index (see coverage). <strong>Deadline-adjusted</strong> basis annualizes only one-time-event markets (pᵢ→1−(1−p)^(365/days)); structural questions (†) are left raw. <strong>Crash-Pressure Gauge</strong> blends five equally-weighted families, each normalized 0–100 vs. calm→stress refs: prediction markets (bubble 0–40%, NVDA tail 0–25%, H100&lt;$2 0–30%), options skew (NVDA RR 1–10pt, SOXX 4–15pt), vol complex (VIX/VIX3M 0.82–1.05, VXN 18–40, SKEW 115–160, VVIX 90–130), credit (HYG & HY/IG drawdown 0 to −8%/−6%), equity drawdown (NVDA 0→−50%, SOXX 0→−40%). Regime: stressed at gauge≥55 / crash≥40 / crash≥25 with z≥2 / any stack≥25%; elevated at gauge≥35 / crash≥25 / z≥1.5 / stack≥15%. Lead-lag uses non-overlapping windows and a 2,000-shuffle permutation test; the bubble market is reflexive with NVDA/SOXX so the ex-bubble row is the cleaner read &ndash; treat all of it as descriptive. Live Polymarket data refreshes every 60s; market-data.json (equity/vol/skew/credit/Kalshi) every 10min from the local fetcher; NVDA/H100 events re-discovered hourly. Sources: Polymarket Gamma + CLOB, Yahoo Finance, CBOE delayed quotes, Kalshi public API. Constituents curated 2026-07-10; not investment advice.`;
+$("foot").innerHTML=`<p style="margin-top:8px"><strong>Composite.</strong> 100×Σ(wᵢ·pᵢ)/Σwᵢ over constituents live at each timestamp; the history panels are <strong>chain-linked</strong> (only common-member moves shift the line, so markets entering/leaving cause no step) and back-adjusted to read in probability units. Closed/resolved markets are dropped from the live index (see coverage). <strong>Deadline-adjusted</strong> basis annualizes only one-time-event markets (pᵢ→1−(1−p)^(365/days)); structural questions (†) are left raw.</p>
+<p style="margin-top:8px"><strong>Crash-Pressure Gauge.</strong> Five equally-weighted families, each normalized 0–100 vs calm→stress refs: prediction markets (bubble 0–40%, NVDA tail 0–25%, H100&lt;$2 0–30%), options skew (NVDA RR 1–10pt, SOXX 4–15pt), vol complex (VIX/VIX3M 0.82–1.05, VXN 18–40, SKEW 115–160, VVIX 90–130), credit (HYG &amp; HY/IG drawdown 0→−8%/−6%, HY OAS 2.5–5.0%, CCC OAS 8.5–14%), equity drawdown (NVDA 0→−50%, SOXX 0→−40%). The gauge history chart is reconstructed from stored daily series; its prediction-market family is bubble-market-only, so it slightly understates days when the NVDA-tail or H100 signals were hot. Regime: stressed at gauge≥55 / crash≥40 / crash≥25 with z≥2 / any stack≥25%; elevated at gauge≥35 / crash≥25 / z≥1.5 / stack≥15%. The chip states which condition fired.</p>
+<p style="margin-top:8px"><strong>Lead-lag.</strong> Non-overlapping windows, 2,000-shuffle permutation test, recomputed on history refresh only. The bubble market is reflexive with NVDA/SOXX so the ex-bubble row is the cleaner read – treat all of it as descriptive.</p>
+<p style="margin-top:8px"><strong>Cadence &amp; sources.</strong> Live Polymarket data (Gamma + CLOB, incl. bubble-market order-book depth) refreshes every 60s; histories, market-data.json and cached studies every 10min; NVDA/H100 events re-discovered hourly. market-data.json is produced by <code>update-market-data.py</code> (GitHub Action, ~30min cadence): Yahoo Finance (equity/vol/credit proxies), CBOE delayed quotes (25Δ risk reversals, single-name IV term structure), FRED keyless CSV (HY OAS, CCC OAS, NFCI), SEC EDGAR Form 4 (open-market S/P only, recent-filings sample), vast.ai public asks (realized H100 $/GPU-hr), Kalshi public API, Manifold public API (play-money). Influencer board is a curated editorial snapshot unless <code>influencers.json</code> is generated by <code>update-influencers.py</code> (Grok/X scoring, optional). Constituents curated 2026-07-10; not investment advice.</p>`;
 
 (async()=>{
   try{
     await fetchMarkets();
-    await Promise.all([fetchHistories(false), fetchNvda(), fetchH100(), fetchMkt(), fetchSnapshots()]);
+    await Promise.all([fetchHistories(false), fetchNvda(), fetchH100(), fetchMkt(), fetchSnapshots(), fetchBook(), fetchInfluencers()]);
     if(coverage.excluded.length) await findSuccessors();
+    computeLeadLagCache();
+    gaugeHistCache=computeGaugeHistory(90);
     renderAll();
     $("status").textContent="Updated "+new Date().toLocaleTimeString();
     setInterval(refreshPrices,60_000);
-    setInterval(refreshHistories,600_000);
-    setInterval(()=>{ fetchMkt().then(()=>{ renderVol(); renderCredit(); renderEquity(); renderLeadLag(); renderGauge(); renderRegime(); renderDataAge(); }); },600_000);
+    setInterval(refreshHeavy,600_000);
     setInterval(()=>{ fetchNvda(); fetchH100(); },3_600_000);
   }catch(e){ $("err").textContent="Initialization failed: "+e.message; $("err").style.display="block"; }
 })();

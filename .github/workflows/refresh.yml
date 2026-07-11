@@ -1,0 +1,55 @@
+name: Refresh market data
+
+on:
+  schedule:
+    # every 30 minutes during and around US market hours (13:00–21:59 UTC ≈ 9am–5pm ET),
+    # then hourly overnight so the dashboard is never badly stale
+    - cron: "*/30 13-21 * * 1-5"
+    - cron: "0 0-12,22-23 * * *"
+  workflow_dispatch: {}
+
+# let the scheduled job push data commits back to the repo
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    # surfacing the secret as a job-level env lets the influencer step's `if:` test it
+    env:
+      XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch market data + append snapshot + evaluate alert
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python3 update-market-data.py --snapshot --alert
+
+      - name: Refresh influencer sentiment (optional; needs XAI_API_KEY)
+        if: ${{ env.XAI_API_KEY != '' }}
+        run: python3 update-influencers.py
+
+      - name: Commit refreshed data
+        run: |
+          git config user.name "ai-crash-monitor bot"
+          git config user.email "actions@github.com"
+          for f in market-data.json snapshots.csv alert-state.json influencers.json; do
+            [ -f "$f" ] && git add -f "$f"
+          done
+          if git diff --cached --quiet; then
+            echo "No data changes to commit."
+          else
+            git commit -m "data: refresh $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push
+          fi

@@ -1,2 +1,6 @@
 __pycache__/
 .DS_Store
+.pytest_cache/
+# data files (market-data.json, snapshots.csv, alert-state.json, influencers.json) are
+# intentionally tracked — they are the durable history the GitHub Action commits and
+# Cloudflare Pages serves. Do not ignore them.
