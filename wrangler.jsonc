@@ -1,0 +1,9 @@
+{
+  // Cloudflare Worker (static assets only) — serves the OMEN site.
+  // The site files live in omen/, so index.html is served at "/".
+  "name": "omen-ai",
+  "compatibility_date": "2026-07-11",
+  "assets": {
+    "directory": "./omen"
+  }
+}
