@@ -131,11 +131,11 @@
   <h1>AI Crash Monitor</h1>
   <span class="chip calm" id="regime"><i></i>Loading</span>
   <span id="regimeWhy"></span>
-  <p class="sub">A blended crash-pressure gauge over Polymarket odds plus options skew, the volatility complex, credit stress, and equity drawdowns. Three prediction-market indexes underneath: <strong style="color:var(--bull)">Bull</strong> (YES = acceleration), <strong style="color:var(--crash)">Crash</strong> (YES = AI market distress), <strong style="color:var(--reg)">Regulation</strong> (YES = government clampdown).</p>
+  <p class="sub">A blended crash-pressure gauge over Polymarket odds plus options skew, the volatility complex, credit stress, and equity drawdowns. Five prediction-market indexes underneath: <strong style="color:var(--bull)">Bull</strong> (YES = acceleration), <strong style="color:var(--crash)">Crash</strong> (YES = AI market distress), <strong style="color:var(--reg)">Regulation</strong> (YES = government clampdown), <strong style="color:var(--acc)">China AI</strong> (YES = Chinese substitution pressure), <strong style="color:var(--aqua)">Macro</strong> (YES = recession/rate risk).</p>
 </header>
 
 <div class="toolbar">
-  <div class="seg" id="weightSeg" title="Constituent weighting"><button data-v="equal" class="active">Equal weight</button><button data-v="volume">Volume weight</button></div>
+  <div class="seg" id="weightSeg" title="Constituent weighting"><button data-v="equal" class="active">Equal weight</button><button data-v="volume">Volume weight</button><button data-v="thesis">Thesis weight</button></div>
   <div class="seg" id="basisSeg" title="Probability basis"><button data-v="raw" class="active">Raw odds</button><button data-v="hazard">Deadline-adjusted</button></div>
   <div class="seg" id="rangeSeg"><button data-v="7">7d</button><button data-v="30" class="active">30d</button><button data-v="90">90d</button></div>
   <div class="grow">
@@ -147,7 +147,7 @@
 <div class="fresh" id="freshStrip"></div>
 
 <div class="card" style="margin-top:14px">
-  <h2>AI Crash-Pressure Gauge <span class="sub" style="font-weight:400">&ndash; blended 0&ndash;100 across five independent signal families</span></h2>
+  <h2>AI Crash-Pressure Gauge <span class="sub" style="font-weight:400">&ndash; blended 0&ndash;100 across six independent signal families</span></h2>
   <div class="gauge">
     <div>
       <div class="gaugeNum"><span id="gaugeVal">&ndash;</span><small>/100</small></div>
@@ -165,13 +165,15 @@
   <div class="tile"><div class="label"><span class="key" style="background:var(--bull)"></span>AI-Bull Index</div><div class="value" id="bullVal">&ndash;</div><div class="delta" id="bullDelta"></div><svg class="spark" id="bullSpark"></svg></div>
   <div class="tile"><div class="label"><span class="key" style="background:var(--crash)"></span>AI-Crash Index</div><div class="value" id="crashVal">&ndash;</div><div class="delta" id="crashDelta"></div><svg class="spark" id="crashSpark"></svg></div>
   <div class="tile"><div class="label"><span class="key" style="background:var(--reg)"></span>AI-Regulation Index</div><div class="value" id="regVal">&ndash;</div><div class="delta" id="regDelta"></div><svg class="spark" id="regSpark"></svg></div>
+  <div class="tile"><div class="label"><span class="key" style="background:var(--acc)"></span>AI-China Index</div><div class="value" id="chinaVal">&ndash;</div><div class="delta" id="chinaDelta"></div><svg class="spark" id="chinaSpark"></svg></div>
+  <div class="tile"><div class="label"><span class="key" style="background:var(--aqua)"></span>AI-Macro Index</div><div class="value" id="macroVal">&ndash;</div><div class="delta" id="macroDelta"></div><svg class="spark" id="macroSpark"></svg></div>
   <div class="tile"><div class="label">Net sentiment (bull &minus; crash)</div><div class="value" id="netVal">&ndash;</div><div class="delta dim">Positive = leans toward acceleration</div><svg class="spark" id="netSpark"></svg></div>
 </div>
 
 <div class="card">
   <h2>Composite index history <span class="sub" id="chainBadge" style="font-weight:400"></span></h2>
   <div class="cap" id="chartCap"></div>
-  <div class="chartwrap" id="mainWrap"><svg id="chart" viewBox="0 0 1000 540" role="img" aria-label="AI index history, three panels"></svg><div class="tip" id="mainTip"></div></div>
+  <div class="chartwrap" id="mainWrap"><svg id="chart" viewBox="0 0 1000 540" role="img" aria-label="AI index history, five panels"></svg><div class="tip" id="mainTip"></div></div>
 </div>
 
 <div class="grid2">
@@ -252,6 +254,21 @@
   </div>
 </div>
 
+<div class="grid2">
+  <div class="card">
+    <h2 id="b200Title">B200 GPU rent <span class="sub" style="font-weight:400">&ndash; Blackwell next-gen demand proxy</span></h2>
+    <div class="cap">Polymarket's B200 (Blackwell) rental brackets — the current-generation GPU. B200 rent below a threshold signals demand destruction for NVDA's flagship product.</div>
+    <div class="statrow" id="b200Stats"></div>
+    <div id="b200Dist"></div>
+  </div>
+  <div class="card">
+    <h2>AI valuation brackets <span class="sub" style="font-weight:400">&ndash; OpenAI &amp; Anthropic euphoria gauge</span></h2>
+    <div class="cap">Polymarket valuation bracket markets. When extreme valuations (> $500B for OpenAI) carry high probability, that's euphoric sentiment. Declining probabilities signal the funding window tightening.</div>
+    <div id="valDist"></div>
+    <div class="note" id="valNote"></div>
+  </div>
+</div>
+
 <div class="card">
   <h2>Cross-venue check <span class="sub" style="font-weight:400">&ndash; Kalshi, Metaculus &amp; Manifold</span></h2>
   <div class="cap" id="kalshiCap">Where the same theme trades on several venues, disagreement is a confidence signal.</div>
@@ -288,6 +305,10 @@
   <div class="card"><h2 style="font-size:13px">AI-Crash <span class="sub" id="crashMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="crashTable"></table></div></div>
 </div>
 <div class="card"><h2 style="font-size:13px">AI-Regulation <span class="sub" id="regMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="regTable"></table></div></div>
+<div class="grid2" style="margin-top:0">
+  <div class="card"><h2 style="font-size:13px">AI-China <span class="sub" id="chinaMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="chinaTable"></table></div></div>
+  <div class="card"><h2 style="font-size:13px">AI-Macro <span class="sub" id="macroMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="macroTable"></table></div></div>
+</div>
 
 <div class="card">
   <h2>Durable snapshots</h2>
@@ -335,6 +356,25 @@ const CONSTITUENTS = [
   { id:"2698575", side:"reg",   htype:"event",      label:"Trump orders federal review of AI releases by Jul 31" },
   { id:"676842",  side:"reg",   htype:"event",      label:"US enacts AI safety bill before 2027" },
   { id:"2839991", side:"reg",   htype:"event",      label:"Any state enacts data center moratorium by Dec 31" },
+
+  /* CHINA AI COMPETITION — the opposing force to US AI stocks.
+     Rising = negative for NVDA/MSFT/OpenAI (substitution pressure, pricing compression).
+     Markets ported from the China Watch companion page. */
+  { id:"1820798", side:"china", htype:"event",      label:"Chinese company has the best AI model by Dec 31, 2026" },
+  { id:"2873443", side:"china", htype:"event",      label:"Chinese company has a top-3 AI model by Dec 31, 2026" },
+  { id:"2873458", side:"china", htype:"event",      label:"Chinese company has a top-5 AI model by Dec 31, 2026" },
+  { id:"2873459", side:"china", htype:"event",      label:"Chinese company has a top-10 AI model by Dec 31, 2026" },
+  { id:"2431240", side:"china", htype:"event",      label:"Alibaba has the best Chinese AI model end of July 2026" },
+  { id:"2431245", side:"china", htype:"event",      label:"DeepSeek has the best Chinese AI model end of July 2026" },
+  { id:"2431244", side:"china", htype:"event",      label:"Z.ai has the best Chinese AI model end of July 2026" },
+
+  /* MACRO — multiple compression / demand destruction backdrop.
+     Rising = negative for AI multiples. IDs verified against Gamma API 2026-07-12. */
+  { id:"609655",  side:"macro", htype:"event",      label:"US recession by end of 2026" },
+  { id:"616905",  side:"macro", htype:"event",      label:"3+ Fed rate cuts in 2026 (easing cycle)" },
+  { id:"616902",  side:"macro", htype:"event",      label:"0 Fed rate cuts in 2026 (tight stance)" },
+  { id:"1192817", side:"macro", htype:"event",      label:"China 2026 GDP growth between 1-2% (slowdown)" },
+
 ];
 
 /* Chart event annotations — add entries as news lands: { d:"YYYY-MM-DD", label:"..." } */
@@ -342,12 +382,14 @@ const EVENTS = [
   { d:"2026-07-10", label:"Constituent set curated" },
 ];
 
-const SIDES = ["bull","crash","reg"];
-const SIDE_COLOR = { bull:"var(--bull)", crash:"var(--crash)", reg:"var(--reg)" };
-const SIDE_NAME = { bull:"Bull", crash:"Crash", reg:"Regulation" };
-const RISK_UP = { bull:false, crash:true, reg:true };   // for crash/reg, a rising index is the bad direction
+const SIDES = ["bull","crash","reg","china","macro"];
+const SIDE_COLOR = { bull:"var(--bull)", crash:"var(--crash)", reg:"var(--reg)", china:"var(--acc)", macro:"var(--aqua)" };
+const SIDE_NAME = { bull:"Bull", crash:"Crash", reg:"Regulation", china:"China AI", macro:"Macro" };
+const RISK_UP = { bull:false, crash:true, reg:true, china:true, macro:true };   // for crash/reg/china/macro, a rising index is the bad direction
 const BUBBLE_ID = "691340";
 const FUNDING_IDS = ["656312","2413330"];
+// Bubble-sentiment markets: existing bull constituents whose extreme probability = euphoria
+const BUBBLE_SENTIMENT_IDS = ["656313","653788","2413330"];
 const GAMMA = "https://gamma-api.polymarket.com", CLOB = "https://clob.polymarket.com";
 
 let weighting="equal", basis="raw", rangeDays=30;
@@ -357,7 +399,7 @@ let coverage = { loaded:0, total:CONSTITUENTS.length, excluded:[], suggestions:[
 let sig = {}, lastRegime=null, alertsOn=false;
 let leadlagCache = null, gaugeHistCache = null;
 let lastPolyRefresh = null;
-const sortState = { bull:{k:"yes",dir:-1}, crash:{k:"yes",dir:-1}, reg:{k:"yes",dir:-1} };
+const sortState = { bull:{k:"yes",dir:-1}, crash:{k:"yes",dir:-1}, reg:{k:"yes",dir:-1}, china:{k:"yes",dir:-1}, macro:{k:"yes",dir:-1} };
 
 const $ = id => document.getElementById(id);
 const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
@@ -378,7 +420,7 @@ function parseMarket(m){
 }
 async function fetchMarkets(){
   const qs=CONSTITUENTS.map(c=>"id="+c.id).join("&");
-  const res=await fetch(`${GAMMA}/markets?${qs}&limit=${CONSTITUENTS.length}`);
+  const res=await fetch(`${GAMMA}/markets?${qs}&limit=${CONSTITUENTS.length+10}`);
   if(!res.ok) throw new Error("Gamma API "+res.status);
   for(const m of await res.json()) markets.set(String(m.id), parseMarket(m));
   coverage.excluded=[]; coverage.loaded=0;
@@ -447,6 +489,46 @@ async function fetchH100(){
     b.push({lo,hi,p}); }
   b.sort((x,y)=>(x.lo??-1)-(y.lo??-1));
   h100={ title:ev.title, url:`https://polymarket.com/event/${ev.slug}`, brackets:b };
+}
+let b200=null;
+async function fetchB200(){
+  const ev=await discoverEvent("GPU rental prices (B200) end of", /GPU rental prices \(B200\) end of/i, /hit/i);
+  if(!ev){ b200=null; return; }
+  const b=[];
+  for(const m of ev.markets||[]){ if(m.closed) continue;
+    const q=m.question||"", p=parseFloat(JSON.parse(m.outcomePrices||'[\"0\"]')[0]); let lo=null,hi=null,mm;
+    if((mm=q.match(/between \$([\d.]+) and \$([\d.]+)/i))){lo=+mm[1];hi=+mm[2];}
+    else if((mm=q.match(/less than \$([\d.]+)/i))){hi=+mm[1];}
+    else if((mm=q.match(/at least \$([\d.]+)/i))){lo=+mm[1];}
+    else continue;
+    b.push({lo,hi,p}); }
+  b.sort((x,y)=>(x.lo??-1)-(y.lo??-1));
+  b200={ title:ev.title, url:`https://polymarket.com/event/${ev.slug}`, brackets:b };
+}
+let valuations=null;
+async function fetchValuations(){
+  const events=[];
+  for(const q of ["Will OpenAI's valuation hit __ by December 31","Will Anthropic's valuation hit __ by June 30"]){
+    const ev=await discoverEvent(q, /valuation hit/i, null);
+    if(ev) events.push(ev);
+  }
+  if(!events.length){ valuations=null; return; }
+  const firms=[];
+  for(const ev of events){
+    const name=(ev.title||"").includes("OpenAI")?"OpenAI":"Anthropic";
+    const brackets=[];
+    for(const m of ev.markets||[]){ if(m.closed) continue;
+      const q=m.question||"", p=parseFloat(JSON.parse(m.outcomePrices||'[\"0\"]')[0]); let lo=null,hi=null,mm;
+      if((mm=q.match(/\$(\d+(?:\.\d+)?)\s*(?:billion|B)/i))){ lo=parseFloat(mm[1]); }
+      else if((mm=q.match(/(?:above|over|at least)\s*\$(\d+(?:\.\d+)?)/i))){ lo=parseFloat(mm[1]); }
+      else if((mm=q.match(/(?:below|under|less than)\s*\$(\d+(?:\.\d+)?)/i))){ hi=parseFloat(mm[1]); }
+      else if((mm=q.match(/between \$(\d+(?:\.\d+)?) and \$(\d+(?:\.\d+)?)/i))){lo=parseFloat(mm[1]);hi=parseFloat(mm[2]);}
+      else continue;
+      brackets.push({lo,hi,p,label:q.length>60?q.substring(0,60)+"...":q}); }
+    brackets.sort((a,b)=>(a.lo??-1)-(b.lo??-1));
+    if(brackets.length) firms.push({name, brackets, url:`https://polymarket.com/event/${ev.slug}`, title:ev.title});
+  }
+  valuations = firms.length?{firms}:null;
 }
 // Under file:// browsers block fetch() of sibling files; a <script src> tag is not blocked.
 // The fetcher emits market-data.js alongside the JSON/CSV, exposing both as globals; we fall
@@ -539,7 +621,7 @@ function buildComposite(){
   const useFine=rangeDays<=7&&historiesFine.size, store=useFine?historiesFine:histories;
   const bucketSec=(useFine?60:720)*60;
   const s={}; for(const side of SIDES) s[side]=chainedSeries(side,{store,bucketSec,days:rangeDays,weighted:weighting==="volume",hazard:basis==="hazard"});
-  return { buckets:s.bull.buckets, bull:s.bull.vals, crash:s.crash.vals, reg:s.reg.vals };
+  return { buckets:s.bull.buckets, bull:s.bull.vals, crash:s.crash.vals, reg:s.reg.vals, china:s.china.vals, macro:s.macro.vals };
 }
 function dailyChained(side, days, exclude){
   return chainedSeries(side,{store:histories, bucketSec:86400, days, weighted:false, hazard:false, exclude});
@@ -550,6 +632,17 @@ function nvdaTailProb(){ return (nvda&&nvda.lows.length)?nvda.lows[nvda.lows.len
 function h100Sub2(){ if(!h100) return null; let p=0; for(const b of h100.brackets) if(b.hi!=null&&b.hi<=2.0) p+=b.p; return p*100; }
 function h100Expected(){ if(!h100) return null; let ev=0,pt=0; for(const b of h100.brackets){ const mid=b.lo==null?b.hi-0.15:b.hi==null?b.lo+0.15:(b.lo+b.hi)/2; ev+=b.p*mid; pt+=b.p; } return pt?ev/pt:null; }
 function fundingDelta(){ let best=null; for(const id of FUNDING_IDS){ const m=markets.get(id); if(m&&m.d7!=null&&(!best||m.yes>best.yes)) best=m; } return best?best.d7*100:null; }
+function b200Sub3(){ if(!b200) return null; let p=0; for(const b of b200.brackets) if(b.hi!=null&&b.hi<=3.0) p+=b.p; return p*100; }
+function b200Expected(){ if(!b200) return null; let ev=0,pt=0; for(const b of b200.brackets){ const mid=b.lo==null?b.hi-0.15:b.hi==null?b.lo+0.15:(b.lo+b.hi)/2; ev+=b.p*mid; pt+=b.p; } return pt?ev/pt:null; }
+function bubbleSentiment(){
+  let sum=0,n=0;
+  for(const id of BUBBLE_SENTIMENT_IDS){ const m=markets.get(id); if(m&&!m.closed){ sum+=m.yes*100; n++; } }
+  return n?sum/n:null;
+}
+function macroRecession(){ const m=markets.get("609655"); return m&&!m.closed?m.yes*100:null; }
+function macroFedCuts(){ const m=markets.get("616905"); return m&&!m.closed?m.yes*100:null; }
+function chinaTop3(){ const m=markets.get("2873443"); return m&&!m.closed?m.yes*100:null; }
+function chinaBestModel(){ const m=markets.get("1820798"); return m&&!m.closed?m.yes*100:null; }
 function drawdown(series){ if(!series||!series.length) return null; const hi=Math.max(...series.map(p=>p.c)); return (series[series.length-1].c/hi-1)*100; }
 
 function computeSignals(){
@@ -566,7 +659,11 @@ function computeSignals(){
     {name:"AI bubble burst in 2026 (Polymarket)", v:bubble&&!bubble.closed?bubble.yes*100:null, sub:"3+ triggers: NVDA −50% ATH, SOXX −40%, lab bankruptcy/acquisition, H100 ≤ $1, supplier collapse"},
     {name:"NVDA deep-downside touch this month", v:nvdaTailProb(), sub:"lowest listed strike, monthly bracket markets"},
     {name:"H100 rent below $2.00 at month end", v:h100Sub2(), sub:"GPU rental bracket markets"},
+    {name:"B200 rent below $3.00 at month end", v:b200Sub3(), sub:"B200 (Blackwell) GPU rental bracket markets — next-gen demand proxy"},
     {name:"Funding window: IPO odds 7d change", v:fundingDelta(), sub:"max of OpenAI / Anthropic 2026 IPO; sharp drop = funding window closing", isDelta:true},
+    {name:"Bubble sentiment (extreme euphoria)", v:bubbleSentiment(), sub:"avg of OpenAI $1T IPO + AGI + Anthropic IPO odds; >70% = euphoric"},
+    {name:"US recession probability", v:macroRecession(), sub:"Polymarket: US recession by end of 2026"},
+    {name:"China AI: top-3 model odds", v:chinaTop3(), sub:"Polymarket: Chinese company has a top-3 AI model by Dec 31"},
   ];
   s.gauge=computeGauge();
   sig=s; return s;
@@ -598,12 +695,24 @@ function computeGauge(){
   const E=mkt?.equity||{}; const nDD=drawdown(E.NVDA), sDD=drawdown(E.SOXX);
   const eq=[ sc(nDD!=null?-nDD:null,0,50), sc(sDD!=null?-sDD:null,0,40) ].filter(v=>v!=null);
   fam.equity={ label:"Equity drawdown", v: eq.length?eq.reduce((a,b)=>a+b)/eq.length:null };
+  // 6) macro: recession + fed rate cut expectations + china AI competition
+  const rec=macroRecession(), fed=macroFedCuts(), cn=chinaTop3();
+  const mac=[ sc(rec,5,50), sc(fed,0,60), sc(cn,5,50) ].filter(v=>v!=null);
+  fam.macro={ label:"Macro & China", v: mac.length?mac.reduce((a,b)=>a+b)/mac.length:null };
   const avail=Object.values(fam).filter(f=>f.v!=null);
-  const score=avail.length?avail.reduce((a,f)=>a+f.v,0)/avail.length:null;
+  // thesis weighting: weight families by the crash-thesis schema
+  const THESIS_W = { pred:0.25, opt:0.15, vol:0.10, credit:0.10, equity:0.10, macro:0.30 };
+  let score;
+  if(weighting==="thesis"){
+    let ws=0,wv=0; for(const k of Object.keys(fam)){ const f=fam[k]; if(f.v==null) continue; const w=THESIS_W[k]||0; ws+=w*f.v; wv+=w; }
+    score=wv?ws/wv:null;
+  } else {
+    score=avail.length?avail.reduce((a,f)=>a+f.v,0)/avail.length:null;
+  }
   // ex-ante vs coincident split: prediction markets, options skew and credit are priced
   // before the fact; the vol complex and equity drawdown move with (or after) prices.
   const mean=ks=>{ const vs=ks.map(k=>fam[k].v).filter(v=>v!=null); return vs.length?vs.reduce((a,b)=>a+b)/vs.length:null; };
-  const lead=mean(["pred","opt","credit"]), conf=mean(["vol","equity"]);
+  const lead=mean(["pred","opt","credit","macro"]), conf=mean(["vol","equity"]);
   return { score, fam, n:avail.length, total:Object.keys(fam).length, lead, conf };
 }
 // returns { r, why: [human-readable triggered conditions] }
@@ -683,7 +792,8 @@ function permP(xs,ys,robs,K){ if(robs==null) return null; let c=0; const y=ys.sl
 function computeLeadLagCache(){
   if(!mkt?.equity?.NVDA){ leadlagCache=null; return; }
   const lags=[1,5];
-  const dailies={ full:dailyChained("crash",120,null), ex:dailyChained("crash",120,new Set([BUBBLE_ID])) };
+  const dailies={ full:dailyChained("crash",120,null), ex:dailyChained("crash",120,new Set([BUBBLE_ID])),
+                  china:dailyChained("china",120,null), macro:dailyChained("macro",120,null) };
   const cache={ lags, rows:{} };
   for(const [key,daily] of Object.entries(dailies)){
     const byDate=new Map(); daily.buckets.forEach((t,i)=>{ if(daily.vals[i]!=null) byDate.set(new Date(t*1000).toISOString().slice(0,10), daily.vals[i]); });
@@ -736,16 +846,17 @@ function renderGauge(){
   $("gaugeCoverage").innerHTML = n>=tot
     ? `All ${tot} signal families loaded.`
     : `<span class="badge">Partial</span> ${n} of ${tot} signal families loaded &mdash; the other ${tot-n} are dark (market-data.json not fetched). Read this number as provisional: the missing families could move it in either direction.`;
-  const catRow=k=>{ const f=g.fam[k]; const v=f.v;
-    const col=v==null?"var(--muted)":v>=55?"var(--crit)":v>=35?"var(--warn)":"var(--good)";
-    return `<div class="cat"><span>${f.label}</span><span class="track"><i style="width:${v==null?0:clamp(v,0,100)}%;background:${col}"></i></span><span class="cv">${v==null?"n/a":v.toFixed(0)}</span></div>`; };
+  const catRow=k=>{ const f=g.fam[k]; const v=f?f.v:null;
+    if(!f||v==null) return `<div class="cat"><span style="color:var(--muted)">${(f&&f.label)||'?'}</span><span class="track"><i style="width:0%"></i></span><span class="cv">n/a</span></div>`;
+    const col=v>=55?"var(--crit)":v>=35?"var(--warn)":"var(--good)";
+    return `<div class="cat"><span>${f.label}</span><span class="track"><i style="width:${clamp(v,0,100)}%;background:${col}"></i></span><span class="cv">${v.toFixed(0)}</span></div>`; };
   const groupHead=(name,sub,v)=>`<div class="cat" style="padding-top:9px"><span style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)"><strong style="color:var(--text-secondary)">${name}</strong> &middot; ${sub}</span><span></span><span class="cv" style="font-weight:700">${v==null?"n/a":v.toFixed(0)}</span></div>`;
   $("cats").innerHTML=
     groupHead("Leading","priced before the fact",g.lead)+
-    ["pred","opt","credit"].map(catRow).join("")+
+    ["pred","opt","credit","macro"].map(catRow).join("")+
     groupHead("Confirming","moves with or after prices",g.conf)+
     ["vol","equity"].map(catRow).join("");
-  const order=["pred","opt","vol","credit","equity"];
+  const order=["pred","opt","vol","credit","equity","macro"];
   const top=order.map(k=>g.fam[k]).filter(f=>f.v!=null).sort((a,b)=>b.v-a.v)[0];
   $("gaugeNote").innerHTML=`Highest-pressure family right now: <strong>${top?top.label+" ("+top.v.toFixed(0)+")":"–"}</strong>. Bands on the meter and chart match the regime thresholds (35 / 55). Each family is normalized 0&ndash;100 against calm/stress reference levels (see methodology); the headline gauge is the equal-weighted mean of all five. The <strong>leading</strong> sub-score (prediction markets, options skew, credit) is the early-warning read; the <strong>confirming</strong> sub-score (vol complex, equity drawdown) rises <em>while</em> a crash happens, not before &ndash; a high confirming score with a low leading score means the damage is already on the tape. The history line is reconstructed from stored daily series &ndash; its prediction-market family uses the bubble market only, so it can sit slightly below the live number.`;
   renderGaugeChart();
@@ -768,8 +879,10 @@ function renderTiles(){
   $("bullVal").textContent=v.bull!=null?v.bull.toFixed(1):"–";
   $("crashVal").textContent=v.crash!=null?v.crash.toFixed(1):"–";
   $("regVal").textContent=v.reg!=null?v.reg.toFixed(1):"–";
+  $("chinaVal").textContent=v.china!=null?v.china.toFixed(1):"–";
+  $("macroVal").textContent=v.macro!=null?v.macro.toFixed(1):"–";
   $("netVal").textContent=(v.bull!=null&&v.crash!=null)?(v.bull>=v.crash?"+":"")+(v.bull-v.crash).toFixed(1):"–";
-  for(const [s,el] of [["bull","bullDelta"],["crash","crashDelta"],["reg","regDelta"]]){ const gg=sig[s];
+  for(const [s,el] of [["bull","bullDelta"],["crash","crashDelta"],["reg","regDelta"],["china","chinaDelta"],["macro","macroDelta"]]){ const gg=sig[s];
     $(el).innerHTML=gg?`7d ${deltaSpan(gg.d7,1,"",RISK_UP[s])} pts &middot; z ${deltaSpan(gg.z,2,"",RISK_UP[s])}`:'<span class="dim">history pending</span>'; }
   // tech-progress odds ≠ investment-cycle odds: show the split under the bull tile
   const bt=indexNow("bull","tech"), bc=indexNow("bull","capital");
@@ -779,6 +892,8 @@ function renderTiles(){
   spark("bullSpark", last30(sig.bull?.series), "var(--bull)");
   spark("crashSpark", last30(sig.crash?.series), "var(--crash)");
   spark("regSpark", last30(sig.reg?.series), "var(--reg)");
+  spark("chinaSpark", last30(sig.china?.series), "var(--acc)");
+  spark("macroSpark", last30(sig.macro?.series), "var(--aqua)");
   if(sig.bull?.series&&sig.crash?.series){
     const n=Math.min(sig.bull.series.length, sig.crash.series.length);
     const net=[]; for(let i=0;i<n;i++) net.push(sig.bull.series[sig.bull.series.length-n+i]-sig.crash.series[sig.crash.series.length-n+i]);
@@ -953,6 +1068,33 @@ function renderH100(){
     return hbar(label, b.p*100, b.hi!=null&&b.hi<=2.0?"var(--crash)":"var(--bull)"); }).join("");
   $("h100Dist").innerHTML=h;
 }
+function renderB200(){
+  if(!b200){ $("b200Stats").innerHTML='<div class="sub">B200 bracket event not found right now.</div>'; $("b200Dist").innerHTML=""; return; }
+  $("b200Title").innerHTML=`B200 GPU rent <span class="sub" style="font-weight:400">&ndash; <a href="${b200.url}" target="_blank" rel="noopener">${esc(b200.title)}</a></span>`;
+  const exp=b200Expected(), sub3=b200Sub3();
+  const cells=[];
+  if(exp!=null) cells.push(`<div class="stat"><div class="l">Market-implied</div><div class="v">$${exp.toFixed(2)}</div></div>`);
+  if(sub3!=null) cells.push(`<div class="stat"><div class="l">P(below $3.00)</div><div class="v">${sub3.toFixed(1)}%</div></div>`);
+  cells.push(`<div class="stat"><div class="l">Demand destruction watch</div><div class="v">&le; $2.00</div></div>`);
+  $("b200Stats").innerHTML=cells.join("");
+  $("b200Dist").innerHTML='<div class="note" style="margin-top:10px"><strong>B200 rental brackets</strong></div>'+
+    b200.brackets.map(b=>{ const label=b.lo==null?`&lt; $${b.hi.toFixed(2)}`:b.hi==null?`&ge; $${b.lo.toFixed(2)}`:`$${b.lo.toFixed(2)}&ndash;${b.hi.toFixed(2)}`;
+      return hbar(label, b.p*100, b.hi!=null&&b.hi<=3.0?"var(--crash)":"var(--bull)"); }).join("");
+}
+function renderValuations(){
+  if(!valuations||!valuations.firms.length){ $("valDist").innerHTML='<div class="sub">Valuation bracket markets not found.</div>'; $("valNote").innerHTML=""; return; }
+  let h="";
+  for(const f of valuations.firms){
+    h+=`<div class="note" style="margin-top:10px"><strong>${esc(f.name)}</strong> &ndash; <a href="${f.url}" target="_blank" rel="noopener">${esc(f.title)}</a></div>`;
+    h+=f.brackets.map(b=>{
+      const label=b.lo!=null?`≥ $${b.lo}B`:`< $${b.hi}B`;
+      return hbar(label, b.p*100, b.lo!=null&&b.lo>=500?"var(--acc)":"var(--reg)"); }).join("");
+  }
+  $("valDist").innerHTML=h;
+  const openaiHigh=valuations.firms.find(f=>f.name==="OpenAI")?.brackets.filter(b=>b.lo!=null&&b.lo>=500);
+  const euphoric=openaiHigh&&openaiHigh.length?openaiHigh.reduce((s,b)=>s+b.p,0)*100:null;
+  $("valNote").innerHTML=euphoric!=null?`P(OpenAI ≥ $500B valuation): <strong>${euphoric.toFixed(1)}%</strong> ${euphoric>70?'— <strong>euphoric zone</strong>':euphoric>40?'— elevated':''}.`:"";
+}
 function renderLeaps(){
   const T=mkt?.tail;
   if(!T||!Object.keys(T).length){ $("leapsStats").innerHTML='<div class="sub">Run the fetcher (with the updated script) to enable LEAPS tail probabilities.</div>'; $("leapsBars").innerHTML=""; $("leapsNote").innerHTML=""; return; }
@@ -1019,7 +1161,7 @@ function renderCrossVenue(){
     $("manifoldTable").innerHTML=h+"</tbody>";
   }
   $("kalshiCap").innerHTML="Where the same theme trades on several venues, disagreement is a confidence signal. "
-    +(K&&!K.authed?`<strong>${esc(K.note||"Kalshi public feed exposes no live quotes.")}</strong> `:"")
+    +(K&&!K.authed?`<strong>${esc(K.note||"Kalshi public feed exposes no live quotes — add a KALSHI_API_KEY repo secret to the fetcher for authenticated cross-venue prices. Macro markets (Fed decisions, CPI, GDP, recession) are highest-value on Kalshi.")}</strong> `:"")
     +(MC&&!MC.enabled?"Metaculus panel off &ndash; add a free <code>METACULUS_TOKEN</code> repo secret to enable a real forecaster crowd with a published calibration record. ":"")
     +(MC&&MC.enabled&&MC.questions.length?"Metaculus is a forecaster crowd (no capital at risk, but a strong calibration record) &ndash; best for long-horizon structural questions where Polymarket books are thin. ":"")
     +(M&&M.length?"Manifold is play-money &ndash; treat as crowd sentiment, not capital at risk.":"");
@@ -1189,7 +1331,9 @@ function renderMainChart(){
   multiPanelChart("chart","mainTip","mainWrap",comp.buckets,[
     {vals:comp.bull,color:"var(--bull)",name:"Bull"},
     {vals:comp.crash,color:"var(--crash)",name:"Crash"},
-    {vals:comp.reg,color:"var(--reg)",name:"Regulation"}]);
+    {vals:comp.reg,color:"var(--reg)",name:"Regulation"},
+    {vals:comp.china,color:"var(--acc)",name:"China AI"},
+    {vals:comp.macro,color:"var(--aqua)",name:"Macro"}]);
   $("chartCap").textContent=`Chain-linked composite (${weighting} weight, ${basis==="hazard"?"deadline-adjusted":"raw"} odds), last ${rangeDays} days. Each panel has its own scale — read shapes, not cross-panel levels. Dashed verticals are annotated events (hover).`;
   $("chainBadge").textContent="– composition-neutral, back-adjusted, small multiples";
 }
@@ -1216,13 +1360,16 @@ function renderLeadLag(){
   for(const sym of ["NVDA","SOXX"]) for(const l of lags){ const c=rows.ex?.[sym]?.[l];
     if(c&&c.r!=null){ if(!best||Math.abs(c.r)>Math.abs(best.r)) best={...c,sym,l};
       if(c.p!=null&&c.p<0.05&&(!sigCell||c.p<sigCell.p)) sigCell={...c,sym,l}; } }
+  // also check china and macro rows for significant leads
+  for(const key of ["china","macro"]) for(const sym of ["NVDA","SOXX"]) for(const l of lags){ const c=rows[key]?.[sym]?.[l];
+    if(c&&c.r!=null&&c.p!=null&&c.p<0.05&&(!sigCell||c.p<sigCell.p)) sigCell={...c,sym,l,key}; }
   $("leadlagSummary").innerHTML = sigCell
     ? `<strong>Signal detected:</strong> crash index (ex-bubble) leads ${sigCell.sym} at ${sigCell.l}d &ndash; r=${sigCell.r.toFixed(2)}, p=${sigCell.p.toFixed(2)} <span class="sub">(details)</span>`
     : best
       ? `No significant lead detected &ndash; best ex-bubble cell: ${best.sym} +${best.l}d, r=${best.r.toFixed(2)}${best.p!=null?", p="+best.p.toFixed(2):""} <span class="sub">(event study details)</span>`
       : `Lead-lag study: insufficient overlapping data <span class="sub">(details)</span>`;
   let h=`<thead><tr><th>Predictor</th>${lags.map(l=>`<th class="num">NVDA +${l}d</th>`).join("")}${lags.map(l=>`<th class="num">SOXX +${l}d</th>`).join("")}</tr></thead><tbody>`;
-  for(const [key,name] of [["full","Crash index (full)"],["ex","Crash ex-bubble (cleaner)"]]){
+  for(const [key,name] of [["full","Crash index (full)"],["ex","Crash ex-bubble (cleaner)"],["china","China AI index"],["macro","Macro index"]]){
     h+=`<tr><td>${name}</td>`;
     for(const sym of ["NVDA","SOXX"]) for(const l of lags){ const r=rows[key]?.[sym]?.[l];
       h+=`<td class="num">${r&&r.r!=null?`r=${r.r.toFixed(2)}<div class="sub">n=${r.n}${r.p!=null?", p="+r.p.toFixed(2):""}</div>`:'<span class="dim">–</span>'}</td>`; }
@@ -1245,8 +1392,8 @@ function takeSnapshot(){
   $("snapServer").innerHTML = snapshotsCsv ? `Server-side <code>snapshots.csv</code>: ${server} row(s) (durable, cross-machine &ndash; the GitHub Action appends daily).` : `No server-side snapshots.csv yet &ndash; run <code>update-market-data.py --snapshot</code> for durable, cross-machine history.`;
 }
 $("snapExport").onclick=()=>{ let store={}; try{ store=JSON.parse(localStorage.getItem(SNAP_KEY)||"{}"); }catch(e){}
-  const days=Object.keys(store).sort(); let csv="date,bull,crash,regulation,gauge,composition_changed\n";
-  for(let i=0;i<days.length;i++){ const d=days[i],s=store[d]; csv+=`${d},${s.bull},${s.crash},${s.reg},${s.gauge??""},${i>0&&s.comp!==store[days[i-1]].comp?1:0}\n`; }
+  const days=Object.keys(store).sort(); let csv="date,bull,crash,regulation,china,macro,gauge,composition_changed\n";
+  for(let i=0;i<days.length;i++){ const d=days[i],s=store[d]; csv+=`${d},${s.bull},${s.crash},${s.reg},${s.china??""},${s.macro??""},${s.gauge??""},${i>0&&s.comp!==store[days[i-1]].comp?1:0}\n`; }
   const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="ai-crash-snapshots.csv"; a.click(); };
 
 /* ================= Orchestration ================= */
@@ -1254,7 +1401,7 @@ function renderAll(){
   computeSignals();
   renderGauge(); renderTiles(); renderRegime(); renderStack(); renderMomentum();
   renderVol(); renderCredit(); renderBreadth(); renderInsiders();
-  renderNvda(); renderH100(); renderLeaps(); renderFundamentals(); renderCrossVenue();
+  renderNvda(); renderH100(); renderB200(); renderValuations(); renderLeaps(); renderFundamentals(); renderCrossVenue();
   renderMainChart(); renderEquity(); renderLeadLag();
   for(const s of SIDES) renderTable(s);
   renderCoverage(); renderFresh(); takeSnapshot();
@@ -1298,7 +1445,7 @@ $("foot").innerHTML=`<p style="margin-top:8px"><strong>Composite.</strong> 100×
 (async()=>{
   try{
     await fetchMarkets();
-    await Promise.all([fetchHistories(false), fetchNvda(), fetchH100(), fetchMkt(), fetchSnapshots(), fetchBook()]);
+    await Promise.all([fetchHistories(false), fetchNvda(), fetchH100(), fetchB200(), fetchValuations(), fetchMkt(), fetchSnapshots(), fetchBook()]);
     if(coverage.excluded.length) await findSuccessors();
     computeLeadLagCache();
     gaugeHistCache=computeGaugeHistory(90);
@@ -1306,7 +1453,7 @@ $("foot").innerHTML=`<p style="margin-top:8px"><strong>Composite.</strong> 100×
     $("status").textContent="Updated "+new Date().toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
     setInterval(refreshPrices,60_000);
     setInterval(refreshHeavy,600_000);
-    setInterval(()=>{ fetchNvda(); fetchH100(); },3_600_000);
+    setInterval(()=>{ fetchNvda(); fetchH100(); fetchB200(); fetchValuations(); },3_600_000);
   }catch(e){ $("err").textContent="Initialization failed: "+e.message; $("err").style.display="block"; }
 })();
 </script>
