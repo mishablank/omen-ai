@@ -1,9 +1,23 @@
 {
-  // Cloudflare Worker (static assets only) — serves the OMEN site.
-  // The site files live in omen/, so index.html is served at "/".
+  // Cloudflare Worker for the OMEN site.
+  // Static files live in omen/ and are served by the [assets] binding.
+  // worker.js runs first for the three data paths and streams them live from the
+  // R2 bucket the GitHub Action writes to, so market data is fresh with no redeploy.
   "name": "omen-ai",
   "compatibility_date": "2026-07-11",
+  "main": "worker.js",
   "assets": {
-    "directory": "./omen"
-  }
+    "directory": "./omen",
+    "binding": "ASSETS",
+    // run the Worker (not the bundled asset) first for these paths, so it can
+    // serve the live R2 copy and fall back to the bundled file only on a miss
+    "run_worker_first": [
+      "/market-data.json",
+      "/snapshots.csv",
+      "/influencers.json"
+    ]
+  },
+  "r2_buckets": [
+    { "binding": "DATA", "bucket_name": "omen-data" }
+  ]
 }

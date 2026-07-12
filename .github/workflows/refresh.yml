@@ -19,9 +19,12 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    # surfacing the secret as a job-level env lets the influencer step's `if:` test it
+    # surfacing secrets as job-level env lets the steps' `if:` test them
+    # (the `secrets` context itself is not available inside `if:` expressions)
     env:
       XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -39,6 +42,17 @@ jobs:
       - name: Refresh influencer sentiment (optional; needs XAI_API_KEY)
         if: ${{ env.XAI_API_KEY != '' }}
         run: python3 omen/update-influencers.py
+
+      # Push the fresh data straight to R2 so the Worker serves it live, with no redeploy.
+      # Skips cleanly if the Cloudflare secrets aren't set (the site then falls back to
+      # the bundled copy, i.e. previous behaviour).
+      - name: Upload data to R2
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
+        run: |
+          put() { npx --yes wrangler@4 r2 object put "omen-data/$1" --file "omen/$1" --content-type "$2" --remote; }
+          [ -f omen/market-data.json ] && put market-data.json "application/json"
+          [ -f omen/snapshots.csv ]    && put snapshots.csv    "text/csv"
+          [ -f omen/influencers.json ] && put influencers.json "application/json"
 
       - name: Commit refreshed data
         run: |
