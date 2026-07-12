@@ -45,6 +45,13 @@ CN_AUTHORS = {"deepseek", "qwen", "z-ai", "thudm", "moonshotai", "minimax", "xia
 US_AUTHORS = {"openai", "anthropic", "google", "meta-llama", "x-ai", "nvidia", "microsoft", "amazon",
               "perplexity", "poolside", "inception", "liquid", "allenai", "ibm-granite", "openrouter"}
 
+# Hugging Face download share. Fetched here server-side because HF's API is not
+# reliably CORS-open to arbitrary browser origins (the live site's client fetch is
+# blocked), so the page reads these totals from china-data.json instead.
+HF_CN_ORGS = ["deepseek-ai", "Qwen", "moonshotai", "zai-org", "MiniMaxAI", "tencent", "XiaomiMiMo", "stepfun-ai"]
+HF_US_ORGS = ["meta-llama", "openai", "google", "microsoft", "nvidia", "allenai"]
+HF_US_FAMILY = re.compile(r"llama|gemma|gpt-oss|phi-|phi\d|nemotron|olmo|granite|dbrx", re.I)
+
 
 def get(url, timeout=30):
     return urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=timeout).read()
@@ -112,6 +119,35 @@ def yahoo_series(sym):
             for t, c in zip(ts, cl) if c is not None]
 
 
+def huggingface():
+    """30-day download totals by lab. Returns the shape the page's renderHF expects."""
+    def org_repos(org):
+        d = jget(f"https://huggingface.co/api/models?author={org}&sort=downloads&direction=-1&limit=50")
+        return [{"id": m["id"], "dl": m.get("downloads") or 0} for m in d]
+    cn_orgs, us_orgs = [], []
+    for org in HF_CN_ORGS:
+        try:
+            dl = sum(m["dl"] for m in org_repos(org))
+            if dl:
+                cn_orgs.append({"org": org, "dl": dl})
+        except Exception as e:
+            print(f"  hf {org}: {e}", file=sys.stderr)
+    for org in HF_US_ORGS:
+        try:
+            dl = sum(m["dl"] for m in org_repos(org) if HF_US_FAMILY.search(m["id"]))
+            if dl:
+                us_orgs.append({"org": org, "dl": dl})
+        except Exception as e:
+            print(f"  hf {org}: {e}", file=sys.stderr)
+    cn = sum(o["dl"] for o in cn_orgs)
+    us = sum(o["dl"] for o in us_orgs)
+    if not cn or not us:
+        raise ValueError("HF returned no usable data on one side")
+    cn_orgs.sort(key=lambda o: -o["dl"])
+    us_orgs.sort(key=lambda o: -o["dl"])
+    return {"cnOrgs": cn_orgs, "usOrgs": us_orgs, "cn": cn, "us": us}
+
+
 def openrouter_week():
     d = jget("https://openrouter.ai/api/frontend/v1/rankings/market-share")["data"]
     last = d[-1]
@@ -142,6 +178,13 @@ def run():
         print(f"  +{per_day:.0f} stars/day across basket")
     else:
         print("  baseline stored; velocity available from next run (>20h apart)")
+
+    print("hugging face downloads ...")
+    try:
+        out["hf"] = huggingface()
+        print(f"  CN {out['hf']['cn']/1e6:.0f}M vs US {out['hf']['us']/1e6:.0f}M / 30d")
+    except Exception as e:
+        print(f"  FAILED ({e}) - page falls back to its client fetch", file=sys.stderr)
 
     print("yahoo BABA/KWEB ...")
     try:

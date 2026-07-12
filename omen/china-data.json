@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-12T13:45:13Z",
+ "updated": "2026-07-12T13:54:04Z",
  "snapshot_date": "2026-07-12",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -28,6 +28,70 @@
   "top10": 0,
   "top20": 1,
   "asof": "2026-07-12"
+ },
+ "hf": {
+  "cnOrgs": [
+   {
+    "org": "Qwen",
+    "dl": 260268546
+   },
+   {
+    "org": "deepseek-ai",
+    "dl": 34272499
+   },
+   {
+    "org": "zai-org",
+    "dl": 14706377
+   },
+   {
+    "org": "moonshotai",
+    "dl": 5626501
+   },
+   {
+    "org": "MiniMaxAI",
+    "dl": 3208516
+   },
+   {
+    "org": "tencent",
+    "dl": 1553425
+   },
+   {
+    "org": "stepfun-ai",
+    "dl": 1314185
+   },
+   {
+    "org": "XiaomiMiMo",
+    "dl": 1295104
+   }
+  ],
+  "usOrgs": [
+   {
+    "org": "google",
+    "dl": 64093407
+   },
+   {
+    "org": "meta-llama",
+    "dl": 37065326
+   },
+   {
+    "org": "nvidia",
+    "dl": 23616974
+   },
+   {
+    "org": "openai",
+    "dl": 11846624
+   },
+   {
+    "org": "microsoft",
+    "dl": 7176621
+   },
+   {
+    "org": "allenai",
+    "dl": 2832670
+   }
+  ],
+  "cn": 322245153,
+  "us": 146631622
  },
  "equity_extra": {
   "BABA": [

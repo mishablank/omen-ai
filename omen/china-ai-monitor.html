@@ -381,18 +381,28 @@ async function loadPrices(){
 }
 /* ---------------- Hugging Face ---------------- */
 async function loadHF(){
+  // HF's API is not reliably CORS-open to arbitrary browser origins (the live site is
+  // blocked), so prefer the server-computed totals from china-data.json. Fall back to a
+  // resilient client fetch for local/dev use where CORS happens to allow it.
+  if(snap.hf && snap.hf.cn && snap.hf.us && snap.hf.cnOrgs){
+    S.hf = snap.hf; dot("hf","ok","via daily snapshot"); return;
+  }
   try{
     const fetchOrg = async org => {
-      const d = await jget("https://huggingface.co/api/models?author="+org+"&sort=downloads&direction=-1&limit=50");
-      return d.map(m => ({ id:m.id, dl:m.downloads||0 }));
+      try{ const d = await jget("https://huggingface.co/api/models?author="+org+"&sort=downloads&direction=-1&limit=50");
+           return d.map(m => ({ id:m.id, dl:m.downloads||0 })); }
+      catch(e){ return null; }   // tolerate a single org failing
     };
     const cnLists = await Promise.all(HF_CN_ORGS.map(fetchOrg));
     const usLists = await Promise.all(HF_US_ORGS.map(fetchOrg));
-    const cnOrgs = HF_CN_ORGS.map((org,i)=>({ org, dl: cnLists[i].reduce((s,m)=>s+m.dl,0), top: cnLists[i][0] }));
-    const usOrgs = HF_US_ORGS.map((org,i)=>({ org, dl: usLists[i].filter(m=>HF_US_FAMILY.test(m.id)).reduce((s,m)=>s+m.dl,0) }));
+    if(cnLists.every(x=>!x) || usLists.every(x=>!x)) throw new Error("HF unreachable");
+    const cnOrgs = HF_CN_ORGS.map((org,i)=>({ org, dl:(cnLists[i]||[]).reduce((s,m)=>s+m.dl,0), top:(cnLists[i]||[])[0] })).filter(o=>o.dl>0);
+    const usOrgs = HF_US_ORGS.map((org,i)=>({ org, dl:(usLists[i]||[]).filter(m=>HF_US_FAMILY.test(m.id)).reduce((s,m)=>s+m.dl,0) })).filter(o=>o.dl>0);
     const cn = cnOrgs.reduce((s,o)=>s+o.dl,0), us = usOrgs.reduce((s,o)=>s+o.dl,0);
+    if(!cn || !us) throw new Error("HF empty");
     S.hf = { cnOrgs: cnOrgs.sort((a,b)=>b.dl-a.dl), usOrgs: usOrgs.sort((a,b)=>b.dl-a.dl), cn, us };
-    dot("hf","ok","live, 30-day rolling");
+    const partial = cnLists.some(x=>!x) || usLists.some(x=>!x);
+    dot("hf","ok", partial ? "live, partial" : "live, 30-day rolling");
   }catch(e){ dot("hf","err","unavailable"); }
 }
 /* ---------------- GitHub ---------------- */
