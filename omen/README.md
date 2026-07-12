@@ -43,15 +43,35 @@ Tests: `python3 -m pytest` (covers FRED parsing, Form 4 parsing, and the server-
 | Realized H100 spot rent | vast.ai public bundles API |
 | Cross-venue | Kalshi public API, Manifold public API |
 
-## Automated hosting (recommended)
+## Hosting: Cloudflare Worker + R2
 
 The dashboard's most valuable output is accumulated history. Don't keep it on a laptop.
+The site is deployed as a **Cloudflare Worker with static assets**, and the data files are
+served **live from an R2 bucket** so they're always current with no redeploy.
 
-1. **Push this repo to GitHub** (see below).
-2. **GitHub Action** (`.github/workflows/refresh.yml`) runs `update-market-data.py --snapshot --alert`
-   every ~30 min and commits `market-data.json` + `snapshots.csv` back. Durable, cross-machine.
-3. **Cloudflare Pages** → connect the repo, no build command, output dir `/` (repo root). Every
-   data commit redeploys automatically. Same flow as your other sites.
+- Static files live in `omen/` and are served by the `[assets]` binding (`wrangler.jsonc`).
+- `worker.js` runs first for `/market-data.json`, `/snapshots.csv` and `/influencers.json`
+  (via `assets.run_worker_first`) and streams them from the R2 bucket `omen-data`, falling
+  back to the bundled copy only on a miss — so nothing breaks before the first upload.
+- **GitHub Action** (`.github/workflows/refresh.yml`) runs `omen/update-market-data.py
+  --snapshot --alert` every ~30 min, commits the data back (durable history) **and uploads
+  it to R2** (when the Cloudflare secrets are set), which the live Worker picks up instantly.
+
+### One-time R2 setup (run from the repo root, where `wrangler.jsonc` lives)
+
+```bash
+npx wrangler r2 bucket create omen-data          # create the bucket (must exist before deploy)
+npx wrangler deploy                              # deploy worker.js + the R2/ASSETS bindings
+# seed R2 now so the site is fresh immediately:
+npx wrangler r2 object put omen-data/market-data.json --file omen/market-data.json --content-type application/json --remote
+npx wrangler r2 object put omen-data/snapshots.csv     --file omen/snapshots.csv     --content-type text/csv           --remote
+# let CI keep R2 fresh — add an R2-Edit API token + account id as Action secrets:
+gh secret set CLOUDFLARE_API_TOKEN  -R mishablank/ai-crash-monitor
+gh secret set CLOUDFLARE_ACCOUNT_ID -R mishablank/ai-crash-monitor
+```
+
+Without the two `CLOUDFLARE_*` secrets the upload step skips cleanly and the Worker serves the
+bundled copy (i.e. previous behaviour).
 
 ### Alerts (optional, work with the browser closed)
 
@@ -69,12 +89,16 @@ Set `XAI_API_KEY` as a repo secret. `update-influencers.py` then reads each voic
 posts via Grok Live Search, scores −100…+100 with evidence, and writes `influencers.json`,
 which the dashboard prefers over its inline fallback. Without the key, the curated snapshot stands.
 
-## Push to GitHub
+## Repo
+
+Lives at `mishablank/ai-crash-monitor` (private). Push data/code as usual:
 
 ```bash
-gh repo create ai-crash-monitor --private --source . --remote origin --push
-# then in the repo: Settings → Secrets and variables → Actions → add any of the optional secrets
-# then Cloudflare Pages → Create project → connect ai-crash-monitor → framework: none → deploy
+git pull --rebase origin main   # take the bot's data commits, replay local work on top
+git push
 ```
+
+Optional Action secrets (Settings → Secrets and variables → Actions): the two `CLOUDFLARE_*`
+above for R2, plus `TELEGRAM_*` / `NTFY_TOPIC` for alerts and `XAI_API_KEY` for influencer scoring.
 
 Not investment advice.
