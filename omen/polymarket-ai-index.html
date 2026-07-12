@@ -6,31 +6,25 @@
 <title>AI Crash Monitor</title>
 <style>
   :root {
-    --surface-1: #fcfcfb; --page: #f9f9f7;
-    --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
-    --grid: #e1e0d9; --baseline: #c3c2b7; --border: rgba(11,11,11,0.10);
-    --bull: #2a78d6; --crash: #e34948; --reg: #eda100; --aqua: #1baf7a; --violet: #4a3aa7;
-    --bull-wash: rgba(42,120,214,0.10);
-    --delta-up: #006300; --delta-down: #d03b3b;
-    --good: #0ca30c; --warn: #fab219; --serious: #ec835a; --crit: #d03b3b;
-    --good-wash: rgba(12,163,12,0.07); --warn-wash: rgba(250,178,25,0.10); --crit-wash: rgba(208,59,59,0.08);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --surface-1: #1a1a19; --page: #0d0d0d;
-      --text-primary: #ffffff; --text-secondary: #c3c2b7; --muted: #898781;
-      --grid: #2c2c2a; --baseline: #383835; --border: rgba(255,255,255,0.10);
-      --bull: #3987e5; --crash: #e66767; --reg: #c98500; --aqua: #199e70; --violet: #9085e9;
-      --bull-wash: rgba(57,135,229,0.12);
-      --delta-up: #0ca30c; --delta-down: #e66767;
-      --good-wash: rgba(12,163,12,0.09); --warn-wash: rgba(250,178,25,0.10); --crit-wash: rgba(230,103,103,0.10);
-    }
+    /* OMEN dark-almanac theme: warm charcoal, amber accent */
+    --surface-1: #13110c; --page: #0b0a08;
+    --text-primary: #ece7db; --text-secondary: #a59c88; --muted: #6e6656;
+    --grid: #262117; --baseline: #3a3222; --border: rgba(236,231,219,0.12);
+    --acc: #e3a63c; --accT: #f2c977;
+    --bull: #79c99a; --crash: #e2685a; --reg: #8fa8d8; --aqua: #79c99a; --violet: #e3a63c;
+    --bull-wash: rgba(121,201,154,0.12);
+    --delta-up: #79c99a; --delta-down: #e2685a;
+    --good: #79c99a; --warn: #e3a63c; --serious: #e08a4f; --crit: #e2685a;
+    --good-wash: rgba(121,201,154,0.10); --warn-wash: rgba(227,166,60,0.12); --crit-wash: rgba(226,104,90,0.12);
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--page); color: var(--text-primary); padding: 22px 20px 48px; max-width: 1160px; margin: 0 auto; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--page); color: var(--text-primary); padding: 22px 20px 48px; max-width: 1160px; margin: 0 auto;
+    background-image: radial-gradient(900px 380px at 78% -120px, rgba(227,166,60,.06), transparent 70%); }
   a { color: inherit; }
+  ::selection { background: var(--acc); color: #141005; }
   header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-  header h1 { font-size: 22px; font-weight: 650; letter-spacing: -0.01em; }
+  header h1 { font-family: var(--serif); font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
   .chip { font-size: 12px; font-weight: 650; padding: 4px 12px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; }
   .chip i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
   .chip.calm { background: rgba(12,163,12,0.12); } .chip.calm i { background: var(--good); }
@@ -58,9 +52,9 @@
   .tile .value small { font-size: 16px; font-weight: 500; color: var(--muted); }
   .tile .delta { font-size: 12.5px; margin-top: 2px; color: var(--muted); }
   .spark { width: 100%; height: 26px; display: block; margin-top: 8px; }
-  .badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: var(--warn-wash); color: var(--text-secondary); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; }
-  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-top: 16px; }
-  .card h2 { font-size: 14.5px; font-weight: 650; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: var(--warn-wash); color: var(--accT); border: 1px solid rgba(227,166,60,0.35); border-radius: 4px; padding: 1px 5px; }
+  .card { background: var(--surface-1); border: 1px solid var(--grid); border-radius: 12px; padding: 18px; margin-top: 16px; }
+  .card h2 { font-family: var(--serif); font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .card .cap { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
@@ -127,7 +121,7 @@
   details[open] summary { margin-bottom: 6px; }
   footer { margin-top: 22px; font-size: 12px; color: var(--muted); line-height: 1.6; }
   .backlink { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; white-space: nowrap; }
-  .backlink:hover { color: var(--text-primary); }
+  .backlink:hover { color: var(--accT); border-color: var(--acc); }
 </style>
 </head>
 <body>

@@ -4,238 +4,233 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OMEN — The AI-Cycle Index</title>
-<meta name="description" content="OMEN bundles Polymarket's AI markets into three indexes — Bull, Crash, Regulation — and distills market stress into one crash-pressure gauge.">
+<meta name="description" content="OMEN bundles Polymarket's AI markets into three indexes – Bull, Crash, Regulation – and distills market stress into one crash-pressure gauge.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="favicon.svg">
-<meta name="theme-color" content="#06070f">
+<meta name="theme-color" content="#0b0a08">
 <!-- Open Graph / social share -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="OMEN">
 <meta property="og:title" content="OMEN — The AI-Cycle Index">
-<meta property="og:description" content="OMEN bundles Polymarket's AI markets into three indexes — Bull, Crash, Regulation — and distills market stress into one crash-pressure gauge.">
+<meta property="og:description" content="OMEN bundles Polymarket's AI markets into three indexes – Bull, Crash, Regulation – and distills market stress into one crash-pressure gauge.">
 <meta property="og:image" content="og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="OMEN — a prediction-market index and crash-pressure gauge for the AI cycle.">
+<meta property="og:image:alt" content="OMEN – a prediction-market index and crash-pressure gauge for the AI cycle.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="OMEN — The AI-Cycle Index">
-<meta name="twitter:description" content="Three prediction-market indexes — Bull, Crash, Regulation — plus a crash-pressure gauge for the AI cycle.">
+<meta name="twitter:description" content="Three prediction-market indexes – Bull, Crash, Regulation – plus a crash-pressure gauge for the AI cycle.">
 <meta name="twitter:image" content="og-image.png">
-<!-- Once your domain is live, set absolute URLs for best link-preview support (some scrapers ignore relative image paths):
-     <link rel="canonical" href="https://YOUR-DOMAIN/">
-     <meta property="og:url" content="https://YOUR-DOMAIN/">
-     and change og:image / twitter:image to https://YOUR-DOMAIN/og-image.png -->
 <style>
 :root{
-  --bg:#06070f; --bg2:#0a0c18; --card:#0c0f1f; --card2:#101430; --line:#1c2138; --line2:#2a3055;
-  --ink:#eef0fa; --mut:#8a90ad; --dim:#565b75;
-  --acc:#8b5cf6; --accT:#c4b5fd;
-  --bull:#0d9488; --bullT:#5eead4;
-  --crash:#f43f5e; --crashT:#fda4af;
-  --reg:#d97706; --regT:#fcd34d;
-  --pos:#5eead4; --neg:#fda4af;
+  --bg:#0b0a08; --bg2:#0f0d0a; --panel:#13110c; --panel2:#181510;
+  --line:#262117; --line2:#3a3222;
+  --ink:#ece7db; --mut:#a59c88; --dim:#6e6656;
+  --acc:#e3a63c; --accT:#f2c977; --accD:#8a6420;
+  --bull:#79c99a; --bullD:#2c5c43;
+  --crash:#e2685a; --crashD:#6e2c25;
+  --reg:#8fa8d8; --regD:#37456b;
+  --pos:#79c99a; --neg:#e2685a;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --serif:Georgia,"Iowan Old Style","Palatino Linotype","Times New Roman",serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--ink);font-family:var(--sans);overflow-x:hidden}
-body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
-  background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56"><path d="M28 24v8M24 28h8" stroke="%232a3055" stroke-width="1.4" opacity=".55"/></svg>');
-}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);overflow-x:hidden;
+  background-image:radial-gradient(1100px 480px at 78% -120px,rgba(227,166,60,.07),transparent 70%)}
 a{color:inherit;text-decoration:none}
-::selection{background:var(--acc);color:#fff}
+::selection{background:var(--acc);color:#141005}
 
-.k{font-family:var(--mono);text-transform:uppercase;letter-spacing:.28em;font-size:11px;color:var(--mut)}
 .wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 28px}
-section{padding:110px 0}
+section{padding:96px 0}
+.kick{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--acc);font-weight:600;display:flex;align-items:center;gap:10px}
+.kick::before{content:"";width:22px;height:1px;background:var(--acc);display:inline-block}
+.num-mono{font-family:var(--mono)}
+
+/* ---------- ticker ---------- */
+.ticker{border-bottom:1px solid var(--line);background:var(--bg2);font-family:var(--mono);font-size:11px;color:var(--mut);
+  overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.ticker::-webkit-scrollbar{display:none}
+.ticker .in{display:flex;gap:0;max-width:1180px;margin:0 auto;padding:0 28px;height:36px;align-items:center}
+.ticker .it{display:inline-flex;gap:8px;align-items:baseline;padding:0 20px;border-right:1px solid var(--line)}
+.ticker .it:first-child{padding-left:0}
+.ticker .it b{color:var(--ink);font-weight:600}
+.ticker .lab{color:var(--dim);letter-spacing:.08em}
 
 /* ---------- nav ---------- */
-nav{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(6,7,15,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-nav .wrap{display:flex;align-items:center;gap:36px;height:68px}
-.logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:20px;letter-spacing:.14em}
+nav{position:sticky;top:0;z-index:50;background:rgba(11,10,8,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:34px;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-weight:700;font-size:21px;letter-spacing:.02em}
 .logo svg{width:26px;height:26px}
-nav .links{display:flex;gap:30px;margin-left:auto}
-nav .links a{font-family:var(--mono);font-size:11px;letter-spacing:.22em;color:var(--mut);transition:color .2s}
-nav .links a:hover{color:var(--ink)}
-.btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
-  background:#f4f4f8;color:#0a0b14;padding:13px 22px;border:0;cursor:pointer;font-weight:700;transition:transform .15s,box-shadow .2s}
-.btn:hover{transform:translateY(-1px);box-shadow:0 0 24px rgba(139,92,246,.45)}
+nav .links{display:flex;gap:28px;margin-left:auto}
+nav .links a{font-size:13px;color:var(--mut);transition:color .2s}
+nav .links a:hover{color:var(--accT)}
+.btn{display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:600;
+  background:var(--acc);color:#181204;padding:11px 20px;border:0;border-radius:6px;cursor:pointer;transition:background .15s,transform .15s}
+.btn:hover{background:var(--accT);transform:translateY(-1px)}
 .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line2)}
-.btn.ghost:hover{border-color:var(--acc);box-shadow:none}
-nav .btn{padding:11px 18px;margin-left:8px}
+.btn.ghost:hover{border-color:var(--acc);color:var(--accT);background:transparent}
+nav .btn{padding:9px 16px;margin-left:6px}
 @media(max-width:760px){nav .links{display:none}}
 
 /* ---------- hero ---------- */
-.hero{position:relative;padding:170px 0 120px;text-align:center}
-.stage{position:relative;height:420px;max-width:900px;margin:0 auto 56px}
-.glyphbox{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:380px;height:380px;
-  border:1px solid var(--line2);background:radial-gradient(circle at 50% 45%,rgba(139,92,246,.22),transparent 65%),var(--bg2);
-  display:flex;align-items:center;justify-content:center}
-.glyphbox .corner{position:absolute;font-family:var(--mono);color:var(--acc);font-size:15px}
-.glyphbox .corner.tl{top:14px;left:16px}.glyphbox .corner.br{bottom:14px;right:16px}
-.glyphbox .cap{position:absolute;bottom:18px;left:0;right:0;font-family:var(--mono);letter-spacing:.5em;font-size:11px;color:var(--mut)}
-.glyph{width:150px;height:150px;filter:drop-shadow(0 0 26px rgba(139,92,246,.6))}
-.tickcard{position:absolute;width:250px;background:rgba(12,15,31,.94);border:1px solid var(--line2);padding:18px 20px;text-align:left;
-  box-shadow:0 18px 50px rgba(0,0,0,.55)}
-.tickcard .tk{font-family:var(--mono);font-size:11px;letter-spacing:.2em;margin-bottom:10px}
-.tickcard .px{font-family:var(--mono);font-size:30px;font-weight:700;letter-spacing:.02em}
-.tickcard .row{display:flex;align-items:baseline;justify-content:space-between}
-.tickcard .chg{font-family:var(--mono);font-size:12px;font-weight:700}
-.tickcard .th{font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:9px;letter-spacing:.06em}
-.tc-bull{left:0;top:120px;animation:float 7s ease-in-out infinite}
-.tc-crash{right:0;top:40px;animation:float 8s 1.2s ease-in-out infinite}
-.tc-reg{right:70px;bottom:-14px;width:220px;animation:float 9s .6s ease-in-out infinite}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-@media(max-width:900px){
-  .stage{height:auto;display:flex;flex-direction:column;gap:14px;align-items:center}
-  .glyphbox{position:static;transform:none;width:100%;max-width:380px;height:280px;order:-1}
-  .tickcard{position:static;width:100%;max-width:380px;animation:none}
-}
-.hero h1{font-size:clamp(44px,7.2vw,84px);font-weight:900;letter-spacing:-.03em;line-height:1.02;margin:18px 0 26px}
-.hero .sub{max-width:640px;margin:0 auto 40px;color:var(--mut);font-size:17px;line-height:1.65}
+.hero{padding:88px 0 100px}
+.hgrid{display:grid;grid-template-columns:1.15fr .85fr;gap:64px;align-items:center}
+@media(max-width:940px){.hgrid{grid-template-columns:1fr}}
+.hero h1{font-family:var(--serif);font-size:clamp(40px,5.6vw,66px);font-weight:700;letter-spacing:-.01em;line-height:1.06;margin:22px 0 24px}
+.hero h1 em{font-style:italic;color:var(--accT)}
+.hero .sub{max-width:520px;color:var(--mut);font-size:16.5px;line-height:1.7;margin-bottom:34px}
 .hero .sub b{color:var(--ink);font-weight:600}
-.ctas{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
-.livechip{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--mut);
-  border:1px solid var(--line);padding:7px 13px;margin-bottom:22px}
+.ctas{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:26px}
+.livechip{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--dim)}
 .livechip .dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
 .livechip.on .dot{background:var(--pos);box-shadow:0 0 8px var(--pos);animation:pulse 2s infinite}
 @keyframes pulse{50%{opacity:.4}}
 
-/* ---------- section headers ---------- */
-.shead{margin-bottom:64px}
-.shead .k{display:block;margin-bottom:16px;color:var(--acc)}
-.shead h2{font-size:clamp(32px,4.6vw,52px);font-weight:900;letter-spacing:-.025em;line-height:1.05}
-.shead p{color:var(--mut);margin-top:16px;max-width:560px;line-height:1.6}
+.dialpanel{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,var(--panel2),var(--panel));padding:30px 30px 24px;box-shadow:0 24px 70px rgba(0,0,0,.45)}
+.dialpanel .kick{margin-bottom:18px}
+.dial{display:block;width:100%;max-width:320px;margin:0 auto}
+.dialread{text-align:center;margin-top:-46px}
+.dialread .n{font-family:var(--mono);font-size:44px;font-weight:700;letter-spacing:-.02em}
+.dialread .n small{font-size:16px;color:var(--dim);font-weight:400}
+.dialread .regime{display:inline-block;margin-top:8px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+  color:var(--bull);border:1px solid var(--bullD);border-radius:99px;padding:5px 14px}
+.minirows{margin-top:24px;border-top:1px solid var(--line)}
+.mini{display:flex;align-items:baseline;gap:12px;padding:12px 2px;border-bottom:1px solid var(--line);font-size:13px}
+.mini .nm{font-weight:700;width:64px;letter-spacing:.06em}
+.mini .th{color:var(--dim);font-family:var(--serif);font-style:italic;font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini .px{font-family:var(--mono);font-weight:700}
+.mini .chg{font-family:var(--mono);font-size:11.5px;font-weight:700;width:56px;text-align:right}
 
-/* ---------- daily reading / tilt ---------- */
-#reading{background:linear-gradient(180deg,transparent,rgba(139,92,246,.05) 50%,transparent)}
-.meter{border:1px solid var(--line2);background:var(--card);padding:44px 40px 36px;position:relative}
-.meter .k{color:var(--dim)}
-.bandlabels{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);margin:26px 0 10px}
-.bandlabels span.active{color:var(--ink);text-shadow:0 0 12px rgba(139,92,246,.8)}
-.track{position:relative;height:14px;display:flex;gap:3px}
-.track i{flex:1;background:var(--line);position:relative;overflow:hidden}
-.track i.f1{background:linear-gradient(90deg,#134e4a,#115e59)}
-.track i.f2{background:linear-gradient(90deg,#115e59,#3f4a2a)}
-.track i.f3{background:linear-gradient(90deg,#514a1f,#6b3d1f)}
-.track i.f4{background:linear-gradient(90deg,#6b2a2a,#7f1d2e)}
-.track i.f5{background:linear-gradient(90deg,#7f1d2e,#9f1239)}
-.needle{position:absolute;top:-12px;bottom:-12px;width:3px;background:#fff;box-shadow:0 0 14px rgba(255,255,255,.9);transition:left 1.2s cubic-bezier(.2,.8,.2,1)}
-.needle::after{content:"▼";position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:10px;color:#fff}
-.ghostmark{position:absolute;top:-6px;bottom:-6px;width:1px;background:var(--dim)}
-.meterfoot{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--dim);margin-top:14px}
-.reading-h{font-size:clamp(30px,4vw,46px);font-weight:900;letter-spacing:-.02em;margin:14px 0 34px}
-.reading-h em{font-style:normal;color:var(--bullT)}
-.driver{margin-top:34px;border:1px solid var(--line);border-left:3px solid var(--acc);background:var(--bg2);padding:22px 26px}
-.driver .q{font-size:19px;font-weight:700;margin-bottom:8px}
-.driver .meta{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--mut)}
+/* ---------- section headers ---------- */
+.shead{margin-bottom:56px;padding-top:34px;border-top:1px solid var(--line)}
+.shead h2{font-family:var(--serif);font-size:clamp(30px,4.2vw,46px);font-weight:700;letter-spacing:-.01em;line-height:1.1;margin-top:18px}
+.shead p{color:var(--mut);margin-top:14px;max-width:560px;line-height:1.65;font-size:15px}
+
+/* ---------- daily reading ---------- */
+#reading{padding-top:20px}
+.reading-h{font-family:var(--serif);font-size:clamp(28px,3.8vw,44px);font-weight:700;letter-spacing:-.01em;margin-top:18px}
+.reading-h em{font-style:italic;color:var(--bull)}
+.meter{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:38px 36px 30px;margin-top:40px}
+.meter .cap{font-size:12px;color:var(--mut)}
+.meter .cap b{color:var(--ink);font-family:var(--mono)}
+.bandlabels{display:flex;justify-content:space-between;font-size:10.5px;letter-spacing:.1em;color:var(--dim);margin:26px 0 12px;text-transform:uppercase}
+.bandlabels span.active{color:var(--accT);font-weight:700}
+.track{position:relative;height:4px;border-radius:2px;background:linear-gradient(90deg,var(--bullD),#5c5222 45%,var(--crashD));}
+.needle{position:absolute;top:-8px;bottom:-8px;width:2px;background:var(--accT);box-shadow:0 0 12px rgba(242,201,119,.8);transition:left 1.2s cubic-bezier(.2,.8,.2,1)}
+.needle::after{content:"";position:absolute;top:-7px;left:50%;transform:translateX(-50%);width:7px;height:7px;border-radius:50%;background:var(--accT)}
+.ghostmark{position:absolute;top:-4px;bottom:-4px;width:1px;background:var(--dim)}
+.meterfoot{display:flex;justify-content:space-between;font-size:10.5px;letter-spacing:.1em;color:var(--dim);margin-top:16px;text-transform:uppercase}
+.driver{margin-top:32px;border-left:2px solid var(--acc);padding:6px 0 6px 24px}
+.driver .q{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:8px}
+.driver .meta{font-size:11.5px;letter-spacing:.06em;color:var(--mut);text-transform:uppercase}
 .driver .meta b{color:var(--accT)}
 
-/* ---------- index flip cards ---------- */
-.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+/* ---------- index panels ---------- */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:start}
 @media(max-width:980px){.cards{grid-template-columns:1fr}}
-.flip{perspective:1600px;min-height:660px;cursor:pointer}
-.flip .inner{position:relative;width:100%;height:100%;min-height:660px;transition:transform .7s cubic-bezier(.3,.8,.3,1);transform-style:preserve-3d}
-.flip.flipped .inner{transform:rotateY(180deg)}
-.face{position:absolute;inset:0;backface-visibility:hidden;border:1px solid var(--line2);background:var(--card);display:flex;flex-direction:column;padding:30px 28px}
-.face.back{transform:rotateY(180deg);background:var(--card2);overflow:hidden}
-.face .num{font-family:var(--mono);font-size:12px;color:var(--dim);letter-spacing:.3em}
-.face .side-tag{font-family:var(--mono);font-size:11px;letter-spacing:.24em;margin:20px 0 6px;font-weight:700}
-.face .tick{font-family:var(--mono);font-size:11px;color:var(--mut);letter-spacing:.18em}
-.face .bigpx{font-family:var(--mono);font-size:54px;font-weight:700;letter-spacing:.01em;margin:30px 0 4px}
-.face .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.24em;color:var(--dim)}
-.face .chg24{font-family:var(--mono);font-size:16px;font-weight:700;margin:18px 0 2px}
-.face .thesis{font-size:22px;font-weight:800;letter-spacing:-.01em;margin:26px 0 8px}
-.face .hint{margin-top:auto;font-family:var(--mono);font-size:10px;letter-spacing:.24em;color:var(--dim)}
-.flip:hover .face.front{border-color:var(--acc)}
-.face .desc{font-size:13px;color:var(--mut);line-height:1.6;margin:14px 0 12px}
-.spark7{height:56px;margin:6px 0 14px}
+.ix{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:26px 26px 22px;transition:border-color .2s}
+.ix:hover{border-color:var(--line2)}
+.ix .hd{display:flex;align-items:baseline;gap:10px;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:20px}
+.ix .rom{font-family:var(--serif);font-style:italic;color:var(--dim);font-size:15px}
+.ix .nm{font-weight:800;letter-spacing:.08em;font-size:15px}
+.ix .tk{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--dim);letter-spacing:.08em}
+.ix .bigpx{font-family:var(--mono);font-size:46px;font-weight:700;letter-spacing:-.01em}
+.ix .lbl{font-size:10.5px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase;display:block;margin-top:2px}
+.ix .chg24{font-family:var(--mono);font-size:14px;font-weight:700;margin:14px 0 2px}
+.ix .thesis{font-family:var(--serif);font-style:italic;font-size:19px;margin:20px 0 10px;color:var(--ink)}
+.ix .desc{font-size:13.5px;color:var(--mut);line-height:1.6;margin-bottom:16px}
+.spark7{height:52px;margin:4px 0 16px}
+.ix .tgl{width:100%;background:none;border:1px solid var(--line);border-radius:6px;color:var(--mut);font-size:12px;letter-spacing:.08em;
+  padding:10px;cursor:pointer;text-transform:uppercase;font-weight:600;transition:color .2s,border-color .2s}
+.ix .tgl:hover{color:var(--accT);border-color:var(--line2)}
+.ix .mwrap{display:none;margin-top:16px}
+.ix.open .mwrap{display:block}
 .mtable{width:100%;border-collapse:collapse;font-size:11.5px}
-.mtable th{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--dim);text-align:left;padding:0 0 8px;border-bottom:1px solid var(--line2)}
+.mtable th{font-size:9.5px;letter-spacing:.14em;color:var(--dim);text-align:left;padding:0 0 8px;border-bottom:1px solid var(--line2);text-transform:uppercase}
 .mtable th:last-child,.mtable td:last-child{text-align:right}
 .mtable td{padding:7px 0;border-bottom:1px solid var(--line);color:var(--mut)}
 .mtable td:first-child{color:var(--ink);max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:10px}
 .mtable td:last-child{font-family:var(--mono);font-weight:700}
-.mtable .ht{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--dim)}
+.mtable .ht{font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--dim)}
 
 /* ---------- gauge ---------- */
-#gauge .grid2{display:grid;grid-template-columns:340px 1fr;gap:60px;align-items:start}
+#gauge .grid2{display:grid;grid-template-columns:320px 1fr;gap:56px;align-items:start}
 @media(max-width:900px){#gauge .grid2{grid-template-columns:1fr}}
-.gaugebox{border:1px solid var(--line2);background:var(--card);padding:38px 34px;text-align:center}
-.gaugenum{font-family:var(--mono);font-size:88px;font-weight:700;line-height:1;letter-spacing:-.02em}
-.gaugenum small{font-size:26px;color:var(--dim)}
-.regime{display:inline-block;margin-top:18px;font-family:var(--mono);font-size:11px;letter-spacing:.3em;padding:9px 20px;border:1px solid var(--bull);color:var(--bullT)}
-.gaugebox .k{display:block;margin-bottom:20px}
-.gaugebox .foot{margin-top:22px;font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.14em;line-height:1.8}
-.fam{margin-bottom:26px}
+.gaugebox{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:34px 30px;text-align:center}
+.gaugenum{font-family:var(--mono);font-size:76px;font-weight:700;line-height:1;letter-spacing:-.02em}
+.gaugenum small{font-size:22px;color:var(--dim)}
+.gaugebox .k2{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--acc);font-weight:600;display:block;margin-bottom:20px}
+.gaugebox .regime{display:inline-block;margin-top:16px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+  color:var(--bull);border:1px solid var(--bullD);border-radius:99px;padding:6px 16px}
+.gaugebox .foot{margin-top:20px;font-size:10.5px;color:var(--dim);letter-spacing:.06em;line-height:1.8;text-transform:uppercase}
+.fam{margin-bottom:24px}
 .fam .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
-.fam .name{font-weight:700;font-size:15px}
-.fam .val{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accT)}
-.fam .bar{height:8px;background:var(--line);position:relative}
-.fam .bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--acc),var(--accT));width:0;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
-.fam .note{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:7px;letter-spacing:.06em}
+.fam .name{font-family:var(--serif);font-weight:700;font-size:16px}
+.fam .val{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--accT)}
+.fam .bar{height:3px;border-radius:2px;background:var(--line);position:relative}
+.fam .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:linear-gradient(90deg,var(--accD),var(--acc));width:0;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+.fam .note{font-size:11px;color:var(--dim);margin-top:7px;letter-spacing:.02em}
 
 /* ---------- equity strip ---------- */
-.eqgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:70px}
+.eqgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:64px}
 @media(max-width:980px){.eqgrid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.eqgrid{grid-template-columns:1fr}}
-.eq{border:1px solid var(--line);background:var(--card);padding:20px;position:relative}
-.eq .sym{font-family:var(--mono);font-size:12px;letter-spacing:.2em;font-weight:700}
-.eq .dd{font-family:var(--mono);font-size:12px;font-weight:700;float:right}
+.eq{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:20px;position:relative}
+.eq .sym{font-weight:800;font-size:13px;letter-spacing:.1em}
+.eq .dd{font-family:var(--mono);font-size:11.5px;font-weight:700;float:right}
 .eq .px{font-family:var(--mono);font-size:22px;font-weight:700;margin:10px 0 2px}
-.eq .cap{font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:var(--dim)}
-.eq svg{display:block;width:100%;height:60px;margin-top:12px}
-.eq .tip{position:absolute;pointer-events:none;background:#161a33;border:1px solid var(--line2);font-family:var(--mono);font-size:10px;
+.eq .cap{font-size:9.5px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
+.eq svg{display:block;width:100%;height:56px;margin-top:12px}
+.eq .tip{position:absolute;pointer-events:none;background:var(--panel2);border:1px solid var(--line2);border-radius:5px;font-family:var(--mono);font-size:10px;
   padding:4px 8px;transform:translate(-50%,-130%);white-space:nowrap;display:none;z-index:5}
 
 /* ---------- how / method ---------- */
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
 @media(max-width:900px){.steps{grid-template-columns:1fr}}
-.step{border:1px solid var(--line);background:var(--card);padding:34px 30px;transition:border-color .2s}
-.step:hover{border-color:var(--acc)}
-.step .num{font-family:var(--mono);color:var(--acc);font-size:13px;letter-spacing:.2em;margin-bottom:22px;display:block}
-.step h3{font-size:21px;font-weight:800;margin-bottom:14px;letter-spacing:-.01em}
+.step{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:30px 28px;transition:border-color .2s}
+.step:hover{border-color:var(--line2)}
+.step .rom{font-family:var(--serif);font-style:italic;color:var(--acc);font-size:17px;display:block;margin-bottom:18px}
+.step h3{font-family:var(--serif);font-size:21px;font-weight:700;margin-bottom:12px}
 .step p{color:var(--mut);font-size:14px;line-height:1.65}
-.step .go{display:inline-flex;gap:8px;margin-top:22px;font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--accT)}
+.step .go{display:inline-flex;gap:8px;margin-top:20px;font-size:12px;letter-spacing:.08em;color:var(--accT);text-transform:uppercase;font-weight:600}
 .mlist{border-top:1px solid var(--line2)}
-.mrow{display:grid;grid-template-columns:90px 240px 1fr;gap:30px;padding:38px 0;border-bottom:1px solid var(--line2)}
-@media(max-width:800px){.mrow{grid-template-columns:60px 1fr};.mrow p{grid-column:2}}
-.mrow .num{font-family:var(--mono);color:var(--acc);font-size:15px}
-.mrow h3{font-size:22px;font-weight:800;letter-spacing:-.01em}
+.mrow{display:grid;grid-template-columns:90px 240px 1fr;gap:30px;padding:36px 0;border-bottom:1px solid var(--line)}
+@media(max-width:800px){.mrow{grid-template-columns:60px 1fr}.mrow p{grid-column:2}}
+.mrow .rom{font-family:var(--serif);font-style:italic;color:var(--acc);font-size:18px}
+.mrow h3{font-family:var(--serif);font-size:23px;font-weight:700}
 .mrow p{color:var(--mut);font-size:14.5px;line-height:1.7}
-.mrow code{font-family:var(--mono);font-size:12px;color:var(--accT);background:rgba(139,92,246,.1);padding:2px 6px}
-.ranges{margin-top:34px;font-family:var(--mono);font-size:11px;color:var(--dim);line-height:2;letter-spacing:.04em}
-.ranges b{color:var(--mut);font-weight:700}
+.mrow code{font-family:var(--mono);font-size:12px;color:var(--accT);background:rgba(227,166,60,.08);border-radius:4px;padding:2px 6px}
+.ranges{margin-top:32px;font-size:12px;color:var(--dim);line-height:2}
+.ranges b{color:var(--mut);font-weight:700;letter-spacing:.08em}
 
 /* ---------- results ---------- */
-#results{background:linear-gradient(180deg,transparent,rgba(139,92,246,.06),transparent)}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
 @media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.stats{grid-template-columns:1fr}}
-.stat{border:1px solid var(--line2);background:var(--card);padding:36px 30px}
-.stat .v{font-family:var(--mono);font-size:46px;font-weight:700;letter-spacing:-.01em}
-.stat .t{font-weight:700;margin:14px 0 8px}
+.stat{border-top:2px solid var(--acc);background:linear-gradient(180deg,var(--panel),transparent);padding:28px 24px}
+.stat .v{font-family:var(--mono);font-size:42px;font-weight:700;letter-spacing:-.01em}
+.stat .t{font-family:var(--serif);font-weight:700;font-size:17px;margin:12px 0 8px}
 .stat p{color:var(--mut);font-size:13px;line-height:1.6}
 
-/* ---------- terminal cta ---------- */
-.term{max-width:760px;margin:0 auto;border:1px solid var(--line2);background:var(--card);box-shadow:0 30px 90px rgba(0,0,0,.6)}
-.term .bar{display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--line2);padding:12px 18px;font-family:var(--mono);font-size:11px;color:var(--mut);letter-spacing:.12em}
-.term .bar .wins{margin-left:auto;display:flex;gap:12px;color:var(--dim)}
-.term .body{padding:44px 40px;text-align:center}
-.term .code{font-family:var(--mono);font-size:12.5px;color:var(--pos);text-align:left;background:#070810;border:1px solid var(--line);padding:18px 20px;margin-bottom:36px;overflow-x:auto;line-height:2}
-.term .code .c{color:var(--dim)}
-.term h2{font-size:clamp(28px,4vw,40px);font-weight:900;letter-spacing:-.02em;margin-bottom:14px}
-.term p{color:var(--mut);margin-bottom:30px;line-height:1.6}
+/* ---------- run-it cta ---------- */
+.runbox{max-width:780px;margin:0 auto;border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,var(--panel2),var(--panel));padding:52px 48px;text-align:center;box-shadow:0 30px 90px rgba(0,0,0,.5)}
+@media(max-width:640px){.runbox{padding:36px 24px}}
+.runbox h2{font-family:var(--serif);font-size:clamp(28px,4vw,40px);font-weight:700;margin-bottom:14px}
+.runbox p{color:var(--mut);margin-bottom:30px;line-height:1.6}
+.runbox .code{font-family:var(--mono);font-size:12.5px;color:var(--ink);text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-bottom:34px;overflow-x:auto;line-height:2}
+.runbox .code .c{color:var(--dim)}
+.runbox .code .p{color:var(--acc)}
 
 /* ---------- footer ---------- */
-footer{border-top:1px solid var(--line);padding:70px 0 40px;position:relative;z-index:1}
-.fgrid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:60px}
+footer{border-top:1px solid var(--line);padding:64px 0 40px;position:relative;z-index:1;background:var(--bg2)}
+.fgrid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:56px}
 @media(max-width:800px){.fgrid{grid-template-columns:1fr 1fr}}
-.fgrid h4{font-family:var(--mono);font-size:10px;letter-spacing:.26em;color:var(--dim);margin-bottom:18px}
+.fgrid h4{font-size:11px;letter-spacing:.16em;color:var(--dim);margin-bottom:18px;text-transform:uppercase}
 .fgrid a,.fgrid span{display:block;color:var(--mut);font-size:13.5px;margin-bottom:11px;transition:color .2s}
-.fgrid a:hover{color:var(--ink)}
-.fbase{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--dim);border-top:1px solid var(--line);padding-top:28px}
+.fgrid a:hover{color:var(--accT)}
+.fbase{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;font-size:11px;letter-spacing:.08em;color:var(--dim);border-top:1px solid var(--line);padding-top:26px;text-transform:uppercase}
 
 /* reveal */
 .rv{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease}
@@ -245,97 +240,108 @@ footer{border-top:1px solid var(--line);padding:70px 0 40px;position:relative;z-
 </head>
 <body>
 
+<div class="ticker">
+  <div class="in">
+    <span class="it"><span class="lab">BULL</span><b id="tk-bull">$0.446</b><span class="up" id="tkd-bull">+1.5¢</span></span>
+    <span class="it"><span class="lab">CRASH</span><b id="tk-crash">$0.088</b><span class="up" id="tkd-crash">+0.5¢</span></span>
+    <span class="it"><span class="lab">REG</span><b id="tk-reg">$0.245</b><span class="down" id="tkd-reg">−2.3¢</span></span>
+    <span class="it"><span class="lab">CRASH PRESSURE</span><b>23.6/100</b><span style="color:var(--bull)">CALM</span></span>
+    <span class="it"><span class="lab">SOURCE</span><b style="color:var(--mut)">POLYMARKET · CBOE · YAHOO</b></span>
+  </div>
+</div>
+
 <nav>
   <div class="wrap">
     <a class="logo" href="#top">
-      <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="13" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="3 4"/><path d="M16 6l2.6 7.4L26 16l-7.4 2.6L16 26l-2.6-7.4L6 16l7.4-2.6z" fill="#fff"/></svg>
+      <svg viewBox="0 0 32 32" fill="none"><path d="M3 16C7 9.2 11.4 6 16 6s9 3.2 13 10c-4 6.8-8.4 10-13 10S7 22.8 3 16z" stroke="#e3a63c" stroke-width="2"/><circle cx="16" cy="16" r="4.6" fill="#e3a63c"/><circle cx="16" cy="16" r="1.8" fill="#0b0a08"/></svg>
       OMEN
     </a>
     <div class="links">
-      <a href="#indexes">THE INDEXES</a>
-      <a href="#gauge">THE GAUGE</a>
-      <a href="#method">METHODOLOGY</a>
-      <a href="influencers.html">SENTIMENT</a>
+      <a href="#indexes">The Indexes</a>
+      <a href="#gauge">The Gauge</a>
+      <a href="#method">Methodology</a>
+      <a href="influencers.html">Sentiment</a>
     </div>
-    <a class="btn" href="polymarket-ai-index.html">OPEN THE MONITOR</a>
+    <a class="btn" href="polymarket-ai-index.html">Open the monitor</a>
   </div>
 </nav>
 
 <header class="hero" id="top">
-  <div class="wrap">
-    <div class="stage">
-      <div class="glyphbox">
-        <span class="corner tl">+</span><span class="corner br">+</span>
-        <svg class="glyph" viewBox="0 0 120 120" fill="none">
-          <ellipse cx="60" cy="60" rx="52" ry="20" stroke="#fff" stroke-width="5" stroke-dasharray="7 8" transform="rotate(-28 60 60)"/>
-          <path d="M60 26l7.6 21.8L89.4 55.4 67.6 63 60 84.8 52.4 63 30.6 55.4l21.8-7.6z" fill="#fff"/>
-        </svg>
-        <div class="cap">OMEN</div>
+  <div class="wrap hgrid">
+    <div>
+      <div class="kick">Prediction-market index · The AI cycle</div>
+      <h1>Every turn in the cycle sends <em>omens</em> first.</h1>
+      <p class="sub">OMEN bundles Polymarket's AI markets into three indexes. Hold <b>Bull</b> when you expect the acceleration to continue, <b>Crash</b> when the music stops, <b>Reg</b> when Washington moves first – and read the <b>crash-pressure gauge</b> to see how much stress the wider market is pricing.</p>
+      <div class="ctas">
+        <a class="btn" href="polymarket-ai-index.html">Launch the monitor →</a>
+        <a class="btn ghost" href="influencers.html">Sentiment board</a>
+        <a class="btn ghost" href="#reading">Today's reading</a>
       </div>
-      <div class="tickcard tc-bull">
-        <div class="tk" style="color:var(--bullT)">BULL · Index</div>
-        <div class="row"><span class="px" id="hx-bull">$0.446</span><span class="chg up" id="hd-bull">+1.5¢</span></div>
-        <div class="th">Up and to the right</div>
-      </div>
-      <div class="tickcard tc-crash">
-        <div class="tk" style="color:var(--crashT)">CRASH · Index</div>
-        <div class="row"><span class="px" id="hx-crash">$0.088</span><span class="chg up" id="hd-crash">+0.5¢</span></div>
-        <div class="th">The music stops</div>
-      </div>
-      <div class="tickcard tc-reg">
-        <div class="tk" style="color:var(--regT)">REG · Index</div>
-        <div class="row"><span class="px" id="hx-reg" style="font-size:24px">$0.245</span><span class="chg down" id="hd-reg">−2.3¢</span></div>
-        <div class="th">Washington gets a vote</div>
-      </div>
+      <div class="livechip" id="livechip"><span class="dot"></span><span id="livetxt">SNAPSHOT · 2026-07-11</span></div>
     </div>
 
-    <div class="livechip" id="livechip"><span class="dot"></span><span id="livetxt">SNAPSHOT · 2026-07-11</span></div>
-    <div class="k">PREDICTION-MARKET INDEX · THE AI CYCLE</div>
-    <h1>Hold the AI trade,<br>not individual bets.</h1>
-    <p class="sub">OMEN bundles Polymarket's AI markets into three indexes. Hold <b>Bull</b> when you expect the acceleration to continue, <b>Crash</b> when the music stops, <b>Reg</b> when Washington moves first — and read the <b>crash-pressure gauge</b> to see how much stress the wider market is pricing.</p>
-    <div class="ctas">
-      <a class="btn" href="polymarket-ai-index.html">LAUNCH THE MONITOR <span>→</span></a>
-      <a class="btn ghost" href="influencers.html">SENTIMENT BOARD <span>→</span></a>
-      <a class="btn ghost" href="#reading">TODAY'S READING</a>
-      <a class="btn ghost" href="#how">HOW IT WORKS</a>
-    </div>
+    <aside class="dialpanel rv in">
+      <div class="kick">Crash pressure · today</div>
+      <svg class="dial" viewBox="0 0 220 122">
+        <defs>
+          <linearGradient id="gDial" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#79c99a"/><stop offset=".55" stop-color="#e3a63c"/><stop offset="1" stop-color="#e2685a"/>
+          </linearGradient>
+        </defs>
+        <path d="M20 110 A 90 90 0 0 1 200 110" fill="none" stroke="#262117" stroke-width="9" stroke-linecap="round"/>
+        <path id="dialFill" d="M20 110 A 90 90 0 0 1 200 110" fill="none" stroke="url(#gDial)" stroke-width="9" stroke-linecap="round"
+          stroke-dasharray="283" stroke-dashoffset="283" style="transition:stroke-dashoffset 1.2s cubic-bezier(.2,.8,.2,1)"/>
+        <g id="ticks"></g>
+        <line id="dialNeedle" x1="110" y1="110" x2="110" y2="40" stroke="#ece7db" stroke-width="2"
+          transform="rotate(-90 110 110)" style="transition:transform 1.2s cubic-bezier(.2,.8,.2,1)"/>
+        <circle cx="110" cy="110" r="5" fill="#ece7db"/>
+      </svg>
+      <div class="dialread">
+        <div class="n" id="dialNum">0<small>/100</small></div>
+        <div><span class="regime">Regime · Calm</span></div>
+      </div>
+      <div class="minirows">
+        <div class="mini"><span class="nm" style="color:var(--bull)">BULL</span><span class="th">Up and to the right</span><span class="px" id="hx-bull">$0.446</span><span class="chg up" id="hd-bull">+1.5¢</span></div>
+        <div class="mini"><span class="nm" style="color:var(--crash)">CRASH</span><span class="th">The music stops</span><span class="px" id="hx-crash">$0.088</span><span class="chg up" id="hd-crash">+0.5¢</span></div>
+        <div class="mini"><span class="nm" style="color:var(--reg)">REG</span><span class="th">Washington gets a vote</span><span class="px" id="hx-reg">$0.245</span><span class="chg down" id="hd-reg">−2.3¢</span></div>
+      </div>
+    </aside>
   </div>
 </header>
 
 <!-- ============ daily reading ============ -->
 <section id="reading">
   <div class="wrap">
-    <div class="shead rv">
-      <span class="k">DAILY READING</span>
+    <div class="shead rv" style="margin-bottom:0">
+      <span class="kick">Daily reading</span>
       <div class="reading-h">Today the AI trade reads <em id="regimeWord">Calm</em>.</div>
     </div>
     <div class="meter rv">
-      <span class="k">CRASH-PRESSURE GAUGE &nbsp;·&nbsp; <span id="meterCap" style="color:var(--ink)">23.6 / 100</span> &nbsp;·&nbsp; FIVE SIGNAL FAMILIES</span>
+      <span class="cap">CRASH-PRESSURE GAUGE &nbsp;·&nbsp; <b id="meterCap">23.6 / 100</b> &nbsp;·&nbsp; FIVE SIGNAL FAMILIES</span>
       <div class="bandlabels">
-        <span>DEEP CALM</span><span class="active">CALM</span><span>ELEVATED</span><span>STRESSED</span><span>CRISIS</span>
+        <span>Deep calm</span><span class="active">Calm</span><span>Elevated</span><span>Stressed</span><span>Crisis</span>
       </div>
       <div class="track">
-        <i class="f1"></i><i class="f2"></i><i class="f3"></i><i class="f4"></i><i class="f5"></i>
         <span class="ghostmark" style="left:23%" title="yesterday"></span>
         <span class="needle" id="needle" style="left:2%"></span>
       </div>
-      <div class="meterfoot"><span>◀ CALM</span><span>YESTERDAY ┆ · TODAY ▎</span><span>CRISIS ▶</span></div>
+      <div class="meterfoot"><span>◀ Calm</span><span>Yesterday ┆ · Today ▎</span><span>Crisis ▶</span></div>
 
       <div class="driver">
-        <div class="q">SOXX 25Δ risk reversal — 9.2 vol pts of downside skew</div>
-        <div class="meta">HIGHEST-PRESSURE FAMILY · <b>OPTIONS SKEW 32 / 100</b> · PUTS OVER CALLS ON THE SEMIS COMPLEX · AS OF 2026-07-10</div>
+        <div class="q">SOXX 25Δ risk reversal – 9.2 vol pts of downside skew</div>
+        <div class="meta">Highest-pressure family · <b>Options skew 32 / 100</b> · Puts over calls on the semis complex · As of 2026-07-10</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============ index cards ============ -->
+<!-- ============ index panels ============ -->
 <section id="indexes">
   <div class="wrap">
     <div class="shead rv">
-      <span class="k">THE INDEXES</span>
+      <span class="kick">The indexes</span>
       <h2>Three ways the cycle breaks.</h2>
-      <p>Twenty live Polymarket markets, sorted into the three stories the market tells about AI. Tap a card to see what's inside.</p>
+      <p>Twenty live Polymarket markets, sorted into the three stories the market tells about AI. Open a panel to see what's inside.</p>
     </div>
     <div class="cards" id="cards"></div>
   </div>
@@ -345,16 +351,16 @@ footer{border-top:1px solid var(--line);padding:70px 0 40px;position:relative;z-
 <section id="gauge">
   <div class="wrap">
     <div class="shead rv">
-      <span class="k">THE GAUGE</span>
+      <span class="kick">The gauge</span>
       <h2>How much crash risk<br>is priced in.</h2>
       <p>Five independent signal families, each normalized 0–100 against calm→stress reference levels, equally weighted so no family dominates.</p>
     </div>
     <div class="grid2 rv">
       <div class="gaugebox">
-        <span class="k">CRASH PRESSURE</span>
+        <span class="k2">Crash pressure</span>
         <div class="gaugenum" id="gaugeNum">0<small>/100</small></div>
-        <div class="regime">REGIME · CALM</div>
-        <div class="foot">STRESSED ≥ 55 · ELEVATED ≥ 35<br>SNAPSHOT 2026-07-10 20:22 UTC</div>
+        <div class="regime">Regime · Calm</div>
+        <div class="foot">Stressed ≥ 55 · Elevated ≥ 35<br>Snapshot 2026-07-10 20:22 UTC</div>
       </div>
       <div id="fams"></div>
     </div>
@@ -367,27 +373,27 @@ footer{border-top:1px solid var(--line);padding:70px 0 40px;position:relative;z-
 <section id="how">
   <div class="wrap">
     <div class="shead rv">
-      <span class="k">HOW IT WORKS</span>
+      <span class="kick">How it works</span>
       <h2>A managed basket of<br>prediction-market positions.</h2>
     </div>
     <div class="steps rv">
       <div class="step">
-        <span class="num">01</span>
+        <span class="rom">i.</span>
         <h3>Market discovery</h3>
         <p>The index tracks a curated set of 20 Polymarket AI markets across three themes. Constituent ids, weights, and methodology are public.</p>
-        <a class="go" href="#indexes">SEE THE ALLOCATIONS <span>→</span></a>
+        <a class="go" href="#indexes">See the allocations →</a>
       </div>
       <div class="step">
-        <span class="num">02</span>
+        <span class="rom">ii.</span>
         <h3>Deadline-aware pricing</h3>
         <p>One-time catalysts are annualized with a constant-hazard model so a December deadline and a July deadline compare fairly. Structural questions (†) are left raw.</p>
-        <a class="go" href="#method">TRACE THE MATH <span>→</span></a>
+        <a class="go" href="#method">Trace the math →</a>
       </div>
       <div class="step">
-        <span class="num">03</span>
+        <span class="rom">iii.</span>
         <h3>Chain-linked history</h3>
         <p>The composite line is composition-neutral: a market entering or leaving the set never creates an artificial step. The trend stays whole.</p>
-        <a class="go" href="#method">READ METHODOLOGY <span>→</span></a>
+        <a class="go" href="#method">Read methodology →</a>
       </div>
     </div>
   </div>
@@ -397,7 +403,7 @@ footer{border-top:1px solid var(--line);padding:70px 0 40px;position:relative;z-
 <section id="results">
   <div class="wrap">
     <div class="shead rv">
-      <span class="k">RESULTS</span>
+      <span class="kick">Results</span>
       <h2>The market is pricing the cycle.</h2>
     </div>
     <div class="stats rv">
@@ -419,7 +425,7 @@ footer{border-top:1px solid var(--line);padding:70px 0 40px;position:relative;z-
       <div class="stat">
         <div class="v" id="stat-gauge">23.6</div>
         <div class="t">Crash pressure</div>
-        <p>Equal-weighted gauge reading, 0–100. Today's regime: <b style="color:var(--bullT)">Calm</b>.</p>
+        <p>Equal-weighted gauge reading, 0–100. Today's regime: <b style="color:var(--bull)">Calm</b>.</p>
       </div>
     </div>
   </div>
@@ -429,54 +435,52 @@ footer{border-top:1px solid var(--line);padding:70px 0 40px;position:relative;z-
 <section id="method">
   <div class="wrap">
     <div class="shead rv">
-      <span class="k">METHODOLOGY</span>
+      <span class="kick">Methodology</span>
       <h2>How the index is built.</h2>
     </div>
     <div class="mlist rv">
       <div class="mrow">
-        <span class="num">01</span>
+        <span class="rom">i.</span>
         <h3>Curation</h3>
-        <p>Twenty Polymarket markets — 11 Bull, 3 Crash, 6 Regulation — screened for theme relevance and tradability. Closed or resolved markets drop out of the live index automatically.</p>
+        <p>Twenty Polymarket markets – 11 Bull, 3 Crash, 6 Regulation – screened for theme relevance and tradability. Closed or resolved markets drop out of the live index automatically.</p>
       </div>
       <div class="mrow">
-        <span class="num">02</span>
+        <span class="rom">ii.</span>
         <h3>Pricing</h3>
         <p>Each index is <code>100 × Σ(wᵢ·pᵢ) / Σwᵢ</code> over the constituents live at each timestamp, where <code>pᵢ</code> is the YES midpoint. Weights are equal or lifetime-volume. Deadline-adjusted basis annualizes event markets via <code>1−(1−p)^(365/days)</code>; structural markets (†) stay raw.</p>
       </div>
       <div class="mrow">
-        <span class="num">03</span>
+        <span class="rom">iii.</span>
         <h3>The gauge</h3>
-        <p>Equal-weighted mean of five families, each scored 0–100 against fixed calm→stress reference ranges. Families — not raw signals — are equally weighted, so no family dominates just by having more sub-signals.</p>
+        <p>Equal-weighted mean of five families, each scored 0–100 against fixed calm→stress reference ranges. Families – not raw signals – are equally weighted, so no family dominates just by having more sub-signals.</p>
       </div>
       <div class="mrow">
-        <span class="num">04</span>
+        <span class="rom">iv.</span>
         <h3>Honesty</h3>
-        <p>The lead-lag study finds <b style="color:var(--ink)">no statistically significant lead</b> of the crash index over NVDA/SOXX (right sign, p ≈ 0.14–0.19). The bubble-burst market is partly reflexive — it resolves on the very drawdowns it prices. Treat OMEN as a market-pricing monitor, not a validated forecast.</p>
+        <p>The lead-lag study finds <b style="color:var(--ink)">no statistically significant lead</b> of the crash index over NVDA/SOXX (right sign, p ≈ 0.14–0.19). The bubble-burst market is partly reflexive – it resolves on the very drawdowns it prices. Treat OMEN as a market-pricing monitor, not a validated forecast.</p>
       </div>
     </div>
     <div class="ranges rv">
-      <b>REFERENCE RANGES (CALM → STRESS)</b> — prediction markets: bubble-burst 0–40% · NVDA deep tail 0–25% · H100&lt;$2 0–30% &nbsp;/&nbsp; options skew: NVDA 25Δ RR 1–10 pt · SOXX 4–15 pt &nbsp;/&nbsp; volatility: VIX/VIX3M 0.82–1.05 · VXN 18–40 · SKEW 115–160 · VVIX 90–130 &nbsp;/&nbsp; credit: HYG drawdown 0 to −8% · HY/IG 0 to −6% &nbsp;/&nbsp; equity: NVDA 0 → −50% · SOXX 0 → −40%
+      <b>REFERENCE RANGES (CALM → STRESS)</b> – prediction markets: bubble-burst 0–40% · NVDA deep tail 0–25% · H100&lt;$2 0–30% &nbsp;/&nbsp; options skew: NVDA 25Δ RR 1–10 pt · SOXX 4–15 pt &nbsp;/&nbsp; volatility: VIX/VIX3M 0.82–1.05 · VXN 18–40 · SKEW 115–160 · VVIX 90–130 &nbsp;/&nbsp; credit: HYG drawdown 0 to −8% · HY/IG 0 to −6% &nbsp;/&nbsp; equity: NVDA 0 → −50% · SOXX 0 → −40%
     </div>
   </div>
 </section>
 
-<!-- ============ terminal cta ============ -->
+<!-- ============ run-it cta ============ -->
 <section id="run">
   <div class="wrap">
-    <div class="term rv">
-      <div class="bar">enter_omen.exe<span class="wins"><span>_</span><span>□</span><span>✕</span></span></div>
-      <div class="body">
-        <div class="code">
-          <span class="c"># pull the equity / vol / skew / credit feeds, then serve</span><br>
-          $ python3 update-market-data.py --watch 600 --snapshot<br>
-          $ python3 -m http.server 8742<br>
-          <span class="c">→ http://localhost:8742/polymarket-ai-index.html</span>
-        </div>
-        <h2>Pick the cycle you see coming.</h2>
-        <p>Bull, Crash, or Reg. The full monitor runs locally — one HTML file, one Python script, no dependencies.</p>
-        <a class="btn" href="polymarket-ai-index.html">OPEN THE MONITOR <span>→</span></a>
-        <a class="btn ghost" href="https://polymarket.com/markets/ai" target="_blank" rel="noopener">EXPLORE THE MARKETS</a>
+    <div class="runbox rv">
+      <div class="kick" style="justify-content:center;margin-bottom:20px">Run it yourself</div>
+      <h2>Pick the cycle you see coming.</h2>
+      <p>Bull, Crash, or Reg. The full monitor runs locally – one HTML file, one Python script, no dependencies.</p>
+      <div class="code">
+        <span class="c"># pull the equity / vol / skew / credit feeds, then serve</span><br>
+        <span class="p">$</span> python3 update-market-data.py --watch 600 --snapshot<br>
+        <span class="p">$</span> python3 -m http.server 8742<br>
+        <span class="c">→ http://localhost:8742/polymarket-ai-index.html</span>
       </div>
+      <a class="btn" href="polymarket-ai-index.html">Open the monitor →</a>
+      <a class="btn ghost" href="https://polymarket.com/markets/ai" target="_blank" rel="noopener">Explore the markets</a>
     </div>
   </div>
 </section>
@@ -486,32 +490,32 @@ footer{border-top:1px solid var(--line);padding:70px 0 40px;position:relative;z-
     <div class="fgrid">
       <div>
         <a class="logo" href="#top" style="margin-bottom:18px">
-          <svg viewBox="0 0 32 32" fill="none" style="width:22px;height:22px"><circle cx="16" cy="16" r="13" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="3 4"/><path d="M16 6l2.6 7.4L26 16l-7.4 2.6L16 26l-2.6-7.4L6 16l7.4-2.6z" fill="#fff"/></svg>
+          <svg viewBox="0 0 32 32" fill="none" style="width:22px;height:22px"><path d="M3 16C7 9.2 11.4 6 16 6s9 3.2 13 10c-4 6.8-8.4 10-13 10S7 22.8 3 16z" stroke="#e3a63c" stroke-width="2"/><circle cx="16" cy="16" r="4.6" fill="#e3a63c"/><circle cx="16" cy="16" r="1.8" fill="#0b0a08"/></svg>
           OMEN
         </a>
         <span style="max-width:280px">Three prediction-market indexes and a crash-pressure gauge for the AI cycle.</span>
       </div>
       <div>
-        <h4>INDEXES</h4>
+        <h4>Indexes</h4>
         <a href="#indexes">Bull</a><a href="#indexes">Crash</a><a href="#indexes">Regulation</a><a href="#gauge">The Gauge</a><a href="influencers.html">Sentiment Board</a><a href="polymarket-ai-index.html">Live Monitor →</a>
       </div>
       <div>
-        <h4>DATA</h4>
+        <h4>Data</h4>
         <a href="https://gamma-api.polymarket.com" target="_blank" rel="noopener">Polymarket Gamma</a>
         <a href="https://finance.yahoo.com" target="_blank" rel="noopener">Yahoo Finance</a>
         <a href="https://www.cboe.com" target="_blank" rel="noopener">CBOE delayed quotes</a>
         <a href="https://kalshi.com" target="_blank" rel="noopener">Kalshi</a>
       </div>
       <div>
-        <h4>FINE PRINT</h4>
+        <h4>Fine print</h4>
         <span>Not investment advice</span>
         <span>No proven predictive edge</span>
         <span>Bubble market is reflexive</span>
       </div>
     </div>
     <div class="fbase">
-      <span>© 2026 — OMEN</span>
-      <span>BUILT FROM THE AI CRASH MONITOR · POLYMARKET + YAHOO + CBOE</span>
+      <span>© 2026 – OMEN</span>
+      <span>Built from the AI crash monitor · Polymarket + Yahoo + CBOE</span>
     </div>
   </div>
 </footer>
@@ -556,17 +560,16 @@ const EQ = {
  ORCL:{px:140.64,dd:-43.3,s:[149.01,152.37,154.79,152.96,151.56,149.4,163.12,159.16,155.11,155.97,154.69,152.9,155.52,149.68,154.34,147.09,146.02,142.81,139.66,138.8,147.11,145.23,146.38,145.54,143.17,143.66,137.86,138.09,155.62,163.0,169.81,178.34,175.06,177.58,181.17,187.5,176.28,173.28,172.96,165.96,163.83,161.39,171.83,180.29,185.35,194.03,194.59,195.95,193.84,186.83,189.76,195.61,192.95,186.61,181.46,188.16,189.77,192.08,193.06,190.96,203.7,225.78,248.15,244.58,230.33,236.34,213.68,211.82,205.81,201.26,184.1,184.13,192.64,188.33,183.53,184.29,175.07,165.16,157.53,152.46,148.53,147.76,146.55,142.5,140.27,143.76,141.6,140.49,144.22,140.64]},
 };
 const SIDES = {
- bull:{name:"BULL", tick:"OMN-B", num:"01", color:"var(--bullT)", mark:"#0d9488", thesis:"Up and to the right",
+ bull:{name:"BULL", tick:"OMN-B", rom:"i.", color:"var(--bull)", mark:"#79c99a", thesis:"Up and to the right",
    desc:"BULL is a trade on AI acceleration. Model releases, IPOs, benchmark records and hardware launches make the index rise."},
- crash:{name:"CRASH", tick:"OMN-C", num:"02", color:"var(--crashT)", mark:"#f43f5e", thesis:"The music stops",
-   desc:"CRASH is a trade on the unwind — the bubble-burst market plus distress-sale odds for the leading labs. It rises as the AI trade cracks."},
- reg:{name:"REG", tick:"OMN-R", num:"03", color:"var(--regT)", mark:"#d97706", thesis:"Washington gets a vote",
+ crash:{name:"CRASH", tick:"OMN-C", rom:"ii.", color:"var(--crash)", mark:"#e2685a", thesis:"The music stops",
+   desc:"CRASH is a trade on the unwind – the bubble-burst market plus distress-sale odds for the leading labs. It rises as the AI trade cracks."},
+ reg:{name:"REG", tick:"OMN-R", rom:"iii.", color:"var(--reg)", mark:"#8fa8d8", thesis:"Washington gets a vote",
    desc:"REG prices the clampdown: model-access removals, federal reviews, safety bills, and data-center moratoria."},
 };
 const GAMMA="https://gamma-api.polymarket.com", CLOB="https://clob.polymarket.com";
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const fmt=(x,d=1)=>x.toFixed(d);
 
 /* ================= index math ================= */
 function indexOf(side){
@@ -582,13 +585,16 @@ function chgHtml(v){
   return `<span class="${v>=0?'up':'down'}">${s}${Math.abs(v).toFixed(1)}¢</span>`;
 }
 
-/* ================= hero + cards render ================= */
+/* ================= hero + ticker + cards render ================= */
 function renderHero(){
   for(const side of ["bull","crash","reg"]){
-    $("hx-"+side).textContent="$"+ (indexOf(side)/100).toFixed(3);
-    const d=d1Of(side), el=$("hd-"+side);
-    el.textContent=(d>=0?"+":"−")+Math.abs(d).toFixed(1)+"¢";
-    el.className="chg "+(d>=0?"up":"down");
+    const px="$"+(indexOf(side)/100).toFixed(3);
+    const d=d1Of(side);
+    const dTxt=(d>=0?"+":"−")+Math.abs(d).toFixed(1)+"¢", dCls=d>=0?"up":"down";
+    $("hx-"+side).textContent=px;
+    const el=$("hd-"+side); el.textContent=dTxt; el.className="chg "+dCls;
+    $("tk-"+side).textContent=px;
+    const tl=$("tkd-"+side); tl.textContent=dTxt; tl.className=dCls;
   }
 }
 function renderCards(){
@@ -600,35 +606,41 @@ function renderCards(){
       <td title="${esc(m.label)}"><a href="https://polymarket.com/event/${esc(m.slug)}" target="_blank" rel="noopener">${esc(m.label)}</a></td>
       <td class="ht">${m.ht==="event"?"EVENT":"STRUCT †"}</td>
       <td style="color:${S.color}">${(m.yes*100).toFixed(1)}%</td></tr>`).join("");
-    const el=document.createElement("div");
-    el.className="flip rv"; el.innerHTML=`
-    <div class="inner">
-      <div class="face front">
-        <span class="num">${S.num}</span>
-        <div class="side-tag" style="color:${S.color}">${S.name}</div>
-        <div class="tick">${S.tick} · Index</div>
-        <div class="bigpx" style="color:${S.color}">${v.toFixed(1)}</div>
-        <span class="lbl">INDEX LEVEL · 0–100</span>
-        <div class="chg24">${chgHtml(d)}</div>
-        <span class="lbl">24H</span>
-        <div class="thesis">“${S.thesis}”</div>
-        <span class="hint">TAP TO SEE MARKETS →</span>
+    const el=document.createElement("article");
+    el.className="ix rv"; el.innerHTML=`
+      <div class="hd">
+        <span class="rom">${S.rom}</span>
+        <span class="nm" style="color:${S.color}">${S.name}</span>
+        <span class="tk">${S.tick} · INDEX</span>
       </div>
-      <div class="face back">
-        <div class="side-tag" style="color:${S.color};margin-top:0">${S.name} · ${ms.length} MARKETS</div>
-        <p class="desc">${S.desc}</p>
-        <span class="lbl">PAST 7 DAYS</span>
-        <div class="spark7" id="sp7-${side}"><svg width="100%" height="100%" viewBox="0 0 300 56" preserveAspectRatio="none"><text x="150" y="32" text-anchor="middle" fill="#565b75" font-size="9" font-family="monospace" letter-spacing="2">LOADING LIVE HISTORY…</text></svg></div>
-        <table class="mtable"><tr><th>MARKET</th><th>TYPE</th><th>YES</th></tr>${rows}</table>
-        <span class="hint" style="margin-top:14px">← TAP TO FLIP BACK</span>
-      </div>
-    </div>`;
-    el.addEventListener("click",e=>{ if(e.target.closest("a"))return; el.classList.toggle("flipped"); });
+      <div class="bigpx" style="color:${S.color}">${v.toFixed(1)}</div>
+      <span class="lbl">Index level · 0–100</span>
+      <div class="chg24">${chgHtml(d)} <span class="lbl" style="display:inline;margin-left:6px">24h</span></div>
+      <div class="thesis">“${S.thesis}”</div>
+      <p class="desc">${S.desc}</p>
+      <span class="lbl">Past 7 days</span>
+      <div class="spark7" id="sp7-${side}"><svg width="100%" height="100%" viewBox="0 0 300 52" preserveAspectRatio="none"><text x="150" y="30" text-anchor="middle" fill="#6e6656" font-size="9" font-family="monospace" letter-spacing="2">LOADING LIVE HISTORY…</text></svg></div>
+      <button class="tgl">Constituents · ${ms.length} markets</button>
+      <div class="mwrap">
+        <table class="mtable"><tr><th>Market</th><th>Type</th><th>Yes</th></tr>${rows}</table>
+      </div>`;
+    el.querySelector(".tgl").addEventListener("click",()=>el.classList.toggle("open"));
     host.appendChild(el);
   }
 }
 
-/* ================= gauge ================= */
+/* ================= gauge + dial ================= */
+function drawDialTicks(){
+  const g=$("ticks"); if(!g) return;
+  let h="";
+  for(let k=0;k<=4;k++){
+    const a=(-90+k*45)*Math.PI/180;
+    const x1=110+Math.sin(a)*78, y1=110-Math.cos(a)*78;
+    const x2=110+Math.sin(a)*72, y2=110-Math.cos(a)*72;
+    h+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#3a3222" stroke-width="1.5"/>`;
+  }
+  g.innerHTML=h;
+}
 function renderGauge(){
   $("fams").innerHTML=FAMILIES.map(f=>`
    <div class="fam">
@@ -636,21 +648,26 @@ function renderGauge(){
      <div class="bar"><i data-w="${f.v}"></i></div>
      <div class="note">${f.note}</div>
    </div>`).join("");
-  // animated counters + needle fire on reveal
-  const box=$("gaugeNum");
+  drawDialTicks();
+  // animated counters + needles fire on reveal
+  const targets=[["gaugeNum",$("gaugeNum")],["dialNum",$("dialNum")]];
   const io=new IntersectionObserver(es=>{
-    if(!es[0].isIntersecting) return;
+    if(!es.some(e=>e.isIntersecting)) return;
     io.disconnect();
     const t0=performance.now();
     (function tick(t){
       const k=Math.min(1,(t-t0)/1100), e=1-Math.pow(1-k,3);
-      box.innerHTML=(GAUGE*e).toFixed(1)+"<small>/100</small>";
+      for(const [,el] of targets) if(el) el.innerHTML=(GAUGE*e).toFixed(1)+"<small>/100</small>";
       if(k<1) requestAnimationFrame(tick);
     })(t0);
     document.querySelectorAll(".fam .bar i").forEach(b=>b.style.width=b.dataset.w+"%");
-  },{threshold:.4});
-  io.observe(box);
-  requestAnimationFrame(()=>{ $("needle").style.left=GAUGE+"%"; });
+  },{threshold:.3});
+  for(const [,el] of targets) if(el) io.observe(el);
+  requestAnimationFrame(()=>{
+    $("needle").style.left=GAUGE+"%";
+    const fill=$("dialFill"); if(fill) fill.style.strokeDashoffset=(283*(1-GAUGE/100)).toFixed(1);
+    const nd=$("dialNeedle"); if(nd) nd.setAttribute("transform",`rotate(${(-90+180*GAUGE/100).toFixed(1)} 110 110)`);
+  });
 }
 
 /* ================= sparklines ================= */
@@ -669,9 +686,9 @@ function renderEquity(){
   for(const [sym,e] of Object.entries(EQ)){
     const el=document.createElement("div");
     el.className="eq";
-    const {svg}=sparkSvg(e.s,300,60,"#8b5cf6",true);
+    const {svg}=sparkSvg(e.s,300,56,"#e3a63c",true);
     el.innerHTML=`<span class="sym">${sym}</span><span class="dd down">${e.dd.toFixed(1)}% OFF HIGH</span>
-      <div class="px">$${e.px.toFixed(2)}</div><span class="cap">LAST 90 SESSIONS · DAILY CLOSE</span>${svg}
+      <div class="px">$${e.px.toFixed(2)}</div><span class="cap">Last 90 sessions · daily close</span>${svg}
       <div class="tip"></div>`;
     host.appendChild(el);
     // hover readout
@@ -731,7 +748,7 @@ async function fetchSparks(){
   for(const side of ["bull","crash","reg"]){
     const ids=MARKETS.filter(m=>m.side===side&&hist[m.id]).map(m=>m.id);
     const el=document.getElementById("sp7-"+side); if(!el) continue;
-    if(ids.length<2){ el.innerHTML='<svg width="100%" height="100%" viewBox="0 0 300 56"><text x="150" y="32" text-anchor="middle" fill="#565b75" font-size="9" font-family="monospace" letter-spacing="2">LIVE HISTORY UNAVAILABLE</text></svg>'; continue; }
+    if(ids.length<2){ el.innerHTML='<svg width="100%" height="100%" viewBox="0 0 300 52"><text x="150" y="30" text-anchor="middle" fill="#6e6656" font-size="9" font-family="monospace" letter-spacing="2">LIVE HISTORY UNAVAILABLE</text></svg>'; continue; }
     // resample each history to 60 buckets over the common window, then equal-weight mean
     const t0=Math.max(...ids.map(i=>hist[i][0].t)), t1=Math.min(...ids.map(i=>hist[i][hist[i].length-1].t));
     if(t1<=t0) continue;
@@ -745,7 +762,7 @@ async function fetchSparks(){
       }
       series.push(sum/ids.length*100);
     }
-    el.innerHTML=sparkSvg(series,300,56,SIDES[side].mark,true).svg;
+    el.innerHTML=sparkSvg(series,300,52,SIDES[side].mark,true).svg;
   }
 }
 
