@@ -49,10 +49,16 @@ jobs:
       - name: Upload data to R2
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
         run: |
-          put() { npx --yes wrangler@4 r2 object put "omen-data/$1" --file "omen/$1" --content-type "$2" --remote; }
-          [ -f omen/market-data.json ] && put market-data.json "application/json"
-          [ -f omen/snapshots.csv ]    && put snapshots.csv    "text/csv"
-          [ -f omen/influencers.json ] && put influencers.json "application/json"
+          # A missing optional file (e.g. influencers.json without XAI_API_KEY) must skip,
+          # not fail the step — otherwise `bash -e` would kill the run and skip the commit.
+          # A real upload failure still propagates and fails the step.
+          put() {
+            [ -f "omen/$1" ] || { echo "omen/$1 absent — skipping"; return 0; }
+            npx --yes wrangler@4 r2 object put "omen-data/$1" --file "omen/$1" --content-type "$2" --remote
+          }
+          put market-data.json "application/json"
+          put snapshots.csv    "text/csv"
+          put influencers.json "application/json"
 
       - name: Commit refreshed data
         run: |
