@@ -104,6 +104,42 @@ def test_gauge_groups_split():
     assert lead2 == 10.0 and conf2 is None
 
 
+def test_quarter_of_maps_fred_quarter_start_dates():
+    assert umd.quarter_of("2025-01-01") == "2025Q1"
+    assert umd.quarter_of("2025-04-01") == "2025Q2"
+    assert umd.quarter_of("2025-07-01") == "2025Q3"
+    assert umd.quarter_of("2025-10-15") == "2025Q4"
+
+
+def test_macro_capex_gdp_shares_and_growth_contribution():
+    # fundamentals capex is a single-quarter figure ($B); GDP is SAAR ($B).
+    # capex must be annualized (x4) before comparing to SAAR GDP.
+    fund = {"quarters": ["2025Q1", "2025Q2"], "capex_b": [50.0, 60.0]}
+    gdp = [{"d": "2025-01-01", "c": 29000.0}, {"d": "2025-04-01", "c": 29400.0}]
+    m = umd.macro_capex_gdp(fund, gdp)
+    assert m["quarters"] == ["2025Q1", "2025Q2"]
+    assert m["capex_ann_b"] == [200.0, 240.0]
+    # 200/29000 = 0.690%, 240/29400 = 0.816%
+    assert round(m["pct_gdp"][0], 3) == 0.690
+    assert round(m["pct_gdp"][1], 3) == 0.816
+    # growth contribution: d(annualized capex)=40 over d(GDP)=400 -> 10%
+    assert m["growth_share"][0] is None          # no prior quarter
+    assert round(m["growth_share"][1], 1) == 10.0
+
+
+def test_macro_capex_gdp_handles_missing_gdp_quarter():
+    fund = {"quarters": ["2025Q1", "2025Q2"], "capex_b": [50.0, 60.0]}
+    gdp = [{"d": "2025-01-01", "c": 29000.0}]     # Q2 GDP not published yet
+    m = umd.macro_capex_gdp(fund, gdp)
+    assert m["quarters"] == ["2025Q1"]            # unmatched quarter dropped
+    assert m["capex_ann_b"] == [200.0]
+
+
+def test_macro_capex_gdp_empty_inputs_return_none():
+    assert umd.macro_capex_gdp(None, [{"d": "2025-01-01", "c": 1.0}]) is None
+    assert umd.macro_capex_gdp({"quarters": [], "capex_b": []}, []) is None
+
+
 def test_gauge_families_and_regime():
     data = {
         "skew": {"NVDA": {"rr": 0.055}, "SOXX": {"rr": 0.095}},

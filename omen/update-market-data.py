@@ -44,8 +44,18 @@ BASKET = ["NVDA", "MSFT", "GOOGL", "AMZN", "META", "AVGO", "MU", "ANET",
 BENCH = ["SPY"]
 EQUITY = sorted(set(CORE + BASKET + BENCH))
 VOL = {"^VXN": "VXN", "^VIX": "VIX", "^VIX3M": "VIX3M", "^SKEW": "SKEW", "^VVIX": "VVIX"}
-CREDIT = ["HYG", "LQD", "JNK"]
-FRED = {"BAMLH0A0HYM2": "HY_OAS", "BAMLH0A3HYC": "CCC_OAS", "NFCI": "NFCI"}
+# HYG/LQD/JNK are the leveraged-credit proxies; BIZD (VanEck BDC ETF) is the
+# private-credit / direct-lending channel Kedrosky flags — where pensions and
+# insurers hold AI-data-center / neocloud debt that never touches the HY index.
+CREDIT = ["HYG", "LQD", "JNK", "BIZD"]
+# most debt-dependent AI-infra names (neoclouds + capex-heavy power/DB); their
+# equity is the market's read on financing risk before it shows in credit spreads.
+LEVERED_AI = ["CRWV", "ORCL", "NBIS", "IREN"]
+# power/electricity: XLU proxies data-center power-demand pull (kept OUT of the
+# breadth basket so it never moves that signal); ELEC_CPI is residents' bills.
+POWER_PROXY = ["XLU"]
+FRED = {"BAMLH0A0HYM2": "HY_OAS", "BAMLH0A3HYC": "CCC_OAS", "NFCI": "NFCI",
+        "GDP": "GDP", "CUSR0000SEHF01": "ELEC_CPI"}
 SKEW_SYMS = ["NVDA", "SOXX"]
 # LEAPS tail: drawdown levels per symbol; the last one is the bubble-market trigger level
 TAIL_LEVELS = {"NVDA": [-30, -50], "SOXX": [-25, -40]}
@@ -58,7 +68,14 @@ FUND_CIKS = {"MSFT": "0000789019", "GOOGL": "0001652044", "AMZN": "0001018724",
 FUND_TAGS = {"capex": ["PaymentsToAcquirePropertyPlantAndEquipment",
                        "PaymentsToAcquireProductiveAssets"],       # AMZN's tag since 2017
              "ocf": ["NetCashProvidedByUsedInOperatingActivities",
-                     "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations"]}
+                     "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations"],
+             # D&A cash-flow addback; firms use different tags, sec_concept merges them.
+             # Depreciation lagging capex = cost recognition trailing the cash spend,
+             # the accounting tell of the fast-obsolescing GPU buildout.
+             "dep": ["DepreciationDepletionAndAmortization",
+                     "DepreciationAmortizationAndAccretionNet",
+                     "DepreciationAmortizationAndImpairment",
+                     "DepreciationAndAmortization", "Depreciation"]}
 METACULUS_TERMS = ["AI bubble", "AI winter", "artificial general intelligence"]
 KALSHI_SERIES = {
     "KXACQUIREMISTRAL": "AI lab acquisition (Mistral)",
@@ -259,14 +276,15 @@ def fundamentals():
     for sym, cik in FUND_CIKS.items():
         capex = sec_concept(cik, FUND_TAGS["capex"])
         ocf = sec_concept(cik, FUND_TAGS["ocf"])
+        dep = sec_concept(cik, FUND_TAGS["dep"])
         if capex:
-            per[sym] = {"capex": capex, "ocf": ocf}
-            print(f"fundamentals {sym}: {len(capex)} quarters")
+            per[sym] = {"capex": capex, "ocf": ocf, "dep": dep}
+            print(f"fundamentals {sym}: {len(capex)} quarters (dep {len(dep)})")
         time.sleep(0.15)
     if not per:
         return None
     allq = sorted(set(q for v in per.values() for q in v["capex"]))[-10:]
-    quarters, capex, ocf, count = [], [], [], []
+    quarters, capex, ocf, dep, count = [], [], [], [], []
     for q in allq:
         syms = [s for s in per if q in per[s]["capex"]]
         if len(syms) < len(per) - 1:     # allow one laggard (off-cycle fiscal years)
@@ -275,11 +293,50 @@ def fundamentals():
         capex.append(round(sum(per[s]["capex"][q] for s in syms) / 1e9, 2))
         o = [per[s]["ocf"].get(q) for s in syms if per[s]["ocf"].get(q) is not None]
         ocf.append(round(sum(o) / 1e9, 2) if len(o) == len(syms) else None)
+        # depreciation aggregated over the same firms present for capex this quarter;
+        # None unless every one of them reported a D&A line (so dep/capex is comparable)
+        d = [per[s]["dep"].get(q) for s in syms if per[s]["dep"].get(q) is not None]
+        dep.append(round(sum(d) / 1e9, 2) if len(d) == len(syms) else None)
         count.append(len(syms))
     if not quarters:
         return None
     return {"names": list(per.keys()), "quarters": quarters, "capex_b": capex,
-            "ocf_b": ocf, "n_firms": count,
+            "ocf_b": ocf, "dep_b": dep, "n_firms": count,
+            "asof": datetime.date.today().isoformat()}
+
+
+def quarter_of(iso_date):
+    """Map a FRED quarterly observation date (quarter START, e.g. 2025-04-01)
+    to a calendar quarter label matching the fundamentals panel ('2025Q2')."""
+    d = datetime.date.fromisoformat(iso_date)
+    return f"{d.year}Q{(d.month - 1) // 3 + 1}"
+
+
+def macro_capex_gdp(fund, gdp_series):
+    """Combined AI-capex as a share of the economy and of GDP growth (Kedrosky's
+    scale argument). fund['capex_b'] is single-quarter capex ($B); FRED GDP is a
+    seasonally-adjusted ANNUAL rate, so capex is annualized (x4) before the ratio."""
+    if not fund or not fund.get("quarters") or not gdp_series:
+        return None
+    gdp = {quarter_of(p["d"]): p["c"] for p in gdp_series if p.get("c")}
+    quarters, capex_ann, gdp_b, pct = [], [], [], []
+    for q, cq in zip(fund["quarters"], fund["capex_b"]):
+        if q not in gdp:
+            continue
+        ann = round(cq * 4, 2)
+        quarters.append(q)
+        capex_ann.append(ann)
+        gdp_b.append(gdp[q])
+        pct.append(round(ann / gdp[q] * 100, 3))
+    if not quarters:
+        return None
+    growth = [None]
+    for i in range(1, len(quarters)):
+        dg = gdp_b[i] - gdp_b[i - 1]
+        dc = capex_ann[i] - capex_ann[i - 1]
+        growth.append(round(dc / dg * 100, 1) if dg > 0 else None)
+    return {"quarters": quarters, "capex_ann_b": capex_ann, "gdp_b": gdp_b,
+            "pct_gdp": pct, "growth_share": growth,
             "asof": datetime.date.today().isoformat()}
 
 
@@ -661,9 +718,9 @@ def build():
             "basket": BASKET, "bench": "SPY",
             "equity": {}, "vol": {}, "skew": {}, "term": {}, "tail": {}, "credit": {},
             "fred": {}, "kalshi": {}, "manifold": [], "metaculus": None,
-            "fundamentals": None, "insiders": {}, "gpu": None}
+            "fundamentals": None, "macro": None, "insiders": {}, "gpu": None}
 
-    for sym in EQUITY:
+    for sym in EQUITY + POWER_PROXY:
         try:
             data["equity"][sym] = yahoo_series(sym)
             print(f"equity {sym}: {len(data['equity'][sym])} pts")
@@ -749,6 +806,15 @@ def build():
             print(f"fundamentals: {len(f['quarters'])} quarters, latest capex ${f['capex_b'][-1]}B")
     except Exception as e:
         print(f"fundamentals: FAIL {e}")
+
+    try:
+        gdp = (data["fred"].get("GDP") or {}).get("series")
+        data["macro"] = macro_capex_gdp(data.get("fundamentals"), gdp)
+        if data["macro"]:
+            m = data["macro"]
+            print(f"macro: capex {m['pct_gdp'][-1]}% of GDP, {m['growth_share'][-1]}% of GDP growth ({m['quarters'][-1]})")
+    except Exception as e:
+        print(f"macro: FAIL {e}")
 
     try:
         data["gpu"] = gpu_spot(prev.get("gpu"))
