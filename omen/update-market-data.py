@@ -27,6 +27,7 @@ import xml.etree.ElementTree as ET
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "market-data.json")
 SNAP = os.path.join(HERE, "snapshots.csv")
+BUNDLE = os.path.join(HERE, "market-data.js")
 ALERT_STATE = os.path.join(HERE, "alert-state.json")
 UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
 SEC_UA = {"User-Agent": "Mikhail Blank blank.mikhail@gmail.com"}
@@ -548,6 +549,24 @@ def build():
     return data
 
 
+def write_bundle():
+    """Emit market-data.js so the dashboard works when opened directly via file://.
+    Browsers block fetch() of sibling files under file://, but a <script src> tag loads
+    fine; the page falls back to these globals when fetch fails."""
+    try:
+        data_txt = open(OUT).read()
+    except OSError:
+        return
+    try:
+        snap_txt = open(SNAP).read()
+    except OSError:
+        snap_txt = ""
+    with open(BUNDLE, "w") as f:
+        f.write("window.__MARKET_DATA__=" + data_txt + ";\n")
+        f.write("window.__SNAPSHOTS_CSV__=" + json.dumps(snap_txt) + ";\n")
+    print("written:", BUNDLE)
+
+
 def main():
     args = sys.argv[1:]
     do_snap = "--snapshot" in args
@@ -565,6 +584,7 @@ def main():
                 check_alert(data)
         except Exception as e:
             print("build error:", e)
+        write_bundle()
         if not watch:
             break
         print(f"sleeping {watch}s (Ctrl-C to stop)…")
