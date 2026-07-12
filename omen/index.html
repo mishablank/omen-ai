@@ -245,7 +245,7 @@ footer{border-top:1px solid var(--line);padding:64px 0 40px;position:relative;z-
     <span class="it"><span class="lab">BULL</span><b id="tk-bull">$0.446</b><span class="up" id="tkd-bull">+1.5¢</span></span>
     <span class="it"><span class="lab">CRASH</span><b id="tk-crash">$0.088</b><span class="up" id="tkd-crash">+0.5¢</span></span>
     <span class="it"><span class="lab">REG</span><b id="tk-reg">$0.245</b><span class="down" id="tkd-reg">−2.3¢</span></span>
-    <span class="it"><span class="lab">CRASH PRESSURE</span><b>23.6/100</b><span style="color:var(--bull)">CALM</span></span>
+    <span class="it"><span class="lab">CRASH PRESSURE</span><b id="tk-gauge">23.6/100</b><span id="tk-regime" style="color:var(--bull)">CALM</span></span>
     <span class="it"><span class="lab">SOURCE</span><b style="color:var(--mut)">POLYMARKET · CBOE · YAHOO</b></span>
   </div>
 </div>
@@ -775,6 +775,9 @@ function applyServerData(mkt){
   bands.forEach((b,i)=>b.classList.toggle("active",i===bi));
   // both regime chips (hero + dial) must agree, or the page contradicts itself
   document.querySelectorAll(".regime").forEach(chip=>{ chip.textContent="Regime · "+R.word; chip.style.borderColor=R.border; chip.style.color=R.color; });
+  // top ticker carries a third crash-pressure readout — keep it in step too
+  const tg=$("tk-gauge"); if(tg) tg.textContent=sg.score.toFixed(1)+"/100";
+  const tr=$("tk-regime"); if(tr){ tr.textContent=R.word.toUpperCase(); tr.style.color=R.border; }
   const foot=document.querySelector(".gaugebox .foot");
   if(foot) foot.innerHTML=`STRESSED &ge; 55 · ELEVATED &ge; 35<br>LEADING ${sg.lead??"–"} · CONFIRMING ${sg.conf??"–"}<br>SNAPSHOT ${esc(sg.at||mkt.updated||"")}`;
   const sgStat=$("stat-gauge");
