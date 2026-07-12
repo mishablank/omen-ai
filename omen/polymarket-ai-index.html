@@ -235,10 +235,28 @@
   </div>
 </div>
 
+<div class="grid2">
+  <div class="card">
+    <h2>Options-implied 1-year tail <span class="sub" style="font-weight:400">&ndash; LEAPS, the deepest crash market</span></h2>
+    <div class="cap">Risk-neutral P(finish below level) from long-dated CBOE puts, N(&minus;d2) at the listed strike&rsquo;s IV. NVDA options carry orders of magnitude more capital than the Polymarket bubble market &ndash; this is the hardest-to-push crash price available. Risk-neutral odds overstate real-world odds (risk premium), so read them as a ceiling.</div>
+    <div class="statrow" id="leapsStats"></div>
+    <div id="leapsBars"></div>
+    <div class="note" id="leapsNote"></div>
+  </div>
+  <div class="card">
+    <h2>Fundamentals check <span class="sub" style="font-weight:400">&ndash; AI-capex filers, SEC XBRL</span></h2>
+    <div class="cap">The one panel that isn&rsquo;t a market price. Combined quarterly capex and operating cash flow for MSFT, GOOGL, AMZN, META, ORCL from audited filings. Capex/OCF is the classic capex-bubble fundamental &ndash; dot-com telecoms crossed 100% before the unwind. A bubble is priced <em>vs. fundamentals</em>; this is the denominator.</div>
+    <div class="statrow" id="fundStats"></div>
+    <div id="fundBars"></div>
+    <div class="note" id="fundNote"></div>
+  </div>
+</div>
+
 <div class="card">
-  <h2>Cross-venue check <span class="sub" style="font-weight:400">&ndash; Kalshi &amp; Manifold</span></h2>
+  <h2>Cross-venue check <span class="sub" style="font-weight:400">&ndash; Kalshi, Metaculus &amp; Manifold</span></h2>
   <div class="cap" id="kalshiCap">Where the same theme trades on several venues, disagreement is a confidence signal.</div>
   <div class="tscroll"><table id="kalshiTable"></table></div>
+  <div class="tscroll"><table id="metaculusTable"></table></div>
   <div class="tscroll"><table id="manifoldTable"></table></div>
 </div>
 
@@ -266,10 +284,10 @@
   <div id="coverageNote" class="note"></div>
 </div>
 <div class="grid2" style="margin-top:0">
-  <div class="card"><h2 style="font-size:13px">AI-Bull</h2><div class="tscroll"><table id="bullTable"></table></div></div>
-  <div class="card"><h2 style="font-size:13px">AI-Crash</h2><div class="tscroll"><table id="crashTable"></table></div></div>
+  <div class="card"><h2 style="font-size:13px">AI-Bull <span class="sub" id="bullMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="bullTable"></table></div></div>
+  <div class="card"><h2 style="font-size:13px">AI-Crash <span class="sub" id="crashMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="crashTable"></table></div></div>
 </div>
-<div class="card"><h2 style="font-size:13px">AI-Regulation</h2><div class="tscroll"><table id="regTable"></table></div></div>
+<div class="card"><h2 style="font-size:13px">AI-Regulation <span class="sub" id="regMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="regTable"></table></div></div>
 
 <div class="card">
   <h2>Durable snapshots</h2>
@@ -291,18 +309,21 @@
 
 /* ================= Constituents ================= */
 // htype: "event" = one-time catalyst (hazard annualization defensible); "structural" = ongoing state (not annualized)
+// theme (bull only): "tech" = technology-progress odds, "capital" = capital-markets odds.
+// The distinction matters: tech progress can continue right through a financial unwind
+// (railways, dot-com), so only the capital side is a clean read on the investment cycle.
 const CONSTITUENTS = [
-  { id:"676829",  side:"bull",  htype:"event",      label:"GPT-6 released by Dec 31, 2026" },
-  { id:"653788",  side:"bull",  htype:"structural", label:"OpenAI announces AGI before 2027" },
-  { id:"676837",  side:"bull",  htype:"event",      label:"AI wins IMO gold medal in 2026" },
-  { id:"1087074", side:"bull",  htype:"structural", label:"Any model hits 1550 Chatbot Arena by Dec 31" },
-  { id:"656312",  side:"bull",  htype:"event",      label:"OpenAI IPO by Dec 31, 2026" },
-  { id:"656313",  side:"bull",  htype:"event",      label:"OpenAI $1t+ IPO before 2027" },
-  { id:"2413330", side:"bull",  htype:"event",      label:"Anthropic IPO by Dec 31, 2026" },
-  { id:"2109881", side:"bull",  htype:"structural", label:"Anthropic market cap flips BTC by Dec 31" },
-  { id:"676804",  side:"bull",  htype:"event",      label:"OpenAI consumer hardware product by Dec 31, 2026" },
-  { id:"2487206", side:"bull",  htype:"event",      label:"Next Mythos-class model by Sep 30, 2026" },
-  { id:"2255930", side:"bull",  htype:"event",      label:"AI data center in space by Dec 31, 2027" },
+  { id:"676829",  side:"bull",  htype:"event",      theme:"tech",    label:"GPT-6 released by Dec 31, 2026" },
+  { id:"653788",  side:"bull",  htype:"structural", theme:"tech",    label:"OpenAI announces AGI before 2027" },
+  { id:"676837",  side:"bull",  htype:"event",      theme:"tech",    label:"AI wins IMO gold medal in 2026" },
+  { id:"1087074", side:"bull",  htype:"structural", theme:"tech",    label:"Any model hits 1550 Chatbot Arena by Dec 31" },
+  { id:"656312",  side:"bull",  htype:"event",      theme:"capital", label:"OpenAI IPO by Dec 31, 2026" },
+  { id:"656313",  side:"bull",  htype:"event",      theme:"capital", label:"OpenAI $1t+ IPO before 2027" },
+  { id:"2413330", side:"bull",  htype:"event",      theme:"capital", label:"Anthropic IPO by Dec 31, 2026" },
+  { id:"2109881", side:"bull",  htype:"structural", theme:"capital", label:"Anthropic market cap flips BTC by Dec 31" },
+  { id:"676804",  side:"bull",  htype:"event",      theme:"tech",    label:"OpenAI consumer hardware product by Dec 31, 2026" },
+  { id:"2487206", side:"bull",  htype:"event",      theme:"tech",    label:"Next Mythos-class model by Sep 30, 2026" },
+  { id:"2255930", side:"bull",  htype:"event",      theme:"tech",    label:"AI data center in space by Dec 31, 2027" },
 
   { id:"691340",  side:"crash", htype:"structural", label:"AI bubble burst in 2026 (3+ crash triggers)", reflexive:true },
   { id:"676827",  side:"crash", htype:"event",      label:"OpenAI acquired before 2027" },
@@ -467,9 +488,9 @@ function adjustP(p, endMs, atMs, htype){
   const days=Math.max((endMs-atMs)/86400000, 7), pc=clamp(p,0.001,0.995);
   return Math.min(1-Math.pow(1-pc, 365/days), 0.995);
 }
-function indexNow(side){
+function indexNow(side, theme){
   let num=0,den=0,now=Date.now();
-  for(const c of CONSTITUENTS){ if(c.side!==side) continue; const m=markets.get(c.id);
+  for(const c of CONSTITUENTS){ if(c.side!==side||(theme&&c.theme!==theme)) continue; const m=markets.get(c.id);
     if(!m||m.closed) continue; const w=weightOf(c.id); num+=w*adjustP(m.yes,m.endDate,now,c.htype); den+=w; }
   return den?(num/den)*100:null;
 }
@@ -579,7 +600,11 @@ function computeGauge(){
   fam.equity={ label:"Equity drawdown", v: eq.length?eq.reduce((a,b)=>a+b)/eq.length:null };
   const avail=Object.values(fam).filter(f=>f.v!=null);
   const score=avail.length?avail.reduce((a,f)=>a+f.v,0)/avail.length:null;
-  return { score, fam, n:avail.length, total:Object.keys(fam).length };
+  // ex-ante vs coincident split: prediction markets, options skew and credit are priced
+  // before the fact; the vol complex and equity drawdown move with (or after) prices.
+  const mean=ks=>{ const vs=ks.map(k=>fam[k].v).filter(v=>v!=null); return vs.length?vs.reduce((a,b)=>a+b)/vs.length:null; };
+  const lead=mean(["pred","opt","credit"]), conf=mean(["vol","equity"]);
+  return { score, fam, n:avail.length, total:Object.keys(fam).length, lead, conf };
 }
 // returns { r, why: [human-readable triggered conditions] }
 function computeRegime(){
@@ -711,13 +736,18 @@ function renderGauge(){
   $("gaugeCoverage").innerHTML = n>=tot
     ? `All ${tot} signal families loaded.`
     : `<span class="badge">Partial</span> ${n} of ${tot} signal families loaded &mdash; the other ${tot-n} are dark (market-data.json not fetched). Read this number as provisional: the missing families could move it in either direction.`;
-  const order=["pred","opt","vol","credit","equity"];
-  $("cats").innerHTML=order.map(k=>{ const f=g.fam[k]; const v=f.v;
+  const catRow=k=>{ const f=g.fam[k]; const v=f.v;
     const col=v==null?"var(--muted)":v>=55?"var(--crit)":v>=35?"var(--warn)":"var(--good)";
-    return `<div class="cat"><span>${f.label}</span><span class="track"><i style="width:${v==null?0:clamp(v,0,100)}%;background:${col}"></i></span><span class="cv">${v==null?"n/a":v.toFixed(0)}</span></div>`;
-  }).join("");
+    return `<div class="cat"><span>${f.label}</span><span class="track"><i style="width:${v==null?0:clamp(v,0,100)}%;background:${col}"></i></span><span class="cv">${v==null?"n/a":v.toFixed(0)}</span></div>`; };
+  const groupHead=(name,sub,v)=>`<div class="cat" style="padding-top:9px"><span style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)"><strong style="color:var(--text-secondary)">${name}</strong> &middot; ${sub}</span><span></span><span class="cv" style="font-weight:700">${v==null?"n/a":v.toFixed(0)}</span></div>`;
+  $("cats").innerHTML=
+    groupHead("Leading","priced before the fact",g.lead)+
+    ["pred","opt","credit"].map(catRow).join("")+
+    groupHead("Confirming","moves with or after prices",g.conf)+
+    ["vol","equity"].map(catRow).join("");
+  const order=["pred","opt","vol","credit","equity"];
   const top=order.map(k=>g.fam[k]).filter(f=>f.v!=null).sort((a,b)=>b.v-a.v)[0];
-  $("gaugeNote").innerHTML=`Highest-pressure family right now: <strong>${top?top.label+" ("+top.v.toFixed(0)+")":"–"}</strong>. Bands on the meter and chart match the regime thresholds (35 / 55). Each family is normalized 0&ndash;100 against calm/stress reference levels (see methodology); the gauge is their equal-weighted mean. The history line is reconstructed from stored daily series &ndash; its prediction-market family uses the bubble market only, so it can sit slightly below the live number.`;
+  $("gaugeNote").innerHTML=`Highest-pressure family right now: <strong>${top?top.label+" ("+top.v.toFixed(0)+")":"–"}</strong>. Bands on the meter and chart match the regime thresholds (35 / 55). Each family is normalized 0&ndash;100 against calm/stress reference levels (see methodology); the headline gauge is the equal-weighted mean of all five. The <strong>leading</strong> sub-score (prediction markets, options skew, credit) is the early-warning read; the <strong>confirming</strong> sub-score (vol complex, equity drawdown) rises <em>while</em> a crash happens, not before &ndash; a high confirming score with a low leading score means the damage is already on the tape. The history line is reconstructed from stored daily series &ndash; its prediction-market family uses the bubble market only, so it can sit slightly below the live number.`;
   renderGaugeChart();
 }
 function renderGaugeChart(){
@@ -741,6 +771,10 @@ function renderTiles(){
   $("netVal").textContent=(v.bull!=null&&v.crash!=null)?(v.bull>=v.crash?"+":"")+(v.bull-v.crash).toFixed(1):"–";
   for(const [s,el] of [["bull","bullDelta"],["crash","crashDelta"],["reg","regDelta"]]){ const gg=sig[s];
     $(el).innerHTML=gg?`7d ${deltaSpan(gg.d7,1,"",RISK_UP[s])} pts &middot; z ${deltaSpan(gg.z,2,"",RISK_UP[s])}`:'<span class="dim">history pending</span>'; }
+  // tech-progress odds ≠ investment-cycle odds: show the split under the bull tile
+  const bt=indexNow("bull","tech"), bc=indexNow("bull","capital");
+  if(bt!=null&&bc!=null) $("bullDelta").innerHTML+=`<div class="sub" title="Tech = model releases, benchmarks, hardware. Capital = IPOs, valuation flips. Only the capital side reads on the investment cycle.">Tech ${bt.toFixed(1)} &middot; Capital ${bc.toFixed(1)}</div>`;
+  if(bc!=null&&v.crash!=null) $("netVal").parentElement.querySelector(".delta").innerHTML=`Positive = leans toward acceleration<div class="sub" title="Capital-markets bull constituents only vs crash – the cleaner financial-cycle read (tech progress can survive a financial unwind).">Capital-only net ${(bc>=v.crash?"+":"")+(bc-v.crash).toFixed(1)}</div>`;
   const last30=ser=>ser?ser.slice(-30):null;
   spark("bullSpark", last30(sig.bull?.series), "var(--bull)");
   spark("crashSpark", last30(sig.crash?.series), "var(--crash)");
@@ -919,6 +953,49 @@ function renderH100(){
     return hbar(label, b.p*100, b.hi!=null&&b.hi<=2.0?"var(--crash)":"var(--bull)"); }).join("");
   $("h100Dist").innerHTML=h;
 }
+function renderLeaps(){
+  const T=mkt?.tail;
+  if(!T||!Object.keys(T).length){ $("leapsStats").innerHTML='<div class="sub">Run the fetcher (with the updated script) to enable LEAPS tail probabilities.</div>'; $("leapsBars").innerHTML=""; $("leapsNote").innerHTML=""; return; }
+  const cell=(l,v,extra="")=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}${extra}</div></div>`;
+  const cells=[], bars=[];
+  for(const sym of ["NVDA","SOXX"]){
+    const t=T[sym]; if(!t) continue;
+    for(const lv of t.levels){
+      if(lv.p==null) continue;
+      const isTrig=lv.pct===t.trigger_pct;
+      bars.push(hbar(`${sym} ${lv.pct}%${isTrig?" (trigger)":""}`, lv.p*100, isTrig?"var(--crash)":"var(--reg)"));
+      if(isTrig) cells.push(cell(`P(${sym} ${lv.pct}% in ~${Math.round(t.dte/30)}mo)`, (lv.p*100).toFixed(1)+"%", ` <small>K $${lv.strike}</small>`));
+    }
+  }
+  $("leapsStats").innerHTML=cells.join("");
+  $("leapsBars").innerHTML='<div class="note" style="margin-top:10px"><strong>P(below level at expiry)</strong> – nearest listed strike, risk-neutral</div>'+bars.join("");
+  const nv=T.NVDA, bubble=markets.get(BUBBLE_ID);
+  let note="";
+  if(nv&&nv.levels[nv.levels.length-1].p!=null&&bubble&&!bubble.closed){
+    const pL=nv.levels[nv.levels.length-1].p*100, pB=bubble.yes*100;
+    note=`Cross-check: LEAPS price a ${pL.toFixed(1)}% chance of NVDA finishing ${nv.trigger_pct}% lower in ~${Math.round(nv.dte/30)} months; the Polymarket bubble market (which needs 3+ triggers, NVDA −50% among them) trades at ${pB.toFixed(1)}%. ${pB>pL?"The bubble market is pricing <strong>more</strong> stress than the far deeper options market – thin-book premium or information, take your pick.":"The deeper options market prices the tail at least as fat as the bubble market – the crash bid is not just a thin-book artifact."}`;
+  }
+  $("leapsNote").innerHTML=note+` As of ${esc(nv?.date||"")}, expiry ~${nv?nv.dte:"?"}d. Delayed CBOE quotes; N(&minus;d2) at r=4%.`;
+}
+function renderFundamentals(){
+  const F=mkt?.fundamentals;
+  if(!F||!F.quarters?.length){ $("fundStats").innerHTML='<div class="sub">Run the fetcher (with the updated script) to enable the fundamentals panel.</div>'; $("fundBars").innerHTML=""; $("fundNote").innerHTML=""; return; }
+  const n=F.quarters.length, lastC=F.capex_b[n-1], lastO=F.ocf_b[n-1];
+  const yoyIdx=F.quarters.indexOf(F.quarters[n-1].replace(/^(\d{4})/,(m,y)=>String(+y-1)));
+  const yoy=yoyIdx>=0?(lastC/F.capex_b[yoyIdx]-1)*100:null;
+  const ratio=lastO?lastC/lastO*100:null;
+  const cell=(l,v,extra="")=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}${extra}</div></div>`;
+  $("fundStats").innerHTML=[
+    cell("Combined capex, last qtr", "$"+lastC.toFixed(0)+"B", ` <small>${F.quarters[n-1]}</small>`),
+    yoy!=null?cell("Capex YoY", (yoy>0?"+":"")+yoy.toFixed(0)+"%"):"",
+    ratio!=null?cell("Capex / operating cash flow", ratio.toFixed(0)+"%", ` <small>${ratio>=90?"near the dot-com line":ratio>=70?"heavy":"funded"}</small>`):"",
+  ].join("");
+  const maxC=Math.max(...F.capex_b);
+  $("fundBars").innerHTML='<div class="note" style="margin-top:10px"><strong>Quarterly capex ($B)</strong> with capex/OCF</div>'+
+    F.quarters.map((q,i)=>{ const r=F.ocf_b[i]?Math.round(F.capex_b[i]/F.ocf_b[i]*100):null;
+      return `<div class="hbar"><span class="k">${q}${F.n_firms[i]<F.names.length?' <span class="sub">('+F.n_firms[i]+'/'+F.names.length+')</span>':''}</span><span class="track"><i style="width:${(F.capex_b[i]/maxC*100).toFixed(0)}%;background:${r!=null&&r>=90?"var(--crit)":r!=null&&r>=70?"var(--warn)":"var(--bull)"}"></i></span><span class="v">$${F.capex_b[i].toFixed(0)}B${r!=null?" · "+r+"%":""}</span></div>`; }).join("");
+  $("fundNote").innerHTML=`${esc(F.names.join(", "))}; calendar-quarter aggregation of 10-K/10-Q cash-flow lines (fiscal quarters mapped by period end). Capex/OCF above ~100% means the buildout runs on external financing &ndash; the regime where credit, not sentiment, ends the party. Filings lag the quarter by 4&ndash;8 weeks, so this panel is slow-moving by design: it tells you how far fundamentals must grow into the spend, not when the repricing starts. As of ${esc(F.asof)}.`;
+}
 function renderCrossVenue(){
   const K=mkt?.kalshi;
   if(!K||!K.markets||!K.markets.length){ $("kalshiTable").innerHTML=""; }
@@ -926,6 +1003,13 @@ function renderCrossVenue(){
     let h=`<thead><tr><th>Theme</th><th>Kalshi market</th><th class="num">YES</th></tr></thead><tbody>`;
     for(const m of K.markets) h+=`<tr><td class="sub">${esc(m.theme)}</td><td><a href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.title)}</a>${m.subtitle?` <span class="sub">${esc(m.subtitle)}</span>`:""}</td><td class="num">${m.price!=null?(m.price*100).toFixed(1)+"%":'<span class="dim">no quote</span>'}</td></tr>`;
     $("kalshiTable").innerHTML=h+"</tbody>";
+  }
+  const MC=mkt?.metaculus;
+  if(!MC||!MC.questions||!MC.questions.length){ $("metaculusTable").innerHTML=""; }
+  else{
+    let h=`<thead><tr><th>Search</th><th>Metaculus question <span class="sub">(calibrated forecaster crowd)</span></th><th class="num">Prob</th><th class="num">Forecasters</th></tr></thead><tbody>`;
+    for(const q of MC.questions) h+=`<tr><td class="sub">${esc(q.theme)}</td><td><a href="${esc(q.url)}" target="_blank" rel="noopener">${esc(q.title)}</a></td><td class="num">${(q.prob*100).toFixed(0)}%</td><td class="num dim">${q.forecasters??"–"}</td></tr>`;
+    $("metaculusTable").innerHTML=h+"</tbody>";
   }
   const M=mkt?.manifold;
   if(!M||!M.length){ $("manifoldTable").innerHTML=""; }
@@ -936,6 +1020,8 @@ function renderCrossVenue(){
   }
   $("kalshiCap").innerHTML="Where the same theme trades on several venues, disagreement is a confidence signal. "
     +(K&&!K.authed?`<strong>${esc(K.note||"Kalshi public feed exposes no live quotes.")}</strong> `:"")
+    +(MC&&!MC.enabled?"Metaculus panel off &ndash; add a free <code>METACULUS_TOKEN</code> repo secret to enable a real forecaster crowd with a published calibration record. ":"")
+    +(MC&&MC.enabled&&MC.questions.length?"Metaculus is a forecaster crowd (no capital at risk, but a strong calibration record) &ndash; best for long-horizon structural questions where Polymarket books are thin. ":"")
     +(M&&M.length?"Manifold is play-money &ndash; treat as crowd sentiment, not capital at risk.":"");
 }
 function renderTable(side){
@@ -950,10 +1036,19 @@ function renderTable(side){
   const th=(k,label,num)=>`<th class="sortable${num?" num":""}" data-k="${k}">${label} ${arrow(k)}</th>`;
   let h=`<thead><tr>${th("label","Market")}${th("yes","YES",1)}${hz?'<th class="num">1y-eq</th>':""}${th("d1","24h",1)}${th("d7","7d",1)}${th("vol","Vol",1)}<th class="num">Wt</th></tr></thead><tbody>`;
   const risky=RISK_UP[side];
+  // concentration: effective number of constituents = 1/Σ(w/Σw)² – exposes how few
+  // markets actually drive the index under the current weighting
+  if(rows.length&&totW){
+    const effN=1/rows.reduce((s,r)=>{ const w=weightOf(r.c.id)/totW; return s+w*w; },0);
+    const topW=Math.max(...rows.map(r=>weightOf(r.c.id)/totW))*100;
+    const el=$(side+"Meta");
+    if(el) el.innerHTML=`&ndash; ${rows.length} markets &middot; eff. N ${effN.toFixed(1)} &middot; top weight ${topW.toFixed(0)}%${side==="crash"?' &middot; bubble market dominates &amp; is reflexive':''}`;
+  }
   for(const {c,m} of rows){ const w=totW?(weightOf(c.id)/totW)*100:0;
     const spike=m.vol24>=1000&&m.vol1wk&&m.vol24/(m.vol1wk/7)>=2, thin=m.spread!=null&&m.spread>0.06;
     const padj=adjustP(m.yes,m.endDate,now,c.htype);
-    h+=`<tr><td><a href="${m.url}" target="_blank" rel="noopener">${esc(c.label)}</a>${c.htype==="structural"?'<span class="flag" title="structural question – not annualized">†</span>':""}${thin?'<span class="flag" title="wide bid/ask spread">⚠</span>':""}${spike?'<span class="flag" title="unusual 24h volume">⚡</span>':""}
+    const themeTag=c.theme?`<span class="badge" style="margin-left:5px" title="${c.theme==="tech"?"technology-progress odds – can stay high straight through a financial unwind":"capital-markets odds – the financial-cycle read"}">${c.theme==="tech"?"TECH":"CAP"}</span>`:"";
+    h+=`<tr><td><a href="${m.url}" target="_blank" rel="noopener">${esc(c.label)}</a>${themeTag}${c.htype==="structural"?'<span class="flag" title="structural question – not annualized">†</span>':""}${thin?'<span class="flag" title="wide bid/ask spread">⚠</span>':""}${spike?'<span class="flag" title="unusual 24h volume">⚡</span>':""}
       <div class="bar" style="max-width:150px"><i style="width:${(m.yes*100).toFixed(1)}%;background:${color}"></i></div></td>
       <td class="num">${(m.yes*100).toFixed(1)}%</td>${hz?`<td class="num dim">${c.htype==="event"?(padj*100).toFixed(1)+"%":"–"}</td>`:""}
       <td class="num">${deltaSpan(m.d1!=null?m.d1*100:null,1,"",risky)}</td><td class="num">${deltaSpan(m.d7!=null?m.d7*100:null,1,"",risky)}</td>
@@ -1159,7 +1254,7 @@ function renderAll(){
   computeSignals();
   renderGauge(); renderTiles(); renderRegime(); renderStack(); renderMomentum();
   renderVol(); renderCredit(); renderBreadth(); renderInsiders();
-  renderNvda(); renderH100(); renderCrossVenue();
+  renderNvda(); renderH100(); renderLeaps(); renderFundamentals(); renderCrossVenue();
   renderMainChart(); renderEquity(); renderLeadLag();
   for(const s of SIDES) renderTable(s);
   renderCoverage(); renderFresh(); takeSnapshot();
@@ -1193,8 +1288,12 @@ $("alertBtn").onclick=async()=>{ if(!("Notification" in window)){ alert("This br
 
 $("foot").innerHTML=`<p style="margin-top:8px"><strong>Composite.</strong> 100×Σ(wᵢ·pᵢ)/Σwᵢ over constituents live at each timestamp; the history panels are <strong>chain-linked</strong> (only common-member moves shift the line, so markets entering/leaving cause no step) and back-adjusted to read in probability units. Closed/resolved markets are dropped from the live index (see coverage). <strong>Deadline-adjusted</strong> basis annualizes only one-time-event markets (pᵢ→1−(1−p)^(365/days)); structural questions (†) are left raw.</p>
 <p style="margin-top:8px"><strong>Crash-Pressure Gauge.</strong> Five equally-weighted families, each normalized 0–100 vs calm→stress refs: prediction markets (bubble 0–40%, NVDA tail 0–25%, H100&lt;$2 0–30%), options skew (NVDA RR 1–10pt, SOXX 4–15pt), vol complex (VIX/VIX3M 0.82–1.05, VXN 18–40, SKEW 115–160, VVIX 90–130), credit (HYG &amp; HY/IG drawdown 0→−8%/−6%, HY OAS 2.5–5.0%, CCC OAS 8.5–14%), equity drawdown (NVDA 0→−50%, SOXX 0→−40%). The gauge history chart is reconstructed from stored daily series; its prediction-market family is bubble-market-only, so it slightly understates days when the NVDA-tail or H100 signals were hot. Regime: stressed at gauge≥55 / crash≥40 / crash≥25 with z≥2 / any stack≥25%; elevated at gauge≥35 / crash≥25 / z≥1.5 / stack≥15%. The chip states which condition fired.</p>
+<p style="margin-top:8px"><strong>Leading vs confirming.</strong> The five families are also split into a <em>leading</em> sub-score (prediction markets, options skew, credit – all priced before the fact) and a <em>confirming</em> sub-score (vol complex, equity drawdown – both move with or after prices). The headline gauge stays the mean of all five for continuity, but the split is the honest read: only the leading side can warn, and the lead-lag study below shows even that lead is unproven.</p>
+<p style="margin-top:8px"><strong>Bull split.</strong> Bull constituents are tagged TECH (model releases, benchmarks, hardware – technology-progress odds) or CAP (IPOs, valuation flips – capital-markets odds). Technology progress historically survives financial unwinds (railways, dot-com), so the capital-only sub-reading is the cleaner cycle signal; the tech side mostly tells you the release calendar is intact.</p>
+<p style="margin-top:8px"><strong>LEAPS tail.</strong> From the same CBOE chains: the expiry nearest 365d (min 250d), the listed put nearest each drawdown level, and P(S<sub>T</sub>&lt;K)=N(&minus;d2) at that strike&rsquo;s IV with r=4%. Risk-neutral, so it overstates real-world odds by the variance risk premium – use it as a deep-market ceiling to sanity-check the thin Polymarket bubble book, not as a forecast.</p>
+<p style="margin-top:8px"><strong>Fundamentals.</strong> SEC XBRL companyconcept quarterlies for MSFT/GOOGL/AMZN/META/ORCL (cumulative cash-flow lines differenced into single quarters, fiscal periods mapped to calendar quarters by end date; AMZN&rsquo;s post-2017 capex tag handled). Capex/OCF is the metric that actually distinguishes &ldquo;bubble&rdquo; (price vs fundamentals) from &ldquo;popping&rdquo; (price vs price) – everything else on this page is market-priced and can be collectively wrong.</p>
 <p style="margin-top:8px"><strong>Lead-lag.</strong> Non-overlapping windows, 2,000-shuffle permutation test, recomputed on history refresh only. The bubble market is reflexive with NVDA/SOXX so the ex-bubble row is the cleaner read – treat all of it as descriptive.</p>
-<p style="margin-top:8px"><strong>Cadence &amp; sources.</strong> Live Polymarket data (Gamma + CLOB, incl. bubble-market order-book depth) refreshes every 60s; histories, market-data.json and cached studies every 10min; NVDA/H100 events re-discovered hourly. market-data.json is produced by <code>update-market-data.py</code> (GitHub Action, ~30min cadence): Yahoo Finance (equity/vol/credit proxies), CBOE delayed quotes (25Δ risk reversals, single-name IV term structure), FRED keyless CSV (HY OAS, CCC OAS, NFCI), SEC EDGAR Form 4 (open-market S/P only, recent-filings sample), vast.ai public asks (realized H100 $/GPU-hr), Kalshi public API, Manifold public API (play-money). Constituents curated 2026-07-10; not investment advice.</p>`;
+<p style="margin-top:8px"><strong>Cadence &amp; sources.</strong> Live Polymarket data (Gamma + CLOB, incl. bubble-market order-book depth) refreshes every 60s; histories, market-data.json and cached studies every 10min; NVDA/H100 events re-discovered hourly. market-data.json is produced by <code>update-market-data.py</code> (GitHub Action, ~30min cadence): Yahoo Finance (equity/vol/credit proxies), CBOE delayed quotes (25Δ risk reversals, single-name IV term structure, LEAPS tail), FRED keyless CSV (HY OAS, CCC OAS, NFCI), SEC EDGAR Form 4 (open-market S/P only, recent-filings sample), SEC XBRL companyconcept (capex/OCF fundamentals), vast.ai public asks (realized H100 $/GPU-hr), Kalshi public API, Metaculus (optional token), Manifold public API (play-money). Constituents curated 2026-07-10; not investment advice.</p>`;
 
 (async()=>{
   try{

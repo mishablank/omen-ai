@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 """Fetch the non-Polymarket data feeds for the AI Crash dashboard into market-data.json.
 
-Sources (all free / unauthenticated):
+Sources (all free / unauthenticated unless noted):
   - Equity closes (Yahoo chart): NVDA, SOXX, AI-capex basket, SPY benchmark
   - Volatility complex (Yahoo chart): ^VXN, ^VIX, ^VIX3M, ^SKEW, ^VVIX
   - Options skew + IV term structure (CBOE delayed quotes): NVDA, SOXX
+  - LEAPS-implied 1y tail probabilities (same CBOE chains, N(-d2)): NVDA, SOXX
   - Credit proxies (Yahoo chart): HYG, LQD, JNK
   - Credit spreads (FRED, keyless CSV): HY OAS, CCC OAS, NFCI
-  - Cross-venue (Kalshi public API + Manifold public API)
+  - Hyperscaler capex fundamentals (SEC XBRL companyconcept): MSFT, GOOGL, AMZN, META, ORCL
+  - Cross-venue (Kalshi public API + Manifold public API + Metaculus, token optional)
   - Insider activity (SEC EDGAR Form 4): NVDA, AVGO, ORCL, CRWV
   - Realized GPU spot rent (vast.ai public bundles API): H100 SXM $/GPU-hr
+
+Optional env: METACULUS_TOKEN enables the Metaculus forecaster-crowd panel
+(create a free account at metaculus.com, token from the profile page).
 
 Also:
   --snapshot   append a chain-linkable snapshot (3 Polymarket indexes + gauge) to snapshots.csv
@@ -21,7 +26,7 @@ Env for --alert (all optional): TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID, and/or NT
 
 No third-party dependencies. Run it from the folder that serves the dashboard.
 """
-import urllib.request, urllib.error, urllib.parse, json, datetime, re, sys, os, time
+import urllib.request, urllib.error, urllib.parse, json, datetime, re, sys, os, time, math
 import xml.etree.ElementTree as ET
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -42,7 +47,19 @@ VOL = {"^VXN": "VXN", "^VIX": "VIX", "^VIX3M": "VIX3M", "^SKEW": "SKEW", "^VVIX"
 CREDIT = ["HYG", "LQD", "JNK"]
 FRED = {"BAMLH0A0HYM2": "HY_OAS", "BAMLH0A3HYC": "CCC_OAS", "NFCI": "NFCI"}
 SKEW_SYMS = ["NVDA", "SOXX"]
+# LEAPS tail: drawdown levels per symbol; the last one is the bubble-market trigger level
+TAIL_LEVELS = {"NVDA": [-30, -50], "SOXX": [-25, -40]}
+TAIL_RATE = 0.04          # risk-free rate for d2
+TAIL_MIN_DTE = 250        # only expiries at least this far out qualify as "1y"
 INSIDER_TICKERS = ["NVDA", "AVGO", "ORCL", "CRWV"]
+# hyperscaler / AI-capex fundamentals via SEC XBRL (calendar-quarter aggregation)
+FUND_CIKS = {"MSFT": "0000789019", "GOOGL": "0001652044", "AMZN": "0001018724",
+             "META": "0001326801", "ORCL": "0001341439"}
+FUND_TAGS = {"capex": ["PaymentsToAcquirePropertyPlantAndEquipment",
+                       "PaymentsToAcquireProductiveAssets"],       # AMZN's tag since 2017
+             "ocf": ["NetCashProvidedByUsedInOperatingActivities",
+                     "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations"]}
+METACULUS_TERMS = ["AI bubble", "AI winter", "artificial general intelligence"]
 KALSHI_SERIES = {
     "KXACQUIREMISTRAL": "AI lab acquisition (Mistral)",
     "KXRECSSNBER": "US recession (macro backdrop)",
@@ -106,7 +123,8 @@ def cboe_options(sym):
         if not m or o.get("iv") in (None, 0) or o.get("delta") is None:
             continue
         exp = datetime.datetime.strptime(m.group(1), "%y%m%d").date()
-        rows.append({"dte": (exp - today).days, "type": m.group(2), "iv": o["iv"], "delta": o["delta"]})
+        rows.append({"dte": (exp - today).days, "type": m.group(2), "iv": o["iv"],
+                     "delta": o["delta"], "strike": int(m.group(3)) / 1000.0})
     return d.get("current_price"), rows
 
 
@@ -119,8 +137,8 @@ def iv_at(exp_rows, typ, target):
     return None
 
 
-def cboe_skew_and_term(sym):
-    spot, rows = cboe_options(sym)
+def cboe_skew_and_term(sym, preloaded=None):
+    spot, rows = preloaded if preloaded else cboe_options(sym)
     today = datetime.date.today().isoformat()
     dtes = sorted(set(r["dte"] for r in rows if r["dte"] >= 25))
     if not dtes:
@@ -144,6 +162,166 @@ def cboe_skew_and_term(sym):
                     "iv_front": round(atm_f, 4), "iv_back": round(atm_b, 4),
                     "ratio": round(atm_f / atm_b, 4), "date": today}
     return skew, term
+
+
+# ---------- LEAPS-implied tail probabilities ----------
+def norm_cdf(x):
+    return 0.5 * (1 + math.erf(x / math.sqrt(2)))
+
+
+def bs_prob_below(spot, strike, iv, dte, r=TAIL_RATE):
+    """Risk-neutral P(S_T < K) = N(-d2). Overstates real-world crash odds a bit
+    (risk premium), which makes it a conservative ceiling for comparison."""
+    if not spot or not strike or not iv or iv <= 0 or dte <= 0:
+        return None
+    t = dte / 365.0
+    d2 = (math.log(spot / strike) + (r - iv * iv / 2) * t) / (iv * math.sqrt(t))
+    return norm_cdf(-d2)
+
+
+def options_tail(sym, spot, rows, prev):
+    """1y-ish LEAPS-implied probability of finishing below each drawdown level."""
+    if not spot:
+        return None
+    dtes = sorted(set(r["dte"] for r in rows if r["dte"] >= TAIL_MIN_DTE))
+    if not dtes:
+        return None
+    dte = min(dtes, key=lambda d: abs(d - 365))
+    puts = [r for r in rows if r["dte"] == dte and r["type"] == "P" and r.get("iv")]
+    if not puts:
+        return None
+    today = datetime.date.today().isoformat()
+    levels = []
+    for pct in TAIL_LEVELS.get(sym, [-30, -50]):
+        target = spot * (1 + pct / 100.0)
+        best = min(puts, key=lambda r: abs(r["strike"] - target))
+        if abs(best["strike"] - target) > 0.12 * target:
+            levels.append({"pct": pct, "strike": None, "iv": None, "p": None})
+            continue
+        p = bs_prob_below(spot, best["strike"], best["iv"], dte)
+        levels.append({"pct": pct, "strike": best["strike"], "iv": round(best["iv"], 4),
+                       "p": round(p, 4) if p is not None else None})
+    trig = levels[-1]["p"] if levels else None
+    hist = [h for h in ((prev or {}).get("history") or []) if h["date"] != today]
+    if trig is not None:
+        hist.append({"date": today, "p_trig": trig})
+    return {"date": today, "dte": dte, "spot": spot, "levels": levels,
+            "trigger_pct": TAIL_LEVELS.get(sym, [-30, -50])[-1], "history": hist[-365:]}
+
+
+# ---------- SEC XBRL fundamentals (hyperscaler capex vs operating cash flow) ----------
+def quarterlize(entries):
+    """XBRL cash-flow entries are cumulative from fiscal-year start (Q1, 6mo, 9mo, FY).
+    Return {calendar 'YYYYQn' of the period END: single-quarter value} by differencing
+    successive cumulatives within each fiscal-year group."""
+    ded = {}
+    for e in entries:
+        if e.get("start") and e.get("end") and e.get("val") is not None:
+            ded[(e["start"], e["end"])] = e["val"]     # later filings overwrite earlier
+    groups = {}
+    for (start, end), val in ded.items():
+        groups.setdefault(start, []).append((end, val))
+    out = {}
+    for start, evs in groups.items():
+        evs.sort()
+        d0 = datetime.date.fromisoformat(start)
+        prev_end, prev_val = None, 0.0
+        for end, val in evs:
+            d1 = datetime.date.fromisoformat(end)
+            span = (d1 - (datetime.date.fromisoformat(prev_end) if prev_end else d0)).days
+            if 75 <= span <= 105:                      # a clean single quarter
+                q = f"{d1.year}Q{(d1.month - 1) // 3 + 1}"
+                out[q] = val - prev_val
+            prev_end, prev_val = end, val
+    return out
+
+
+def sec_concept(cik, tags):
+    """Merge quarterly values across candidate tags (companies switch tags over time,
+    e.g. AMZN moved capex to PaymentsToAcquireProductiveAssets in 2017)."""
+    out = {}
+    for tag in tags:
+        try:
+            j = json.loads(get(f"https://data.sec.gov/api/xbrl/companyconcept/CIK{cik}/us-gaap/{tag}.json",
+                               headers=SEC_UA))
+            entries = j.get("units", {}).get("USD", [])
+            if entries:
+                out.update(quarterlize(entries))
+        except Exception:
+            continue
+    return out
+
+
+def fundamentals():
+    """Aggregate quarterly capex and operating cash flow across the AI-capex filers.
+    Capex/OCF is the classic capex-bubble fundamental (dot-com telecoms ran >100%)."""
+    per = {}
+    for sym, cik in FUND_CIKS.items():
+        capex = sec_concept(cik, FUND_TAGS["capex"])
+        ocf = sec_concept(cik, FUND_TAGS["ocf"])
+        if capex:
+            per[sym] = {"capex": capex, "ocf": ocf}
+            print(f"fundamentals {sym}: {len(capex)} quarters")
+        time.sleep(0.15)
+    if not per:
+        return None
+    allq = sorted(set(q for v in per.values() for q in v["capex"]))[-10:]
+    quarters, capex, ocf, count = [], [], [], []
+    for q in allq:
+        syms = [s for s in per if q in per[s]["capex"]]
+        if len(syms) < len(per) - 1:     # allow one laggard (off-cycle fiscal years)
+            continue
+        quarters.append(q)
+        capex.append(round(sum(per[s]["capex"][q] for s in syms) / 1e9, 2))
+        o = [per[s]["ocf"].get(q) for s in syms if per[s]["ocf"].get(q) is not None]
+        ocf.append(round(sum(o) / 1e9, 2) if len(o) == len(syms) else None)
+        count.append(len(syms))
+    if not quarters:
+        return None
+    return {"names": list(per.keys()), "quarters": quarters, "capex_b": capex,
+            "ocf_b": ocf, "n_firms": count,
+            "asof": datetime.date.today().isoformat()}
+
+
+# ---------- Metaculus (optional token; forecaster crowd, no capital at risk) ----------
+def metaculus():
+    tok = os.environ.get("METACULUS_TOKEN")
+    if not tok:
+        return {"enabled": False, "note": "Set METACULUS_TOKEN (free account) to enable the forecaster-crowd panel.", "questions": []}
+    seen, out = set(), []
+    for term in METACULUS_TERMS:
+        try:
+            j = json.loads(get("https://www.metaculus.com/api/posts/?"
+                               + urllib.parse.urlencode({"search": term, "limit": 6,
+                                                         "statuses": "open", "forecast_type": "binary"}),
+                               headers={"User-Agent": "omen-ai/1.0", "Authorization": f"Token {tok}"}))
+        except Exception as e:
+            print(f"metaculus '{term}': FAIL {e}")
+            continue
+        for post in j.get("results", []):
+            pid = post.get("id")
+            if pid in seen:
+                continue
+            q = post.get("question") or {}
+            prob = None
+            try:
+                agg = (q.get("aggregations") or {}).get("recency_weighted") or {}
+                latest = agg.get("latest") or {}
+                centers = latest.get("centers") or []
+                prob = centers[0] if centers else latest.get("means", [None])[0]
+            except Exception:
+                prob = None
+            if prob is None:
+                prob = q.get("community_prediction") if isinstance(q.get("community_prediction"), (int, float)) else None
+            n = post.get("nr_forecasters") or q.get("nr_forecasters")
+            if prob is None:
+                continue
+            seen.add(pid)
+            out.append({"theme": term, "title": post.get("title") or q.get("title"),
+                        "url": f"https://www.metaculus.com/questions/{pid}/",
+                        "prob": round(float(prob), 3), "forecasters": n})
+    out.sort(key=lambda x: -(x["forecasters"] or 0))
+    return {"enabled": True, "questions": out[:8]}
 
 
 # ---------- Kalshi ----------
@@ -354,6 +532,15 @@ def compute_gauge(data, price):
     return score, fam
 
 
+def gauge_groups(fam):
+    """Split the five families into ex-ante vs coincident sub-scores.
+    Leading = priced before the fact (prediction markets, options skew, credit);
+    Confirming = moves with or after prices (vol complex, equity drawdown)."""
+    lead = mean_or_none([fam.get("pred"), fam.get("opt"), fam.get("credit")])
+    conf = mean_or_none([fam.get("vol"), fam.get("equity")])
+    return lead, conf
+
+
 def compute_regime(gauge, price):
     bubble = (price.get(BUBBLE_ID) or 0) * 100
     crash_vals = [price[i] for i in POLY_IDS["crash"] if i in price]
@@ -377,13 +564,18 @@ def append_snapshot(data=None):
         vals = [price[i] for i in ids if i in price]
         row[side] = round(sum(vals) / len(vals) * 100, 2) if vals else ""
         row[side + "_n"] = len(vals)
-    gauge = ""
+    gauge = lead = conf = ""
     if data:
-        g, _ = compute_gauge(data, price)
+        g, fam = compute_gauge(data, price)
         gauge = round(g, 1) if g is not None else ""
+        gl, gc = gauge_groups(fam)
+        lead = round(gl, 1) if gl is not None else ""
+        conf = round(gc, 1) if gc is not None else ""
     row["gauge"] = gauge
+    row["lead"] = lead
+    row["conf"] = conf
     row["comp"] = ",".join(sorted(price.keys()))
-    header = ["date", "bull", "bull_n", "crash", "crash_n", "reg", "reg_n", "gauge", "comp"]
+    header = ["date", "bull", "bull_n", "crash", "crash_n", "reg", "reg_n", "gauge", "lead", "conf", "comp"]
     existing = {}
     if os.path.exists(SNAP):
         with open(SNAP) as f:
@@ -444,8 +636,10 @@ def check_alert(data):
     if rank[regime] > rank.get(prev.get("regime", "calm"), 0):
         gtxt = f"{gauge:.0f}" if gauge is not None else "?"
         bubble = (price.get(BUBBLE_ID) or 0) * 100
+        lead, conf = gauge_groups(fam)
         send_alert(f"AI Crash Monitor: regime -> {regime.upper()}",
-                   f"Gauge {gtxt}/100 · bubble market {bubble:.1f}% · families: "
+                   f"Gauge {gtxt}/100 (leading {lead and round(lead)} / confirming {conf and round(conf)}) "
+                   f"· bubble market {bubble:.1f}% · families: "
                    + ", ".join(f"{k} {v:.0f}" for k, v in fam.items() if v is not None))
     json.dump({"regime": regime, "gauge": gauge, "at": datetime.datetime.utcnow().isoformat() + "Z"},
               open(ALERT_STATE, "w"))
@@ -465,8 +659,9 @@ def build():
     data = {"updated": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "updated_date": now.strftime("%Y-%m-%d"),
             "basket": BASKET, "bench": "SPY",
-            "equity": {}, "vol": {}, "skew": {}, "term": {}, "credit": {},
-            "fred": {}, "kalshi": {}, "manifold": [], "insiders": {}, "gpu": None}
+            "equity": {}, "vol": {}, "skew": {}, "term": {}, "tail": {}, "credit": {},
+            "fred": {}, "kalshi": {}, "manifold": [], "metaculus": None,
+            "fundamentals": None, "insiders": {}, "gpu": None}
 
     for sym in EQUITY:
         try:
@@ -485,7 +680,17 @@ def build():
 
     for sym in SKEW_SYMS:
         try:
-            sk, term = cboe_skew_and_term(sym)
+            chain = cboe_options(sym)          # one download per symbol, reused below
+            sk, term = cboe_skew_and_term(sym, chain)
+            try:
+                tail = options_tail(sym, chain[0], chain[1], prev.get("tail", {}).get(sym))
+                if tail:
+                    data["tail"][sym] = tail
+                    trig = tail["levels"][-1]
+                    print(f"tail {sym}: P({trig['pct']}% @ {tail['dte']}d) = "
+                          f"{trig['p'] * 100:.1f}%" if trig["p"] is not None else f"tail {sym}: no quote at trigger")
+            except Exception as e:
+                print(f"tail {sym}: FAIL {e}")
             if sk:
                 hist = (prev.get("skew", {}).get(sym, {}) or {}).get("history", [])
                 hist = [h for h in hist if h["date"] != sk["date"]]
@@ -532,6 +737,20 @@ def build():
         print(f"manifold: FAIL {e}")
 
     try:
+        data["metaculus"] = metaculus()
+        print(f"metaculus: {len(data['metaculus']['questions'])} questions, enabled={data['metaculus']['enabled']}")
+    except Exception as e:
+        print(f"metaculus: FAIL {e}")
+
+    try:
+        data["fundamentals"] = fundamentals()
+        if data["fundamentals"]:
+            f = data["fundamentals"]
+            print(f"fundamentals: {len(f['quarters'])} quarters, latest capex ${f['capex_b'][-1]}B")
+    except Exception as e:
+        print(f"fundamentals: FAIL {e}")
+
+    try:
         data["gpu"] = gpu_spot(prev.get("gpu"))
         if data["gpu"]:
             print(f"gpu: H100 median ${data['gpu']['median_dph']}/hr ({data['gpu']['n_offers']} offers)")
@@ -542,6 +761,27 @@ def build():
         data["insiders"] = edgar_insiders()
     except Exception as e:
         print(f"insiders: FAIL {e}")
+
+    # server-side gauge + regime, embedded so the landing page and the monitor
+    # can never disagree about the headline regime
+    try:
+        price = poly_prices()
+        score, fam = compute_gauge(data, price)
+        lead, conf = gauge_groups(fam)
+        crash_vals = [price[i] for i in POLY_IDS["crash"] if i in price]
+        data["server_gauge"] = {
+            "score": round(score, 1) if score is not None else None,
+            "lead": round(lead, 1) if lead is not None else None,
+            "conf": round(conf, 1) if conf is not None else None,
+            "fam": {k: (round(v, 1) if v is not None else None) for k, v in fam.items()},
+            "regime": compute_regime(score, price),
+            "bubble": price.get(BUBBLE_ID),
+            "crash_level": round(sum(crash_vals) / len(crash_vals) * 100, 2) if crash_vals else None,
+            "at": now.strftime("%Y-%m-%dT%H:%M:%SZ")}
+        print(f"server gauge: {data['server_gauge']['score']} ({data['server_gauge']['regime']}) "
+              f"lead {data['server_gauge']['lead']} conf {data['server_gauge']['conf']}")
+    except Exception as e:
+        print(f"server gauge: FAIL {e}")
 
     with open(OUT, "w") as f:
         json.dump(data, f)

@@ -354,7 +354,7 @@ footer{border-top:1px solid var(--line);padding:64px 0 40px;position:relative;z-
     <div class="shead rv">
       <span class="kick">The gauge</span>
       <h2>How much crash risk<br>is priced in.</h2>
-      <p>Five independent signal families, each normalized 0–100 against calm→stress reference levels, equally weighted so no family dominates.</p>
+      <p>Five signal families, each normalized 0–100 against calm→stress reference levels. Three are <b style="color:var(--ink)">leading</b> (prediction markets, options skew, credit – priced before the fact) and two are <b style="color:var(--ink)">confirming</b> (volatility, equity drawdown – they rise while a crash happens, not before). Only the leading side can warn; a high confirming score means the damage is already on the tape.</p>
     </div>
     <div class="grid2 rv">
       <div class="gaugebox">
@@ -419,9 +419,9 @@ footer{border-top:1px solid var(--line);padding:64px 0 40px;position:relative;z-
         <p>Lifetime traded volume across the indexed prediction markets.</p>
       </div>
       <div class="stat">
-        <div class="v">5</div>
+        <div class="v">3+2</div>
         <div class="t">Signal families</div>
-        <p>Prediction markets, options skew, volatility, credit, and equity drawdown.</p>
+        <p>Three leading (prediction markets, options skew, credit) and two confirming (volatility, equity drawdown).</p>
       </div>
       <div class="stat">
         <div class="v" id="stat-gauge">23.6</div>
@@ -459,6 +459,11 @@ footer{border-top:1px solid var(--line);padding:64px 0 40px;position:relative;z-
         <span class="rom">iv.</span>
         <h3>Honesty</h3>
         <p>The lead-lag study finds <b style="color:var(--ink)">no statistically significant lead</b> of the crash index over NVDA/SOXX (right sign, p ≈ 0.14–0.19). The bubble-burst market is partly reflexive – it resolves on the very drawdowns it prices. Treat OMEN as a market-pricing monitor, not a validated forecast.</p>
+      </div>
+      <div class="mrow">
+        <span class="num">05</span>
+        <h3>Scope</h3>
+        <p>“Popping” and “bubble” are different questions. OMEN’s markets and gauges answer <b style="color:var(--ink)">how much stress is priced</b> — they cannot say the market is <em>wrong</em>, which is what “bubble” means. For that the monitor carries two non-sentiment anchors: audited <b style="color:var(--ink)">capex vs operating cash flow</b> for the AI-capex filers (SEC XBRL), and <b style="color:var(--ink)">LEAPS-implied 1-year tail odds</b> from the far deeper options market as a cross-check on thin prediction books. Everything else here can be collectively euphoric or collectively scared at the same time.</p>
       </div>
     </div>
     <div class="ranges rv">
@@ -504,8 +509,11 @@ footer{border-top:1px solid var(--line);padding:64px 0 40px;position:relative;z-
         <h4>Data</h4>
         <a href="https://gamma-api.polymarket.com" target="_blank" rel="noopener">Polymarket Gamma</a>
         <a href="https://finance.yahoo.com" target="_blank" rel="noopener">Yahoo Finance</a>
-        <a href="https://www.cboe.com" target="_blank" rel="noopener">CBOE delayed quotes</a>
+        <a href="https://www.cboe.com" target="_blank" rel="noopener">CBOE delayed quotes + LEAPS</a>
+        <a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany" target="_blank" rel="noopener">SEC EDGAR / XBRL</a>
+        <a href="https://fred.stlouisfed.org" target="_blank" rel="noopener">FRED</a>
         <a href="https://kalshi.com" target="_blank" rel="noopener">Kalshi</a>
+        <a href="https://www.metaculus.com" target="_blank" rel="noopener">Metaculus</a>
       </div>
       <div>
         <h4>Fine print</h4>
@@ -525,17 +533,17 @@ footer{border-top:1px solid var(--line);padding:64px 0 40px;position:relative;z-
 "use strict";
 /* ================= baked snapshot (2026-07-11) ================= */
 const MARKETS=[
-{id:"676829",side:"bull",ht:"event",label:"GPT-6 released by Dec 31, 2026",yes:0.92,d1:0.02,slug:"gpt-6-released-by"},
-{id:"653788",side:"bull",ht:"structural",label:"OpenAI announces AGI before 2027",yes:0.075,d1:null,slug:"openai-announces-it-has-achieved-agi-before-2027"},
-{id:"676837",side:"bull",ht:"event",label:"AI wins IMO gold medal in 2026",yes:0.63,d1:null,slug:"ai-wins-imo-gold-medal-in-2026"},
-{id:"1087074",side:"bull",ht:"structural",label:"Any model hits 1550 Chatbot Arena by Dec 31",yes:0.17,d1:null,slug:"chatbot-arena-how-high-will-ai-score-by-december-31"},
-{id:"656312",side:"bull",ht:"event",label:"OpenAI IPO by Dec 31, 2026",yes:0.185,d1:-0.05,slug:"openai-ipo-by"},
-{id:"656313",side:"bull",ht:"event",label:"OpenAI $1t+ IPO before 2027",yes:0.105,d1:null,slug:"openai-1t-ipo-before-2027"},
-{id:"2413330",side:"bull",ht:"event",label:"Anthropic IPO by Dec 31, 2026",yes:0.625,d1:null,slug:"anthropic-ipo-by"},
-{id:"2109881",side:"bull",ht:"structural",label:"Anthropic market cap flips BTC by Dec 31",yes:0.8,d1:null,slug:"will-anthropic-flip-btc-by-december-31"},
-{id:"676804",side:"bull",ht:"event",label:"OpenAI consumer hardware product by Dec 31, 2026",yes:0.33,d1:0.025,slug:"will-openai-launch-a-consumer-hardware-product-by"},
-{id:"2487206",side:"bull",ht:"event",label:"Next Mythos-class model by Sep 30, 2026",yes:0.815,d1:0.065,slug:"next-mythos-class-model-released-by"},
-{id:"2255930",side:"bull",ht:"event",label:"AI data center in space by Dec 31, 2027",yes:0.255,d1:null,slug:"ai-data-center-in-space-by"},
+{id:"676829",side:"bull",theme:"tech",ht:"event",label:"GPT-6 released by Dec 31, 2026",yes:0.92,d1:0.02,slug:"gpt-6-released-by"},
+{id:"653788",side:"bull",theme:"tech",ht:"structural",label:"OpenAI announces AGI before 2027",yes:0.075,d1:null,slug:"openai-announces-it-has-achieved-agi-before-2027"},
+{id:"676837",side:"bull",theme:"tech",ht:"event",label:"AI wins IMO gold medal in 2026",yes:0.63,d1:null,slug:"ai-wins-imo-gold-medal-in-2026"},
+{id:"1087074",side:"bull",theme:"tech",ht:"structural",label:"Any model hits 1550 Chatbot Arena by Dec 31",yes:0.17,d1:null,slug:"chatbot-arena-how-high-will-ai-score-by-december-31"},
+{id:"656312",side:"bull",theme:"capital",ht:"event",label:"OpenAI IPO by Dec 31, 2026",yes:0.185,d1:-0.05,slug:"openai-ipo-by"},
+{id:"656313",side:"bull",theme:"capital",ht:"event",label:"OpenAI $1t+ IPO before 2027",yes:0.105,d1:null,slug:"openai-1t-ipo-before-2027"},
+{id:"2413330",side:"bull",theme:"capital",ht:"event",label:"Anthropic IPO by Dec 31, 2026",yes:0.625,d1:null,slug:"anthropic-ipo-by"},
+{id:"2109881",side:"bull",theme:"capital",ht:"structural",label:"Anthropic market cap flips BTC by Dec 31",yes:0.8,d1:null,slug:"will-anthropic-flip-btc-by-december-31"},
+{id:"676804",side:"bull",theme:"tech",ht:"event",label:"OpenAI consumer hardware product by Dec 31, 2026",yes:0.33,d1:0.025,slug:"will-openai-launch-a-consumer-hardware-product-by"},
+{id:"2487206",side:"bull",theme:"tech",ht:"event",label:"Next Mythos-class model by Sep 30, 2026",yes:0.815,d1:0.065,slug:"next-mythos-class-model-released-by"},
+{id:"2255930",side:"bull",theme:"tech",ht:"event",label:"AI data center in space by Dec 31, 2027",yes:0.255,d1:null,slug:"ai-data-center-in-space-by"},
 {id:"691340",side:"crash",ht:"structural",label:"AI bubble burst in 2026 (3+ crash triggers)",yes:0.1595,d1:0.007,slug:"ai-bubble-burst-by"},
 {id:"676827",side:"crash",ht:"event",label:"OpenAI acquired before 2027",yes:0.0615,d1:null,slug:"openai-acquired-before-2027"},
 {id:"676846",side:"crash",ht:"event",label:"Anthropic acquired before 2027",yes:0.044,d1:0.0025,slug:"anthropic-acquired-before-2027"},
@@ -546,13 +554,14 @@ const MARKETS=[
 {id:"676842",side:"reg",ht:"event",label:"US enacts AI safety bill before 2027",yes:0.21,d1:null,slug:"us-enacts-ai-safety-bill-before-2027"},
 {id:"2839991",side:"reg",ht:"event",label:"Any state enacts data center moratorium by Dec 31",yes:0.375,d1:-0.19,slug:"will-any-state-enact-a-data-center-moratorium-by-december-31-20260707003733282"}
 ];
-const GAUGE = 23.6;
-const FAMILIES = [
- {label:"Options skew", v:32.4, note:"NVDA 25Δ RR 2.6 pt · SOXX 25Δ RR 9.2 pt"},
- {label:"Prediction markets", v:25.2, note:"Bubble burst 16% · NVDA deep tail 4% · H100 <$2 5.9%"},
- {label:"Equity drawdown", v:24.5, note:"NVDA −10.5% · SOXX −11.2% off highs"},
- {label:"Volatility complex", v:24.3, note:"VXN 24.9 · SKEW 144.7 · VIX/VIX3M 0.81 · VVIX 87.3"},
- {label:"Credit", v:11.3, note:"HYG −1.8% off high · HY/IG ratio at its high"},
+let GAUGE = 23.6;
+// g: "lead" = priced before the fact (can warn) · "conf" = moves with/after prices (confirms)
+let FAMILIES = [
+ {key:"pred",   g:"lead", label:"Prediction markets", v:25.2, note:"Bubble burst 16% · NVDA deep tail 4% · H100 <$2 5.9%"},
+ {key:"opt",    g:"lead", label:"Options skew", v:32.4, note:"NVDA 25Δ RR 2.6 pt · SOXX 25Δ RR 9.2 pt"},
+ {key:"credit", g:"lead", label:"Credit", v:11.3, note:"HYG −1.8% off high · HY/IG ratio at its high"},
+ {key:"vol",    g:"conf", label:"Volatility complex", v:24.3, note:"VXN 24.9 · SKEW 144.7 · VIX/VIX3M 0.81 · VVIX 87.3"},
+ {key:"equity", g:"conf", label:"Equity drawdown", v:24.5, note:"NVDA −10.5% · SOXX −11.2% off highs"},
 ];
 const EQ = {
  NVDA:{px:210.96,dd:-10.5,s:[180.05,183.04,183.34,177.82,182.65,184.77,186.03,183.14,180.25,183.22,181.93,180.4,178.56,172.7,175.64,175.2,178.68,171.24,167.52,165.17,174.4,175.75,177.39,177.64,178.1,182.08,183.91,188.63,189.31,196.51,198.87,198.35,201.68,202.06,199.88,202.5,199.64,208.27,216.61,213.17,209.25,199.57,198.45,198.48,196.5,207.83,211.5,215.2,219.44,220.78,225.83,235.74,225.32,222.32,220.61,223.47,219.51,215.33,214.86,212.6,214.25,211.14,224.36,222.82,214.75,218.66,205.1,208.64,208.19,200.42,204.87,205.19,212.45,207.41,204.65,210.69,208.65,200.04,199.0,195.74,192.53,194.97,200.09,197.58,194.83,195.55,196.93,204.12,202.78,210.96]},
@@ -562,7 +571,7 @@ const EQ = {
 };
 const SIDES = {
  bull:{name:"BULL", tick:"OMN-B", rom:"i.", color:"var(--bull)", mark:"#79c99a", thesis:"Up and to the right",
-   desc:"BULL is a trade on AI acceleration. Model releases, IPOs, benchmark records and hardware launches make the index rise."},
+   desc:"BULL is a trade on AI acceleration. TECH rows price technology progress (models, benchmarks, hardware); CAP rows price the capital markets (IPOs, valuations). Only the CAP side reads on the investment cycle – tech progress has survived every historical unwind."},
  crash:{name:"CRASH", tick:"OMN-C", rom:"ii.", color:"var(--crash)", mark:"#e2685a", thesis:"The music stops",
    desc:"CRASH is a trade on the unwind – the bubble-burst market plus distress-sale odds for the leading labs. It rises as the AI trade cracks."},
  reg:{name:"REG", tick:"OMN-R", rom:"iii.", color:"var(--reg)", mark:"#8fa8d8", thesis:"Washington gets a vote",
@@ -605,7 +614,7 @@ function renderCards(){
     const ms=MARKETS.filter(m=>m.side===side).sort((a,b)=>b.yes-a.yes);
     const rows=ms.map(m=>`<tr>
       <td title="${esc(m.label)}"><a href="https://polymarket.com/event/${esc(m.slug)}" target="_blank" rel="noopener">${esc(m.label)}</a></td>
-      <td class="ht">${m.ht==="event"?"EVENT":"STRUCT †"}</td>
+      <td class="ht">${m.ht==="event"?"EVENT":"STRUCT †"}${m.theme?(m.theme==="tech"?" · TECH":" · CAP"):""}</td>
       <td style="color:${S.color}">${(m.yes*100).toFixed(1)}%</td></tr>`).join("");
     const el=document.createElement("article");
     el.className="ix rv"; el.innerHTML=`
@@ -642,13 +651,28 @@ function drawDialTicks(){
   }
   g.innerHTML=h;
 }
-function renderGauge(){
-  $("fams").innerHTML=FAMILIES.map(f=>`
+// LEADING families (prediction markets, options skew, credit) are priced before the fact —
+// only they can warn. CONFIRMING families (vol complex, equity drawdown) move with or after
+// prices, so a high confirming score with a low leading score means the damage is already done.
+const GROUPS={lead:"LEADING · PRICED BEFORE THE FACT", conf:"CONFIRMING · MOVES WITH PRICES"};
+function renderFams(animate){
+  let h="", g0=null;
+  for(const f of FAMILIES){
+    if(f.g!==g0){ g0=f.g;
+      const gv=FAMILIES.filter(x=>x.g===g0&&x.v!=null);
+      const gm=gv.length?gv.reduce((a,x)=>a+x.v,0)/gv.length:null;
+      h+=`<div style="display:flex;justify-content:space-between;align-items:baseline;margin:${h?"26px":"0"} 0 14px"><span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)">${GROUPS[g0]}</span><span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accT)">${gm==null?"–":gm.toFixed(0)+" / 100"}</span></div>`; }
+    h+=`
    <div class="fam">
-     <div class="top"><span class="name">${f.label}</span><span class="val">${f.v.toFixed(1)} / 100</span></div>
-     <div class="bar"><i data-w="${f.v}"></i></div>
+     <div class="top"><span class="name">${f.label}</span><span class="val">${f.v==null?"–":f.v.toFixed(1)+" / 100"}</span></div>
+     <div class="bar"><i data-w="${f.v??0}"${animate?"":` style="width:${f.v??0}%"`}></i></div>
      <div class="note">${f.note}</div>
-   </div>`).join("");
+   </div>`;
+  }
+  $("fams").innerHTML=h;
+}
+function renderGauge(){
+  renderFams(true);
   drawDialTicks();
   // animated counters + needles fire on reveal
   const targets=[["gaugeNum",$("gaugeNum")],["dialNum",$("dialNum")]];
@@ -706,12 +730,96 @@ function renderEquity(){
   }
 }
 
-/* ================= live layer (Polymarket, CORS-open) ================= */
+/* ================= live layer (Polymarket + fetcher data) ================= */
+const REGIME_META={
+  calm:{word:"Calm", color:"var(--bullT)", border:"var(--bull)"},
+  elevated:{word:"Elevated", color:"var(--regT)", border:"var(--reg)"},
+  stressed:{word:"Stressed", color:"var(--crashT)", border:"var(--crash)"},
+};
+const dd=s=>{ if(!s||!s.length) return null; const hi=Math.max(...s.map(p=>p.c)); return (s[s.length-1].c/hi-1)*100; };
+function famNotes(mkt, bubblePct){
+  const sk=mkt.skew||{}, V=mkt.vol||{}, F=mkt.fred||{}, E=mkt.equity||{};
+  const rr=s=>sk[s]?.rr!=null?(sk[s].rr*100).toFixed(1)+" pt":"–";
+  const ts=(V.VIX&&V.VIX3M)?(V.VIX.last/V.VIX3M.last).toFixed(2):"–";
+  return {
+    pred: bubblePct!=null?`Bubble burst ${bubblePct.toFixed(1)}% (bubble market only – see monitor for the full stack)`:"–",
+    opt: `NVDA 25Δ RR ${rr("NVDA")} · SOXX 25Δ RR ${rr("SOXX")}`,
+    credit: (F.HY_OAS?`HY OAS ${F.HY_OAS.last.toFixed(2)}%`:"–")+(F.CCC_OAS?` · CCC ${F.CCC_OAS.last.toFixed(2)}%`:""),
+    vol: (V.VXN?`VXN ${V.VXN.last.toFixed(1)}`:"–")+(V.SKEW?` · SKEW ${V.SKEW.last.toFixed(1)}`:"")+` · VIX/VIX3M ${ts}`+(V.VVIX?` · VVIX ${V.VVIX.last.toFixed(1)}`:""),
+    equity: (E.NVDA?`NVDA ${dd(E.NVDA).toFixed(1)}%`:"–")+(E.SOXX?` · SOXX ${dd(E.SOXX).toFixed(1)}%`:"")+" off highs",
+  };
+}
+function applyServerData(mkt){
+  const sg=mkt&&mkt.server_gauge;
+  if(!sg||sg.score==null) return;
+  // regime: server-side rules, refined with the live Polymarket prices just fetched –
+  // the landing headline can no longer contradict the monitor
+  const bm=MARKETS.find(m=>m.id==="691340");
+  const bubble=(bm&&!bm.closed?bm.yes:(sg.bubble||0))*100;
+  const crashLevel=indexOf("crash");
+  let regime="calm";
+  if(sg.score>=55||crashLevel>=40||bubble>=25) regime="stressed";
+  else if(sg.score>=35||crashLevel>=25||bubble>=15) regime="elevated";
+  const R=REGIME_META[regime];
+  GAUGE=sg.score;
+  // headline reading + meter
+  const rw=$("regimeWord"); rw.textContent=R.word; rw.style.color=R.color;
+  $("gaugeNum").innerHTML=sg.score.toFixed(1)+"<small>/100</small>";
+  $("meterCap").textContent=sg.score.toFixed(1)+" / 100";
+  $("needle").style.left=Math.max(1,Math.min(99,sg.score))+"%";
+  // keep the SVG dial arc + needle in step with the number (they were set to the hardcoded value at first render)
+  const df=$("dialFill"); if(df) df.style.strokeDashoffset=(283*(1-sg.score/100)).toFixed(1);
+  const dn=$("dialNeedle"); if(dn) dn.setAttribute("transform",`rotate(${(-90+180*sg.score/100).toFixed(1)} 110 110)`);
+  const bands=document.querySelectorAll(".bandlabels span");
+  const bi=regime==="stressed"?(sg.score>=75?4:3):regime==="elevated"?2:(sg.score<12?0:1);
+  bands.forEach((b,i)=>b.classList.toggle("active",i===bi));
+  // both regime chips (hero + dial) must agree, or the page contradicts itself
+  document.querySelectorAll(".regime").forEach(chip=>{ chip.textContent="Regime · "+R.word; chip.style.borderColor=R.border; chip.style.color=R.color; });
+  const foot=document.querySelector(".gaugebox .foot");
+  if(foot) foot.innerHTML=`STRESSED &ge; 55 · ELEVATED &ge; 35<br>LEADING ${sg.lead??"–"} · CONFIRMING ${sg.conf??"–"}<br>SNAPSHOT ${esc(sg.at||mkt.updated||"")}`;
+  const sgStat=$("stat-gauge");
+  if(sgStat){ sgStat.textContent=sg.score.toFixed(1);
+    const b=sgStat.parentElement.querySelector("p b"); if(b){ b.textContent=R.word; b.style.color=R.color; } }
+  // families with live values + notes
+  const notes=famNotes(mkt, bubble);
+  for(const f of FAMILIES){ if(sg.fam&&sg.fam[f.key]!=null) f.v=sg.fam[f.key]; if(notes[f.key]) f.note=notes[f.key]; }
+  renderFams(false);
+  // driver box: name the condition that set the regime, else the hottest family
+  const q=document.querySelector(".driver .q"), meta=document.querySelector(".driver .meta");
+  if(q&&meta){
+    const trips=[];
+    if(bubble>=25) trips.push(`AI bubble-burst market at ${bubble.toFixed(1)}% – single-market trip (≥25% = Stressed)`);
+    else if(bubble>=15) trips.push(`AI bubble-burst market at ${bubble.toFixed(1)}% – single-market trip (≥15% = Elevated)`);
+    if(crashLevel>=25) trips.push(`Crash index at ${crashLevel.toFixed(1)} (≥25 = Elevated)`);
+    if(sg.score>=35) trips.push(`Blended gauge at ${sg.score.toFixed(0)} (≥35 = Elevated)`);
+    if(regime!=="calm"&&trips.length){
+      q.textContent=trips[0];
+      meta.innerHTML=`REGIME DRIVER · <b>BLENDED GAUGE ${sg.score.toFixed(1)} / 100${sg.score<35?" – STILL IN THE CALM BAND, SINGLE-SIGNAL TRIP":""}</b> · AS OF ${esc((sg.at||"").slice(0,10))}`;
+    }else{
+      const top=FAMILIES.filter(f=>f.v!=null).slice().sort((a,b)=>b.v-a.v)[0];
+      if(top){ q.textContent=`${top.label} — ${top.note}`;
+        meta.innerHTML=`HIGHEST-PRESSURE FAMILY · <b>${top.label.toUpperCase()} ${top.v.toFixed(0)} / 100</b> · ${top.g==="lead"?"A LEADING (EX-ANTE) SIGNAL":"A CONFIRMING (COINCIDENT) SIGNAL"} · AS OF ${esc((sg.at||"").slice(0,10))}`; }
+    }
+  }
+  // equity strip from fresh closes
+  if(mkt.equity){
+    for(const sym of Object.keys(EQ)){
+      const s=mkt.equity[sym]; if(!s||s.length<10) continue;
+      EQ[sym]={px:s[s.length-1].c, dd:dd(s), s:s.slice(-90).map(p=>p.c)};
+    }
+    renderEquity();
+  }
+}
 async function goLive(){
   try{
     const qs=MARKETS.map(m=>"id="+m.id).join("&");
-    const res=await fetch(`${GAMMA}/markets?${qs}&limit=${MARKETS.length}`);
+    const [res,mktRes]=await Promise.all([
+      fetch(`${GAMMA}/markets?${qs}&limit=${MARKETS.length}`),
+      fetch("market-data.json",{cache:"no-store"}).catch(()=>null),
+    ]);
     if(!res.ok) throw new Error("gamma "+res.status);
+    var mktData=null;
+    if(mktRes&&mktRes.ok){ try{ mktData=await mktRes.json(); }catch(e){} }
     const arr=await res.json(); const byId={};
     for(const m of arr) byId[String(m.id)]=m;
     let vol=0, live=0;
@@ -733,6 +841,7 @@ async function goLive(){
     $("stat-vol").textContent="$"+(vol/1e6).toFixed(1)+"M";
     const chip=$("livechip"); chip.classList.add("on");
     $("livetxt").textContent="LIVE · POLYMARKET GAMMA · "+new Date().toISOString().slice(0,16).replace("T"," ")+" UTC";
+    try{ applyServerData(mktData); }catch(e){ /* baked gauge stays */ }
     fetchSparks();
   }catch(e){ /* baked snapshot stays */ }
 }

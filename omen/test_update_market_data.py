@@ -57,6 +57,53 @@ def test_parse_form4_bad_xml_is_zero():
     assert umd.parse_form4_xml("<not xml") == (0.0, 0.0)
 
 
+def test_bs_prob_below_is_sane_and_monotonic():
+    # deeper strikes must be less likely; a rough known value anchors the math
+    p50 = umd.bs_prob_below(210.0, 105.0, 0.51, 340)
+    p30 = umd.bs_prob_below(210.0, 147.0, 0.46, 340)
+    assert p50 is not None and p30 is not None
+    assert 0.05 < p50 < 0.20          # ~10% at current NVDA vols
+    assert p30 > p50                  # -30% strictly more likely than -50%
+    assert umd.bs_prob_below(210.0, 105.0, 0, 340) is None
+    assert umd.bs_prob_below(None, 105.0, 0.5, 340) is None
+
+
+def test_quarterlize_differences_cumulative_flows():
+    # calendar-FY filer: Q1 direct, 6mo/9mo/FY cumulative -> quarters by subtraction
+    entries = [
+        {"start": "2025-01-01", "end": "2025-03-31", "val": 10.0},
+        {"start": "2025-01-01", "end": "2025-06-30", "val": 25.0},
+        {"start": "2025-01-01", "end": "2025-09-30", "val": 45.0},
+        {"start": "2025-01-01", "end": "2025-12-31", "val": 70.0},
+    ]
+    q = umd.quarterlize(entries)
+    assert q["2025Q1"] == 10.0
+    assert q["2025Q2"] == 15.0
+    assert q["2025Q3"] == 20.0
+    assert q["2025Q4"] == 25.0
+
+
+def test_quarterlize_maps_offset_fiscal_years_to_calendar_quarters():
+    # June-FY filer (MSFT-style): fiscal Q2 ends Dec 31 -> calendar Q4
+    entries = [
+        {"start": "2025-07-01", "end": "2025-09-30", "val": 30.0},
+        {"start": "2025-07-01", "end": "2025-12-31", "val": 64.0},
+    ]
+    q = umd.quarterlize(entries)
+    assert q["2025Q3"] == 30.0
+    assert q["2025Q4"] == 34.0
+
+
+def test_gauge_groups_split():
+    fam = {"pred": 30.0, "opt": 40.0, "credit": 20.0, "vol": 50.0, "equity": 70.0}
+    lead, conf = umd.gauge_groups(fam)
+    assert lead == 30.0
+    assert conf == 60.0
+    lead2, conf2 = umd.gauge_groups({"pred": 10.0, "opt": None, "credit": None,
+                                     "vol": None, "equity": None})
+    assert lead2 == 10.0 and conf2 is None
+
+
 def test_gauge_families_and_regime():
     data = {
         "skew": {"NVDA": {"rr": 0.055}, "SOXX": {"rr": 0.095}},

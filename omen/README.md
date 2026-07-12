@@ -11,13 +11,25 @@ else comes from `market-data.json`, produced by `update-market-data.py`.
 
 - **Crash-Pressure Gauge** — five equally-weighted families (prediction markets, options skew,
   vol complex, credit, equity drawdown), each normalized 0–100, plus a **reconstructed 90-day
-  history** with regime bands.
+  history** with regime bands. Families are also split into a **leading** sub-score (prediction
+  markets, options skew, credit – priced before the fact) and a **confirming** sub-score
+  (vol complex, equity drawdown – moves with/after prices); only the leading side can warn.
 - **Regime chip** — Calm / Elevated / Stressed, and *which threshold fired* (e.g. "bubble market ≥ 15%").
+  The fetcher embeds the same server-side gauge + regime into `market-data.json`
+  (`server_gauge`), which the landing page reads — so the two pages can't disagree.
 - **Three composite indexes** (Bull / Crash / Regulation) as chain-linked small multiples with
-  event annotations, tile sparklines, and risk-direction-aware delta colors.
-- **New signal panels** — FRED credit spreads (HY OAS, CCC OAS, NFCI), single-name IV term
+  event annotations, tile sparklines, and risk-direction-aware delta colors. Bull constituents
+  are tagged **TECH** (technology-progress odds) vs **CAP** (capital-markets odds) with
+  sub-readings, since tech progress can survive a financial unwind.
+- **LEAPS tail panel** — risk-neutral P(NVDA −50% / SOXX −40% in ~1y) from long-dated CBOE
+  puts via N(−d2), as a deep-market cross-check on the thin Polymarket bubble book.
+- **Fundamentals panel** — combined quarterly capex and operating cash flow for
+  MSFT/GOOGL/AMZN/META/ORCL from SEC XBRL (the one non-market-priced anchor; capex/OCF is the
+  classic capex-bubble metric).
+- **Signal panels** — FRED credit spreads (HY OAS, CCC OAS, NFCI), single-name IV term
   structure, AI-complex breadth (basket vs SPY, % above 50-DMA), SEC Form 4 insider net-selling,
-  H100 rent *implied vs realized* (vast.ai), Manifold cross-venue, bubble-market order-book depth.
+  H100 rent *implied vs realized* (vast.ai), Kalshi/Metaculus/Manifold cross-venue,
+  bubble-market order-book depth, per-index concentration (effective N).
 - **Influencer board** — curated editorial snapshot, or auto-scored (see below).
 
 ## Local use
@@ -38,10 +50,12 @@ Tests: `python3 -m pytest` (covers FRED parsing, Form 4 parsing, and the server-
 | Prediction markets, order book | Polymarket Gamma + CLOB |
 | Equity / vol / credit proxies | Yahoo Finance chart API |
 | 25Δ risk reversal + IV term structure | CBOE delayed quotes |
+| LEAPS-implied 1y tail (N(−d2)) | CBOE delayed quotes (same chains) |
 | HY OAS, CCC OAS, NFCI | FRED `fredgraph.csv` (honest UA required) |
+| Hyperscaler capex / OCF fundamentals | SEC XBRL `companyconcept` (honest UA required) |
 | Insider net-selling | SEC EDGAR Form 4 (open-market S/P only) |
 | Realized H100 spot rent | vast.ai public bundles API |
-| Cross-venue | Kalshi public API, Manifold public API |
+| Cross-venue | Kalshi public API, Manifold public API, Metaculus (needs free `METACULUS_TOKEN`) |
 
 ## Hosting: Cloudflare Worker + R2
 
@@ -99,6 +113,7 @@ git push
 ```
 
 Optional Action secrets (Settings → Secrets and variables → Actions): the two `CLOUDFLARE_*`
-above for R2, plus `TELEGRAM_*` / `NTFY_TOPIC` for alerts and `XAI_API_KEY` for influencer scoring.
+above for R2, plus `TELEGRAM_*` / `NTFY_TOPIC` for alerts, `XAI_API_KEY` for influencer scoring,
+and `METACULUS_TOKEN` for the Metaculus cross-venue panel (free account; token on the profile page).
 
 Not investment advice.

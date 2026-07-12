@@ -37,6 +37,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          METACULUS_TOKEN: ${{ secrets.METACULUS_TOKEN }}
         run: python3 omen/update-market-data.py --snapshot --alert
 
       - name: Refresh influencer sentiment (optional; needs XAI_API_KEY)
