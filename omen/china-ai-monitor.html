@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>China AI Substitution Monitor</title>
+<meta name="description" content="Tracks demand for Chinese LLMs (DeepSeek, Qwen, GLM, Kimi, MiniMax) as a leading indicator of substitution pressure on US AI stocks.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+  :root {
+    /* OMEN dark-almanac theme: warm charcoal, amber accent (matches the landing page + monitor) */
+    --surface-1: #13110c; --page: #0b0a08;
+    --text-primary: #ece7db; --text-secondary: #a59c88; --muted: #6e6656;
+    --grid: #262117; --baseline: #3a3222; --border: rgba(236,231,219,0.12);
+    --acc: #e3a63c; --accT: #f2c977;
+    --cn: #e2685a; --us: #8fa8d8; --other: #6e6656;
+    --cn-wash: rgba(226,104,90,0.12); --us-wash: rgba(143,168,216,0.12);
+    --aqua: #79c99a; --violet: #e3a63c; --reg: #8fa8d8;
+    --delta-up: #79c99a; --delta-down: #e2685a;
+    --good: #79c99a; --warn: #e3a63c; --crit: #e2685a;
+    --good-wash: rgba(121,201,154,0.10); --warn-wash: rgba(227,166,60,0.12); --crit-wash: rgba(226,104,90,0.12);
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--page); color: var(--text-primary); padding: 22px 20px 48px; max-width: 1160px; margin: 0 auto;
+    background-image: radial-gradient(900px 380px at 78% -120px, rgba(227,166,60,.06), transparent 70%); }
+  a { color: inherit; }
+  a:hover { text-decoration: underline; }
+  ::selection { background: var(--acc); color: #141005; }
+  .backlink { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; white-space: nowrap; display: inline-block; margin-bottom: 10px; }
+  .backlink:hover { color: var(--accT); border-color: var(--acc); text-decoration: none; }
+  header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  header h1 { font-family: var(--serif); font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
+  .chip { font-size: 12px; font-weight: 650; padding: 4px 12px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; }
+  .chip i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .chip.contained { background: var(--good-wash); } .chip.contained i { background: var(--good); }
+  .chip.building { background: var(--warn-wash); } .chip.building i { background: var(--warn); }
+  .chip.displacing { background: var(--crit-wash); } .chip.displacing i { background: var(--crit); }
+  header p.sub { color: var(--text-secondary); font-size: 13.5px; margin-top: 4px; flex-basis: 100%; line-height: 1.5; }
+  .fresh { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; font-size: 11.5px; color: var(--text-secondary); background: var(--surface-1); border: 1px solid var(--border); border-radius: 9px; padding: 7px 12px; margin: 14px 0; }
+  .fresh span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .fresh i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; background: var(--baseline); }
+  .fresh i.ok { background: var(--good); } .fresh i.warn { background: var(--warn); } .fresh i.err { background: var(--crit); }
+  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px 14px; margin-top: 14px; }
+  .card h2 { font-family: var(--serif); font-size: 17px; font-weight: 700; }
+  .sub { font-size: 11.5px; color: var(--muted); font-weight: 400; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+  @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } .grid2 > .card { margin-top: 0; } }
+  .grid2 .card { margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+  th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); font-weight: 600; padding: 8px 8px 6px; border-bottom: 1px solid var(--grid); }
+  td { padding: 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tag { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; letter-spacing: .04em; }
+  .tag.cn { background: var(--cn-wash); color: var(--cn); }
+  .tag.us { background: var(--us-wash); color: var(--us); }
+  .gauge { display: grid; grid-template-columns: 240px 1fr; gap: 26px; align-items: center; margin-top: 6px; }
+  @media (max-width: 700px) { .gauge { grid-template-columns: 1fr; } }
+  .gaugeNum { font-size: 60px; font-weight: 600; line-height: 1; }
+  .gaugeNum small { font-size: 15px; color: var(--muted); font-weight: 400; }
+  .meter { height: 12px; border-radius: 6px; margin-top: 12px; background: linear-gradient(90deg, var(--good) 0%, var(--good) 30%, var(--warn) 42%, var(--warn) 58%, var(--crit) 72%, var(--crit) 100%); position: relative; opacity: 0.85; }
+  .meter .mk { position: absolute; top: -4px; width: 3px; height: 20px; background: var(--text-primary); border-radius: 2px; transform: translateX(-50%); }
+  .meterlab { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 5px; }
+  .cats { display: flex; flex-direction: column; }
+  .cat { display: grid; grid-template-columns: 210px 1fr 44px 44px; gap: 10px; align-items: center; font-size: 12.5px; padding: 5px 0; }
+  @media (max-width: 700px) { .cat { grid-template-columns: 130px 1fr 40px 40px; } }
+  .cat .track { height: 8px; background: var(--grid); border-radius: 4px; overflow: hidden; }
+  .cat .track i { display: block; height: 100%; border-radius: 4px; background: var(--cn); }
+  .cat .cv, .cat .cw { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+  .cat .cw { color: var(--muted); font-size: 11px; }
+  .statrow { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 12px; }
+  .stat .l { font-size: 11.5px; color: var(--muted); }
+  .stat .v { font-size: 19px; font-weight: 600; margin-top: 1px; font-variant-numeric: tabular-nums; }
+  .stat .v small { font-size: 12px; font-weight: 400; color: var(--muted); }
+  .note { font-size: 11.5px; color: var(--muted); margin-top: 9px; line-height: 1.55; }
+  .hbar { display: grid; grid-template-columns: 128px 1fr 76px; gap: 8px; align-items: center; font-size: 12.5px; margin-top: 7px; }
+  .hbar .track { height: 10px; background: var(--grid); border-radius: 5px; overflow: hidden; }
+  .hbar .track i { display: block; height: 100%; border-radius: 5px; background: var(--cn); }
+  .hbar .v { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-secondary); white-space: nowrap; }
+  .hbar .k { color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chartwrap { position: relative; margin-top: 8px; }
+  .chartwrap svg { width: 100%; height: auto; display: block; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i.line { width: 14px; height: 2.5px; border-radius: 2px; display: inline-block; }
+  .splitbar { display: flex; height: 18px; border-radius: 6px; overflow: hidden; margin-top: 10px; font-size: 0; }
+  .splitbar i { display: block; height: 100%; }
+  .splitlab { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-secondary); margin-top: 5px; }
+  .eqgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 10px; margin-top: 12px; }
+  .eq { border: 1px solid var(--grid); border-radius: 9px; padding: 10px 12px; }
+  .eq .sym { font-size: 11.5px; font-weight: 700; letter-spacing: .04em; }
+  .eq .dd { float: right; font-size: 11.5px; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .eq .px { font-size: 17px; font-weight: 600; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .eq svg { display: block; width: 100%; height: 30px; margin-top: 6px; }
+  .tl { margin-top: 10px; }
+  .tl .ev { display: grid; grid-template-columns: 92px 1fr; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--grid); font-size: 13px; }
+  .tl .ev:last-child { border-bottom: none; }
+  .tl .d { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tl .t { line-height: 1.5; }
+  .tl .rx { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .tl .rx b.dn { color: var(--delta-down); } .tl .rx b.up { color: var(--delta-up); }
+  .banner { font-size: 12.5px; padding: 9px 12px; border-radius: 8px; margin-top: 12px; display: none; background: var(--warn-wash); }
+  .banner.show { display: block; }
+  .up { color: var(--delta-up); } .down { color: var(--delta-down); }
+  code { font-size: 11.5px; background: var(--grid); padding: 1px 5px; border-radius: 4px; }
+  footer { margin-top: 22px; font-size: 12px; color: var(--muted); line-height: 1.65; }
+  footer h3 { font-size: 12.5px; color: var(--text-secondary); margin: 14px 0 4px; }
+</style>
+</head>
+<body>
+
+<a class="backlink" href="index.html">&larr; OMEN</a>
+<header>
+  <h1>China AI Substitution Monitor</h1>
+  <span class="chip building" id="regime"><i></i>Loading</span>
+  <p class="sub">Tracks demand for Chinese open-weight models &ndash; <strong>DeepSeek, Qwen, GLM&nbsp;(Z.ai), Kimi&nbsp;(Moonshot), MiniMax, MiMo&nbsp;(Xiaomi)</strong> &ndash; as a leading indicator for US AI equities. Thesis: Chinese open-model adoption &uarr; &rarr; pricing pressure on proprietary US models &uarr; &rarr; lower expected inference margins and marginal GPU demand &rarr; pressure on US AI infrastructure stocks. Companion to the <a href="polymarket-ai-index.html">AI Crash Monitor</a>.</p>
+</header>
+
+<div class="fresh" id="fresh">
+  <span><i id="f-or"></i>OpenRouter usage: <b id="f-or-t">&hellip;</b></span>
+  <span><i id="f-hf"></i>Hugging Face: <b id="f-hf-t">&hellip;</b></span>
+  <span><i id="f-gh"></i>GitHub: <b id="f-gh-t">&hellip;</b></span>
+  <span><i id="f-pm"></i>Polymarket: <b id="f-pm-t">&hellip;</b></span>
+  <span><i id="f-eq"></i>Equity: <b id="f-eq-t">&hellip;</b></span>
+  <span><i id="f-sn"></i>Leaderboards/consumer: <b id="f-sn-t">snapshot</b></span>
+</div>
+
+<div id="dataAge" class="banner"></div>
+
+<!-- ============ ADOPTION INDEX GAUGE ============ -->
+<div class="card">
+  <h2>Chinese AI Adoption Index <span class="sub">&ndash; weighted composite, 0&ndash;100. Weights follow the source methodology; families without a live or recent source are excluded and weights renormalized.</span></h2>
+  <div class="gauge">
+    <div>
+      <div class="gaugeNum"><span id="gaugeVal">&ndash;</span><small>/100</small></div>
+      <div class="meter"><span class="mk" id="gaugeMk" style="left:0%"></span></div>
+      <div class="meterlab"><span>Contained</span><span>Building</span><span>Displacing</span></div>
+      <div class="note" id="gaugeNote"></div>
+    </div>
+    <div class="cats" id="cats"></div>
+  </div>
+  <div class="statrow">
+    <div class="stat"><div class="l">Substitution Pressure Index (SPI)</div><div class="v" id="spiVal">&ndash;</div><div class="l">Chinese-lab tokens &divide; US-lab tokens, OpenRouter trailing week</div></div>
+    <div class="stat"><div class="l">Chinese share of routed tokens</div><div class="v" id="cnShareVal">&ndash;</div><div class="l">named Chinese labs, trailing week</div></div>
+    <div class="stat"><div class="l">4-week change</div><div class="v" id="cnShareDelta">&ndash;</div><div class="l">share, percentage points</div></div>
+    <div class="stat"><div class="l">Frontier price gap</div><div class="v" id="priceGapVal">&ndash;</div><div class="l">US flagship output $/M &divide; Chinese flagship</div></div>
+  </div>
+</div>
+
+<!-- ============ SPI / SHARE TREND ============ -->
+<div class="card">
+  <h2>Substitution pressure trend <span class="sub">&ndash; weekly Chinese vs US lab share of OpenRouter routed tokens (named authors; the platform's "others" bucket is excluded, so Chinese share is a lower bound)</span></h2>
+  <div class="chartwrap"><svg id="trendChart" viewBox="0 0 960 300" preserveAspectRatio="none"></svg></div>
+  <div class="legend">
+    <span><i class="line" style="background:var(--cn)"></i>Chinese labs share</span>
+    <span><i class="line" style="background:var(--us)"></i>US labs share</span>
+    <span><i class="line" style="background:var(--violet)"></i>SPI (CN&divide;US, right scale)</span>
+  </div>
+  <div class="note" id="trendNote"></div>
+</div>
+
+<div class="grid2">
+  <!-- ============ OPENROUTER PANEL ============ -->
+  <div class="card">
+    <h2>OpenRouter usage &ndash; by lab <span class="sub">&ndash; trailing week, live</span></h2>
+    <div class="splitbar" id="orSplit"></div>
+    <div class="splitlab"><span id="orSplitL"></span><span id="orSplitR"></span></div>
+    <div id="orLabs"></div>
+    <div class="note">Tokens routed through <a href="https://openrouter.ai/rankings" target="_blank" rel="noopener">OpenRouter</a> only &ndash; first-party OpenAI/Anthropic/Gemini API traffic is invisible here, so this measures the price-sensitive, model-agnostic segment where substitution shows up first.</div>
+  </div>
+
+  <!-- ============ TOP MODELS ============ -->
+  <div class="card">
+    <h2>Top models by routed tokens <span class="sub">&ndash; trailing week, live</span></h2>
+    <table id="topModels"><thead><tr><th>#</th><th>Model</th><th></th><th class="num">Tokens/wk</th><th class="num">Share</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<div class="grid2">
+  <!-- ============ PRICING ============ -->
+  <div class="card">
+    <h2>Inference price compression <span class="sub">&ndash; flagship $/1M tokens, live from OpenRouter</span></h2>
+    <table id="priceTable"><thead><tr><th>Model</th><th></th><th class="num">Input</th><th class="num">Output</th></tr></thead><tbody></tbody></table>
+    <div class="note" id="priceNote"></div>
+  </div>
+
+  <!-- ============ HUGGING FACE ============ -->
+  <div class="card">
+    <h2>Hugging Face adoption <span class="sub">&ndash; 30-day rolling downloads by lab, live</span></h2>
+    <div class="splitbar" id="hfSplit"></div>
+    <div class="splitlab"><span id="hfSplitL"></span><span id="hfSplitR"></span></div>
+    <div id="hfLabs"></div>
+    <div class="note">Chinese labs vs US open-weight families (Llama, Gemma, GPT-OSS, Phi, Nemotron, OLMo). Sum of each org's top-50 repos; community quantizations/finetunes not attributed, so both sides are undercounts.</div>
+  </div>
+</div>
+
+<div class="grid2">
+  <!-- ============ GITHUB ============ -->
+  <div class="card">
+    <h2>GitHub developer engagement <span class="sub">&ndash; flagship repos, live</span></h2>
+    <table id="ghTable"><thead><tr><th>Repo</th><th class="num">Stars</th><th class="num">Forks</th><th class="num">&Delta;/day</th></tr></thead><tbody></tbody></table>
+    <div class="note" id="ghNote">Star velocity is measured against this browser's first visit (stored locally), so it reads "calibrating" until a later visit. Fork counts are the stronger adoption signal.</div>
+  </div>
+
+  <!-- ============ LEADERBOARDS (snapshot) ============ -->
+  <div class="card">
+    <h2>Leaderboard proximity <span class="sub" id="lbAsof">&ndash; snapshot</span></h2>
+    <div class="statrow">
+      <div class="stat"><div class="l">Best Chinese model on LMArena</div><div class="v" id="lbBest">&ndash;</div><div class="l" id="lbBestSub"></div></div>
+      <div class="stat"><div class="l">Elo gap to US leader</div><div class="v" id="lbGap">&ndash;</div><div class="l" id="lbGapSub"></div></div>
+      <div class="stat"><div class="l">Chinese models in top 10 / top 20</div><div class="v" id="lbCounts">&ndash;</div><div class="l">text arena, ordinal ranks</div></div>
+      <div class="stat"><div class="l">Artificial Analysis index</div><div class="v" id="aaVals">&ndash;</div><div class="l" id="aaSub"></div></div>
+    </div>
+    <div class="note">Source: <a href="https://arena.ai/leaderboard/text" target="_blank" rel="noopener">arena.ai</a> (ex-lmarena.ai) and <a href="https://artificialanalysis.ai/models" target="_blank" rel="noopener">Artificial Analysis</a>. No public CORS API &ndash; refreshed via the updater script, values dated in the header.</div>
+  </div>
+</div>
+
+<!-- ============ POLYMARKET ============ -->
+<div class="card">
+  <h2>Prediction markets &ndash; Chinese AI leadership <span class="sub">&ndash; live Polymarket odds</span></h2>
+  <table id="pmTable"><thead><tr><th>Market</th><th class="num">YES</th><th class="num">24h &Delta;</th></tr></thead><tbody></tbody></table>
+  <div class="note">Leadership markets resolve on <a href="https://arena.ai/leaderboard/text" target="_blank" rel="noopener">arena.ai</a> rankings. These are the market's own probabilities that Chinese labs take or hold the frontier &ndash; the cleanest forward-looking read in this monitor.</div>
+</div>
+
+<!-- ============ EQUITY ============ -->
+<div class="card">
+  <h2>US AI equity check <span class="sub" id="eqAsof">&ndash; the stocks this pressure would show up in</span></h2>
+  <div class="eqgrid" id="eqGrid"></div>
+  <div class="note" id="eqNote">Prices from the site's shared feed (<code>market-data.json</code>, auto-refreshed server-side). Drawdown is vs the 6-month high. Correlation caveat: the <a href="polymarket-ai-index.html">AI Crash Monitor</a>'s lead-lag study finds no statistically significant lead from prediction-market signals to NVDA/SOXX yet &ndash; treat this page as a market-pricing monitor, not a validated forecast.</div>
+</div>
+
+<!-- ============ TIMELINE ============ -->
+<div class="card">
+  <h2>Event timeline &ndash; Chinese model catalysts vs US stock reactions</h2>
+  <div class="tl" id="timeline"></div>
+</div>
+
+<!-- ============ THESIS ============ -->
+<div class="card">
+  <h2>Why this matters for US AI stocks</h2>
+  <div class="note" style="font-size:12.5px; margin-top:8px">
+    <b>Enterprise switching is underway.</b> CNBC (2026-07-07): Coinbase cut AI spend nearly 50% by moving ~1,200 internal agents to GLM-5.2 and Kimi K2.7; Lindy migrated fully off Claude to DeepSeek; Uber capped engineer AI budgets at $1,500/month; Citi reportedly restricted access to the most expensive OpenAI/Anthropic tiers. Chinese models price 60&ndash;90% below US flagships for near-frontier quality.<br><br>
+    <b>The capex asymmetry is the exposure.</b> US hyperscaler capex was ~$400B in 2025 with &gt;$520B consensus for 2026, vs ~$57B for China's major platforms (UBS). If cheap open-weight models keep compressing inference pricing, the revenue side of that capex &ndash; and the margin structure of proprietary US model vendors &ndash; is what gets repriced. NVDA's China datacenter revenue already fell from ~$4.6B/yr to ~zero under export controls, so the remaining channel is margin pressure and demand-mix shifts, not lost China sales.<br><br>
+    <b>The counter-thesis is live too.</b> 2026 has produced no repeat of the Jan-2025 DeepSeek selloff: NVDA beat earnings through DeepSeek V4's launch window and made new highs after V4-Pro. Chinese labs remain export-control constrained, and US frontier models still hold the #1 spots on quality leaderboards. Watch this page for the divergence, not the conclusion.
+  </div>
+</div>
+
+<footer id="foot">
+  <h3>Methodology</h3>
+  <b>Chinese AI Adoption Index</b> = &Sigma;(w<sub>i</sub>&middot;s<sub>i</sub>)/&Sigma;w<sub>i</sub> over available signal families, each normalized 0&ndash;100 against fixed reference ranges: OpenRouter Chinese token share 0&rarr;70% (w=30), Hugging Face Chinese share of open-weight downloads 0&rarr;70% (w=20), GitHub star velocity across the flagship basket 0&rarr;2,000/day (w=15), Western search/consumer interest share 0&rarr;50% (w=10), consumer app adoption 0&rarr;100 judgmental (w=10), LMArena proximity 100&minus;Elo-gap, floored at 0 (w=5), community mentions (Reddit/X) &ndash; not tracked, no public API (w=10, excluded). Weights follow the source note's suggested scheme; excluded families renormalize.
+  <b>SPI</b> = Chinese-lab &divide; US-lab routed tokens (named authors) on OpenRouter, trailing week.
+  <b>Frontier price gap</b> = median output $/M of US flagships (GPT-5.6 family, Claude Opus/Sonnet, Gemini Pro/Flash) &divide; median of Chinese flagships (DeepSeek V4, GLM-5.x, Kimi K2.x, Qwen Max, MiniMax M3).
+  <h3>Caveats</h3>
+  OpenRouter sees only routed traffic &ndash; it overstates Chinese share of the total market (first-party US API traffic is invisible) but is the best public real-time proxy for the substitutable segment. HF download totals mix model generations and exclude derivative quantizations. Leaderboard, search-interest and app figures are dated snapshots (see freshness strip) refreshed by <code>update-china-data.py</code>. Prediction-market prices are thin in places. Nothing here is a validated forecast of equity returns &ndash; the companion monitor's own lead-lag test is honest about that.
+  <h3>Sources</h3>
+  <a href="https://openrouter.ai/rankings" target="_blank" rel="noopener">OpenRouter rankings</a> &middot;
+  <a href="https://huggingface.co" target="_blank" rel="noopener">Hugging Face Hub API</a> &middot;
+  <a href="https://docs.github.com/rest" target="_blank" rel="noopener">GitHub API</a> &middot;
+  <a href="https://polymarket.com/markets/ai" target="_blank" rel="noopener">Polymarket Gamma API</a> &middot;
+  <a href="https://arena.ai/leaderboard/text" target="_blank" rel="noopener">arena.ai</a> &middot;
+  <a href="https://artificialanalysis.ai/models" target="_blank" rel="noopener">Artificial Analysis</a> &middot;
+  <a href="https://www.cnbc.com/2026/07/07/chinese-ai-models-costs-us-openai-anthropic.html" target="_blank" rel="noopener">CNBC 2026-07-07</a>
+  <br><br>Built as part of <a href="index.html">OMEN</a>. Not investment advice.
+</footer>
+
+<script>
+"use strict";
+/* ---------------- snapshot defaults (overridden by china-data.json if present) ---------------- */
+const SNAP = {
+  snapshot_date: "2026-07-12",
+  lmarena: { best_model:"qwen3.7-max-preview", best_org:"Alibaba", best_rank:17, best_score:1475,
+             us_leader:"claude-fable-5", us_leader_score:1509, top10:0, top20:1, votes:7274904, asof:"2026-07-10" },
+  artificial_analysis: { cn_best:"GLM-5.2", cn_score:51, us_best:"Claude Fable 5", us_score:60, asof:"2026-07-12" },
+  search_consumer: {
+    // Goodie AI-referral traffic report, Mar-Apr 2026: DeepSeek+Qwen <1% of Western AI referral traffic vs ChatGPT 62.6% / Claude 18.5% / Gemini 10.6%.
+    western_share_pct: 1, asof: "2026-04",
+    note: "Western consumer search/referral interest in Chinese AI apps remains marginal; the demand shift is developer/API-side."
+  },
+  apps: {
+    // Domestic-China strength, minimal Western chart presence (latest verified: Jan 2026 MAU census).
+    score: 20, asof: "2026-01",
+    note: "Qwen app >200M MAU, Doubao >100M DAU, DeepSeek ~82M WAU - overwhelmingly domestic; no sustained Western top-chart presence."
+  },
+  github_stars_per_day: null,          // computed from local baseline after first visit
+  equity_extra: null                    // updater can add BABA/KWEB series here
+};
+/* ---------------- config ---------------- */
+const CN_AUTHORS = new Set(["deepseek","qwen","z-ai","thudm","moonshotai","minimax","xiaomi","tencent","stepfun","baidu","bytedance-seed","baai","inclusionai","01-ai","internlm","openbmb","openbuddy","nex-agi"]);
+const US_AUTHORS = new Set(["openai","anthropic","google","meta-llama","x-ai","nvidia","microsoft","amazon","perplexity","poolside","inception","liquid","allenai","ibm-granite","openrouter","arcee-ai","nousresearch"]);
+const CN_LABEL = { deepseek:"DeepSeek", qwen:"Qwen (Alibaba)", "z-ai":"GLM (Z.ai)", moonshotai:"Kimi (Moonshot)", minimax:"MiniMax", xiaomi:"MiMo (Xiaomi)", tencent:"Hunyuan (Tencent)", stepfun:"StepFun", "bytedance-seed":"Seed (ByteDance)", baidu:"Ernie (Baidu)" };
+const HF_CN_ORGS = ["deepseek-ai","Qwen","moonshotai","zai-org","MiniMaxAI","tencent","XiaomiMiMo","stepfun-ai"];
+const HF_US_ORGS = ["meta-llama","openai","google","microsoft","nvidia","allenai"];
+const HF_US_FAMILY = /llama|gemma|gpt-oss|phi-|phi\d|nemotron|olmo|granite|dbrx/i;
+const GH_REPOS = ["deepseek-ai/DeepSeek-V3","deepseek-ai/DeepSeek-R1","QwenLM/Qwen3","zai-org/GLM-5","MoonshotAI/Kimi-K2","MiniMax-AI/MiniMax-M2","XiaomiMiMo/MiMo"];
+const PM_MARKETS = [
+  { id:"1820798", label:"Chinese company has the best AI model by Dec 31, 2026" },
+  { id:"2873443", label:"Chinese company has a top-3 AI model by Dec 31, 2026" },
+  { id:"2873458", label:"Chinese company has a top-5 AI model by Dec 31, 2026" },
+  { id:"2873459", label:"Chinese company has a top-10 AI model by Dec 31, 2026" },
+  { id:"2787890", label:"US government removes public access to a major Chinese AI model in 2026" },
+  { id:"2431240", label:"Alibaba has the best Chinese AI model at end of July 2026" },
+  { id:"2431245", label:"DeepSeek has the best Chinese AI model at end of July 2026" },
+  { id:"2431244", label:"Z.ai has the best Chinese AI model at end of July 2026" }
+];
+const PRICE_CN = [
+  { pick:["deepseek/deepseek-v4-pro"], label:"DeepSeek V4 Pro" },
+  { pick:["deepseek/deepseek-v4-flash"], label:"DeepSeek V4 Flash" },
+  { pick:["z-ai/glm-5.2","z-ai/glm-5.1"], label:"GLM-5.2 (Z.ai)" },
+  { pick:["moonshotai/kimi-k2.7-code","moonshotai/kimi-k2.6"], label:"Kimi K2.7 Code" },
+  { pick:["minimax/minimax-m3"], label:"MiniMax M3" },
+  { pick:["qwen/qwen3.7-max","qwen/qwen3.6-max","qwen/qwen3-max"], label:"Qwen Max" }
+];
+const PRICE_US = [
+  { pick:["openai/gpt-5.6-sol"], label:"GPT-5.6 Sol" },
+  { pick:["openai/gpt-5.6-terra"], label:"GPT-5.6 Terra" },
+  { pick:["anthropic/claude-opus-4.8"], label:"Claude Opus 4.8" },
+  { pick:["anthropic/claude-sonnet-5"], label:"Claude Sonnet 5" },
+  { pick:["google/gemini-3.5-flash"], label:"Gemini 3.5 Flash" },
+  { pick:["google/gemini-3.1-pro-preview","google/gemini-3-pro","google/gemini-3.1-pro"], label:"Gemini 3.1 Pro" }
+];
+const EQ_SYMS = ["NVDA","SOXX","AVGO","MU","ANET","CRWV","ORCL","SMCI","VST","MSFT","META","SPY"];
+const TIMELINE = [
+  { d:"2025-01-27", t:"DeepSeek R1 shock - $6M training-cost narrative breaks the capex consensus.", rx:"NVDA <b class='dn'>-16.9%</b>, record ~$589B single-day cap loss; SMH ~-10%; >$1T off tech." },
+  { d:"2025-11-06", t:"Kimi K2 Thinking - a 'slow DeepSeek moment'; ~$4.6M cost claim, beat GPT-5 on HLE text.", rx:"No indexed selloff; commoditization narrative builds." },
+  { d:"2026-02-23", t:"DeepSeek V4 launch (~1T params, coding-focused), timed into NVDA earnings week.", rx:"Pre-release jitters, then <b class='up'>no crash</b>: NVDA beat ($68.1B rev) and guided higher." },
+  { d:"2026-04-25", t:"DeepSeek V4-Pro - 1.6T MoE trained on Huawei Ascend 950, not Nvidia.", rx:"NVDA closed at then-record $208, first $5T company. Market shrugged." },
+  { d:"2026-05-31", t:"DeepSeek makes 75% 'promo' pricing permanent - V4-Pro output to $0.87/M.", rx:"Price-compression regime becomes structural." },
+  { d:"2026-06-21", t:"GLM-5.2 (Z.ai) matches Claude Opus 4.8 agentic benchmarks within ~1pt at ~1/5 cost.", rx:"Reignites catch-up debate (Axios); no indexed move." },
+  { d:"2026-07-07", t:"Reuters: DeepSeek building its own inference chip. CNBC: Chinese share of OpenRouter tokens >30% every week since Feb, enterprises switching.", rx:"NVDA <b class='dn'>-1.6%</b> intraday, already ~17% off its $236 high." }
+];
+/* ---------------- helpers ---------------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmtT = n => n >= 1e12 ? (n/1e12).toFixed(2)+"T" : n >= 1e9 ? (n/1e9).toFixed(1)+"B" : n >= 1e6 ? (n/1e6).toFixed(1)+"M" : n >= 1e3 ? (n/1e3).toFixed(0)+"k" : String(n);
+const pct = (x, d=1) => (x*100).toFixed(d) + "%";
+const clamp01 = x => Math.max(0, Math.min(1, x));
+function dot(id, cls, txt){ const i=$( "f-"+id ); i.className = cls; $("f-"+id+"-t").textContent = txt; }
+async function jget(url, opt){ const r = await fetch(url, opt); if(!r.ok) throw new Error(url+" -> "+r.status); return r.json(); }
+const store = { get(k){ try{ return JSON.parse(localStorage.getItem("cnmon:"+k)); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem("cnmon:"+k, JSON.stringify(v)); }catch(e){} } };
+/* ---------------- state ---------------- */
+let snap = SNAP;
+const S = { or:null, orShare:null, hf:null, gh:null, pm:null, eq:null, prices:null };
+const IDX = {};   // family -> {w, val|null, detail}
+
+/* ---------------- OpenRouter: weekly model rankings + market share ---------------- */
+function authorOf(slug){ return slug.split("/")[0]; }
+function sideOf(a){ return CN_AUTHORS.has(a) ? "cn" : US_AUTHORS.has(a) ? "us" : "other"; }
+async function loadOpenRouter(){
+  try{
+    const [wk, ms] = await Promise.all([
+      jget("https://openrouter.ai/api/frontend/v1/rankings/models?view=week"),
+      jget("https://openrouter.ai/api/frontend/v1/rankings/market-share")
+    ]);
+    // per-model week
+    const models = wk.data.map(m => ({ slug:m.model_permaslug, variant:m.variant_permaslug||m.model_permaslug, tok:(m.total_prompt_tokens||0)+(m.total_completion_tokens||0) }))
+      .filter(m => m.tok > 0);
+    const byAuthor = {}; let tot=0;
+    for(const m of models){ const a=authorOf(m.slug); byAuthor[a]=(byAuthor[a]||0)+m.tok; tot+=m.tok; }
+    let cn=0, us=0;
+    for(const [a,t] of Object.entries(byAuthor)){ const s=sideOf(a); if(s==="cn")cn+=t; else if(s==="us")us+=t; }
+    S.or = { models: models.sort((a,b)=>b.tok-a.tok), byAuthor, tot, cn, us };
+    // weekly share series
+    const series = ms.data.map(w => {
+      let c=0,u=0,t=0;
+      for(const [a,v] of Object.entries(w.ys)){ t+=v; const s=sideOf(a); if(s==="cn")c+=v; else if(s==="us")u+=v; }
+      return { x:w.x, cn:c, us:u, tot:t };
+    }).filter(w => w.tot>0);
+    S.orShare = series;
+    dot("or","ok","live, wk to "+(ms.data.at(-1)?.x||"?"));
+  }catch(e){ dot("or","err","unavailable"); }
+}
+/* ---------------- OpenRouter pricing ---------------- */
+async function loadPrices(){
+  try{
+    const d = await jget("https://openrouter.ai/api/v1/models");
+    const map = new Map(d.data.map(m=>[m.id,m]));
+    const resolve = spec => { for(const id of spec.pick){ const m=map.get(id); if(m) return { label:spec.label, id, inP:+m.pricing.prompt*1e6, outP:+m.pricing.completion*1e6 }; } return null; };
+    S.prices = { cn: PRICE_CN.map(resolve).filter(Boolean), us: PRICE_US.map(resolve).filter(Boolean) };
+  }catch(e){ S.prices = null; }
+}
+/* ---------------- Hugging Face ---------------- */
+async function loadHF(){
+  try{
+    const fetchOrg = async org => {
+      const d = await jget("https://huggingface.co/api/models?author="+org+"&sort=downloads&direction=-1&limit=50");
+      return d.map(m => ({ id:m.id, dl:m.downloads||0 }));
+    };
+    const cnLists = await Promise.all(HF_CN_ORGS.map(fetchOrg));
+    const usLists = await Promise.all(HF_US_ORGS.map(fetchOrg));
+    const cnOrgs = HF_CN_ORGS.map((org,i)=>({ org, dl: cnLists[i].reduce((s,m)=>s+m.dl,0), top: cnLists[i][0] }));
+    const usOrgs = HF_US_ORGS.map((org,i)=>({ org, dl: usLists[i].filter(m=>HF_US_FAMILY.test(m.id)).reduce((s,m)=>s+m.dl,0) }));
+    const cn = cnOrgs.reduce((s,o)=>s+o.dl,0), us = usOrgs.reduce((s,o)=>s+o.dl,0);
+    S.hf = { cnOrgs: cnOrgs.sort((a,b)=>b.dl-a.dl), usOrgs: usOrgs.sort((a,b)=>b.dl-a.dl), cn, us };
+    dot("hf","ok","live, 30-day rolling");
+  }catch(e){ dot("hf","err","unavailable"); }
+}
+/* ---------------- GitHub ---------------- */
+async function loadGH(){
+  try{
+    const rows = (await Promise.all(GH_REPOS.map(async r => {
+      try{ const d = await jget("https://api.github.com/repos/"+r); return { repo:r, stars:d.stargazers_count, forks:d.forks_count }; }
+      catch(e){ return null; }
+    }))).filter(Boolean);
+    if(!rows.length) throw new Error("all failed");
+    // velocity vs local baseline
+    const now = Date.now();
+    let base = store.get("ghBase");
+    const totalStars = rows.reduce((s,r)=>s+r.stars,0);
+    let perDay = null;
+    if(base && now - base.t > 20*3600e3){
+      perDay = (totalStars - base.stars) / ((now - base.t)/86400e3);
+      rows.forEach(r => { const b = base.rows?.[r.repo]; r.vel = b!=null ? (r.stars-b)/((now-base.t)/86400e3) : null; });
+    } else if(!base){
+      base = { t: now, stars: totalStars, rows: Object.fromEntries(rows.map(r=>[r.repo,r.stars])) };
+      store.set("ghBase", base);
+    }
+    S.gh = { rows, perDay };
+    dot("gh","ok", perDay!=null ? "live +velocity" : "live, velocity calibrating");
+  }catch(e){ dot("gh","err","rate-limited"); }
+}
+/* ---------------- Polymarket ---------------- */
+async function loadPM(){
+  try{
+    const d = await jget("https://gamma-api.polymarket.com/markets?" + PM_MARKETS.map(m=>"id="+m.id).join("&"));
+    const byId = new Map(d.map(m=>[String(m.id),m]));
+    S.pm = PM_MARKETS.map(spec => {
+      const m = byId.get(spec.id); if(!m || m.closed) return null;
+      let p = null; try{ p = JSON.parse(m.outcomePrices||"[]")[0]; }catch(e){}
+      return { ...spec, p: p!=null? +p : null, d24: m.oneDayPriceChange!=null? +m.oneDayPriceChange : null, slug: m.slug ? (m.events?.[0]?.slug || m.slug) : null };
+    }).filter(Boolean);
+    dot("pm","ok","live");
+  }catch(e){ dot("pm","err","unavailable"); }
+}
+/* ---------------- Equity (same-origin, generated server-side) ---------------- */
+async function loadEQ(){
+  try{
+    const d = await jget("market-data.json", {cache:"no-store"});
+    S.eq = d;
+    const age = (Date.now() - new Date(d.updated).getTime())/3600e3;
+    dot("eq", age>36?"warn":"ok", "as of "+d.updated_date);
+    if(age>36){ const b=$("dataAge"); b.textContent="Equity feed is "+age.toFixed(0)+"h old - the site's server-side refresher may be stalled."; b.classList.add("show"); }
+  }catch(e){ dot("eq","warn","feed not reachable"); }
+}
+/* ---------------- china-data.json override ---------------- */
+async function loadSnap(){
+  try{ const d = await jget("china-data.json", {cache:"no-store"}); snap = { ...SNAP, ...d }; }catch(e){}
+  const parts=[]; if(snap.lmarena?.asof) parts.push("arena "+snap.lmarena.asof); if(snap.search_consumer?.asof) parts.push("consumer "+snap.search_consumer.asof);
+  dot("sn", "warn", parts.join(" · ") || "embedded snapshot");
+}
+/* ---------------- renderers ---------------- */
+function renderTrend(){
+  const el = $("trendChart"); if(!S.orShare || S.orShare.length<4){ el.outerHTML='<div class="note">OpenRouter share series unavailable.</div>'; return; }
+  const W=960, H=300, L=46, R=52, T=14, B=30;
+  const s = S.orShare;
+  const xs = i => L + (W-L-R) * (i/(s.length-1));
+  const yPct = v => T + (H-T-B) * (1 - v);
+  const maxSpi = Math.max(2, ...s.map(w=>w.us>0? w.cn/w.us : 0)) * 1.08;
+  const ySpi = v => T + (H-T-B) * (1 - v/maxSpi);
+  let g = "";
+  for(const f of [0,.25,.5,.75,1]) g += `<line x1="${L}" y1="${yPct(f)}" x2="${W-R}" y2="${yPct(f)}" stroke="var(--grid)" stroke-width="1"/><text x="${L-6}" y="${yPct(f)+4}" text-anchor="end" font-size="11" fill="var(--muted)">${f*100}%</text>`;
+  for(const f of [0,.5,1]) g += `<text x="${W-R+6}" y="${ySpi(f*maxSpi)+4}" font-size="11" fill="var(--violet)">${(f*maxSpi).toFixed(1)}x</text>`;
+  const path = (fn, key) => s.map((w,i)=>`${i?"L":"M"}${xs(i).toFixed(1)},${fn(w).toFixed(1)}`).join("");
+  const cnP = path(w=>yPct(w.cn/w.tot)), usP = path(w=>yPct(w.us/w.tot)), spiP = path(w=>ySpi(w.us>0?w.cn/w.us:0));
+  const ticks = [0, Math.floor(s.length/3), Math.floor(2*s.length/3), s.length-1];
+  for(const i of ticks) g += `<text x="${xs(i)}" y="${H-8}" text-anchor="middle" font-size="11" fill="var(--muted)">${s[i].x}</text>`;
+  el.innerHTML = g
+    + `<path d="${cnP}" fill="none" stroke="var(--cn)" stroke-width="2.4"/>`
+    + `<path d="${usP}" fill="none" stroke="var(--us)" stroke-width="2.4"/>`
+    + `<path d="${spiP}" fill="none" stroke="var(--violet)" stroke-width="2" stroke-dasharray="5 4"/>`;
+  const last = s.at(-1), yearAgo = s[0];
+  $("trendNote").innerHTML = `Named-Chinese share ${pct(yearAgo.cn/yearAgo.tot)} (wk of ${esc(yearAgo.x)}) &rarr; <b>${pct(last.cn/last.tot)}</b> (wk of ${esc(last.x)}). Platform weekly volume ${fmtT(yearAgo.tot)} &rarr; ${fmtT(last.tot)} tokens. SPI ${ (yearAgo.cn/Math.max(1,yearAgo.us)).toFixed(2) }x &rarr; <b>${(last.cn/Math.max(1,last.us)).toFixed(2)}x</b>.`;
+}
+function renderOR(){
+  if(!S.or){ $("orSplit").outerHTML = '<div class="note">OpenRouter unavailable right now.</div>'; return; }
+  const {byAuthor, tot, cn, us} = S.or;
+  $("orSplit").innerHTML = `<i style="width:${cn/tot*100}%;background:var(--cn)"></i><i style="width:${us/tot*100}%;background:var(--us)"></i><i style="width:${(tot-cn-us)/tot*100}%;background:var(--other)"></i>`;
+  $("orSplitL").innerHTML = `<b style="color:var(--cn)">Chinese ${pct(cn/tot)}</b>`;
+  $("orSplitR").innerHTML = `<b style="color:var(--us)">US ${pct(us/tot)}</b> · other ${pct((tot-cn-us)/tot)}`;
+  const labs = Object.entries(byAuthor).filter(([a])=>CN_AUTHORS.has(a)).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const mx = labs[0]?.[1]||1;
+  $("orLabs").innerHTML = labs.map(([a,t]) =>
+    `<div class="hbar"><span class="k">${esc(CN_LABEL[a]||a)}</span><span class="track"><i style="width:${t/mx*100}%"></i></span><span class="v">${fmtT(t)} · ${pct(t/tot)}</span></div>`).join("");
+  // gauge inputs
+  IDX.openrouter = { w:30, val: clamp01((cn/tot)/0.70)*100, detail: pct(cn/tot)+" of routed tokens" };
+  $("cnShareVal").textContent = pct(cn/tot);
+  $("spiVal").textContent = (cn/Math.max(1,us)).toFixed(2)+"x";
+  if(S.orShare?.length>4){
+    const last=S.orShare.at(-1), prev=S.orShare.at(-5);
+    const dl=(last.cn/last.tot - prev.cn/prev.tot)*100;
+    const el=$("cnShareDelta"); el.textContent=(dl>=0?"+":"")+dl.toFixed(1)+"pt"; el.className="v "+(dl>=0?"down":"up"); // rising CN share = risk-red
+  }
+}
+function renderTopModels(){
+  if(!S.or) return;
+  const tb = $("topModels").querySelector("tbody");
+  tb.innerHTML = S.or.models.slice(0,10).map((m,i)=>{
+    const a = authorOf(m.slug), s = sideOf(a);
+    return `<tr><td class="num">${i+1}</td><td><a href="https://openrouter.ai/${esc(m.slug)}" target="_blank" rel="noopener">${esc(m.variant)}</a></td><td>${s!=="other"?`<span class="tag ${s}">${s.toUpperCase()}</span>`:""}</td><td class="num">${fmtT(m.tok)}</td><td class="num">${pct(m.tok/S.or.tot)}</td></tr>`;
+  }).join("");
+}
+function renderPrices(){
+  const tb = $("priceTable").querySelector("tbody");
+  if(!S.prices){ tb.innerHTML = '<tr><td colspan="4" class="sub">OpenRouter pricing unavailable.</td></tr>'; return; }
+  const row = (m,s) => `<tr><td>${esc(m.label)}</td><td><span class="tag ${s}">${s.toUpperCase()}</span></td><td class="num">$${m.inP.toFixed(2)}</td><td class="num">$${m.outP.toFixed(2)}</td></tr>`;
+  tb.innerHTML = S.prices.us.map(m=>row(m,"us")).join("") + S.prices.cn.map(m=>row(m,"cn")).join("");
+  const med = a => { const v=a.map(m=>m.outP).sort((x,y)=>x-y); return v.length? v[Math.floor(v.length/2)] : null; };
+  const mu = med(S.prices.us), mc = med(S.prices.cn);
+  if(mu && mc){
+    const ratio = mu/mc;
+    $("priceGapVal").textContent = ratio.toFixed(0)+"x";
+    $("priceNote").innerHTML = `Median US flagship output <b>$${mu.toFixed(2)}/M</b> vs Chinese <b>$${mc.toFixed(2)}/M</b> &ndash; a <b>${ratio.toFixed(0)}x</b> gap. DeepSeek made its 75% price cut permanent on 2026-05-31; falling ratios here mean US pricing power is holding, rising means compression is biting.`;
+  }
+}
+function renderHF(){
+  if(!S.hf){ $("hfSplit").outerHTML = '<div class="note">Hugging Face unavailable right now.</div>'; return; }
+  const {cnOrgs, cn, us} = S.hf, tot = cn+us;
+  $("hfSplit").innerHTML = `<i style="width:${cn/tot*100}%;background:var(--cn)"></i><i style="width:${us/tot*100}%;background:var(--us)"></i>`;
+  $("hfSplitL").innerHTML = `<b style="color:var(--cn)">Chinese ${pct(cn/tot)}</b> · ${fmtT(cn)}/30d`;
+  $("hfSplitR").innerHTML = `<b style="color:var(--us)">US open ${pct(us/tot)}</b> · ${fmtT(us)}/30d`;
+  const mx = cnOrgs[0]?.dl||1;
+  $("hfLabs").innerHTML = cnOrgs.slice(0,6).map(o =>
+    `<div class="hbar"><span class="k"><a href="https://huggingface.co/${esc(o.org)}" target="_blank" rel="noopener">${esc(o.org)}</a></span><span class="track"><i style="width:${o.dl/mx*100}%"></i></span><span class="v">${fmtT(o.dl)}/30d</span></div>`).join("");
+  IDX.hf = { w:20, val: clamp01((cn/tot)/0.70)*100, detail: pct(cn/tot)+" of open-weight downloads" };
+}
+function renderGH(){
+  const tb = $("ghTable").querySelector("tbody");
+  if(!S.gh){ tb.innerHTML = '<tr><td colspan="4" class="sub">GitHub API unavailable (unauthenticated rate limit is 60/hr - retry later).</td></tr>'; return; }
+  tb.innerHTML = S.gh.rows.map(r =>
+    `<tr><td><a href="https://github.com/${esc(r.repo)}" target="_blank" rel="noopener">${esc(r.repo)}</a></td><td class="num">${fmtT(r.stars)}</td><td class="num">${fmtT(r.forks)}</td><td class="num">${r.vel!=null? "+"+r.vel.toFixed(0) : "…"}</td></tr>`).join("");
+  const pd = S.gh.perDay ?? snap.github_stars_per_day;
+  if(pd != null){ IDX.github = { w:15, val: clamp01(pd/2000)*100, detail: "+"+pd.toFixed(0)+" stars/day across basket" }; }
+  else IDX.github = { w:15, val: null, detail: "calibrating (needs a second visit >20h apart)" };
+}
+function renderPM(){
+  const tb = $("pmTable").querySelector("tbody");
+  if(!S.pm){ tb.innerHTML = '<tr><td colspan="3" class="sub">Polymarket unavailable right now.</td></tr>'; return; }
+  tb.innerHTML = S.pm.map(m => {
+    const d = m.d24!=null ? `<span class="${m.d24>=0?'down':'up'}">${m.d24>=0?"+":""}${(m.d24*100).toFixed(1)}pt</span>` : "–";
+    return `<tr><td>${m.slug?`<a href="https://polymarket.com/event/${esc(m.slug)}" target="_blank" rel="noopener">${esc(m.label)}</a>`:esc(m.label)}</td><td class="num"><b>${m.p!=null? (m.p*100).toFixed(1)+"%":"–"}</b></td><td class="num">${d}</td></tr>`;
+  }).join("");
+}
+function renderEQ(){
+  const g = $("eqGrid");
+  if(!S.eq?.equity){ g.innerHTML = '<div class="note">Equity feed not reachable from this origin - on the live site this loads automatically.</div>'; return; }
+  $("eqAsof").textContent = "– vs 6-month high, as of " + S.eq.updated_date;
+  const card = (sym, ser, cnSide) => {
+    const last = ser.at(-1).c; const hi = Math.max(...ser.map(p=>p.c));
+    const dd = last/hi - 1;
+    const min = Math.min(...ser.map(p=>p.c)), rng = hi-min || 1;
+    const pts = ser.map((p,i)=>`${(i/(ser.length-1)*100).toFixed(1)},${(28-(p.c-min)/rng*26).toFixed(1)}`).join(" ");
+    return `<div class="eq"><span class="sym">${sym}${cnSide?' <span class="tag cn">CN</span>':""}</span><span class="dd ${dd<-0.15?'down':''}">${(dd*100).toFixed(1)}%</span><div class="px">$${last.toFixed(2)}</div><svg viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${cnSide?'var(--cn)':dd<-0.15?'var(--crit)':'var(--us)'}" stroke-width="1.6"/></svg></div>`;
+  };
+  const syms = EQ_SYMS.filter(s => S.eq.equity[s]);
+  let h = syms.map(sym => card(sym, S.eq.equity[sym], false)).join("");
+  if(snap.equity_extra) for(const [sym, ser] of Object.entries(snap.equity_extra)) if(ser?.length) h += card(sym, ser, true);
+  g.innerHTML = h;
+}
+function renderSnapshotPanels(){
+  const lb = snap.lmarena, aa = snap.artificial_analysis;
+  $("lbAsof").textContent = "– snapshot " + lb.asof;
+  $("lbBest").textContent = "#"+lb.best_rank;
+  $("lbBestSub").textContent = lb.best_model+" ("+lb.best_org+"), Elo "+lb.best_score;
+  $("lbGap").textContent = (lb.us_leader_score-lb.best_score)+" pts";
+  $("lbGapSub").textContent = "vs "+lb.us_leader+" at "+lb.us_leader_score;
+  $("lbCounts").textContent = lb.top10+" / "+lb.top20;
+  $("aaVals").textContent = aa.cn_score+" vs "+aa.us_score;
+  $("aaSub").textContent = aa.cn_best+" vs "+aa.us_best+" ("+aa.asof+")";
+  const gap = lb.us_leader_score - lb.best_score;
+  IDX.arena = { w:5, val: clamp01(1 - gap/100)*100, detail: "Elo gap "+gap+" (as of "+lb.asof+")" };
+  IDX.search = { w:10, val: clamp01((snap.search_consumer.western_share_pct/100)/0.50)*100, detail: "~"+snap.search_consumer.western_share_pct+"% of Western AI referral traffic ("+snap.search_consumer.asof+")" };
+  IDX.apps = { w:10, val: snap.apps.score, detail: "domestic-heavy; no Western top-chart presence ("+snap.apps.asof+")" };
+  IDX.social = { w:10, val: null, detail: "Reddit/X mentions - no public API, not tracked" };
+}
+function renderTimeline(){
+  $("timeline").innerHTML = TIMELINE.map(e => `<div class="ev"><span class="d">${e.d}</span><div><div class="t">${e.t}</div><div class="rx">${e.rx}</div></div></div>`).join("");
+}
+const FAMILY_LABEL = { openrouter:"OpenRouter token share", hf:"HF download share", github:"GitHub star velocity", search:"Western search/consumer", apps:"Consumer apps", arena:"LMArena proximity", social:"Community mentions" };
+function renderGauge(){
+  const fams = Object.entries(IDX);
+  const live = fams.filter(([,f])=>f.val!=null);
+  const wsum = live.reduce((s,[,f])=>s+f.w,0);
+  const idx = wsum? live.reduce((s,[,f])=>s+f.w*f.val,0)/wsum : null;
+  if(idx!=null){
+    $("gaugeVal").textContent = idx.toFixed(0);
+    $("gaugeMk").style.left = idx.toFixed(1)+"%";
+    const reg = idx>=55 ? ["displacing","Displacing"] : idx>=30 ? ["building","Building"] : ["contained","Contained"];
+    const chip = $("regime"); chip.className = "chip "+reg[0]; chip.innerHTML = "<i></i>"+reg[1];
+    // daily local history
+    const today = new Date().toISOString().slice(0,10);
+    const hist = store.get("hist")||[];
+    if(!hist.length || hist.at(-1).d!==today){ hist.push({d:today, v:+idx.toFixed(1)}); store.set("hist", hist.slice(-365)); }
+    else { hist[hist.length-1].v = +idx.toFixed(1); store.set("hist", hist); }
+  }
+  $("cats").innerHTML = fams.map(([k,f]) =>
+    `<div class="cat"><span>${FAMILY_LABEL[k]} <span class="sub">${esc(f.detail||"")}</span></span><span class="track"><i style="width:${f.val??0}%; ${f.val==null?"background:var(--grid)":""}"></i></span><span class="cv">${f.val!=null? f.val.toFixed(0) : "–"}</span><span class="cw">w${f.w}</span></div>`).join("");
+  $("gaugeNote").textContent = wsum<100 ? "Computed over "+wsum+" of 100 weight - excluded families shown greyed." : "";
+}
+/* ---------------- boot ---------------- */
+async function boot(){
+  await loadSnap();
+  renderSnapshotPanels(); renderTimeline();
+  await Promise.all([ loadOpenRouter().then(()=>{renderOR();renderTopModels();renderTrend();}), loadPrices().then(renderPrices), loadHF().then(renderHF), loadGH().then(renderGH), loadPM().then(renderPM), loadEQ().then(renderEQ) ]);
+  renderGauge();
+}
+boot();
+setInterval(()=>{ loadOpenRouter().then(()=>{renderOR();renderTopModels();renderTrend();renderGauge();}); loadPM().then(renderPM); }, 5*60e3);
+setInterval(()=>{ loadEQ().then(renderEQ); }, 10*60e3);
+</script>
+</body>
+</html>

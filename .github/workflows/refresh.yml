@@ -43,6 +43,12 @@ jobs:
         if: ${{ env.XAI_API_KEY != '' }}
         run: python3 omen/update-influencers.py
 
+      - name: Refresh China AI monitor snapshot data
+        # Slow-moving fields for china-ai-monitor.html (leaderboard ranks, GitHub star
+        # velocity, BABA/KWEB, OpenRouter weekly share). The page fetches the fast data
+        # live in-browser; this only regenerates the bundled china-data.json.
+        run: python3 omen/update-china-data.py
+
       # Push the fresh data straight to R2 so the Worker serves it live, with no redeploy.
       # Skips cleanly if the Cloudflare secrets aren't set (the site then falls back to
       # the bundled copy, i.e. previous behaviour).
@@ -64,7 +70,8 @@ jobs:
         run: |
           git config user.name "ai-crash-monitor bot"
           git config user.email "actions@github.com"
-          for f in omen/market-data.json omen/snapshots.csv omen/alert-state.json omen/influencers.json; do
+          for f in omen/market-data.json omen/snapshots.csv omen/alert-state.json omen/influencers.json \
+                   omen/china-data.json omen/china-history.json omen/china-snapshots.csv; do
             [ -f "$f" ] && git add -f "$f"
           done
           if git diff --cached --quiet; then
