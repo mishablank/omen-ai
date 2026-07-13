@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-13T08:22:27Z",
+ "updated": "2026-07-13T12:14:25Z",
  "snapshot_date": "2026-07-13",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -29,45 +29,46 @@
   "top20": 1,
   "asof": "2026-07-13"
  },
+ "github_stars_per_day": 38.4,
  "hf": {
   "cnOrgs": [
    {
     "org": "Qwen",
-    "dl": 259392214
+    "dl": 259464557
    },
    {
     "org": "deepseek-ai",
-    "dl": 34307634
+    "dl": 34438502
    },
    {
     "org": "zai-org",
-    "dl": 14696009
+    "dl": 14794187
    },
    {
     "org": "moonshotai",
-    "dl": 5487606
+    "dl": 5434511
    },
    {
     "org": "MiniMaxAI",
-    "dl": 3198922
+    "dl": 3143308
    },
    {
     "org": "tencent",
-    "dl": 1545513
+    "dl": 1544402
    },
    {
     "org": "XiaomiMiMo",
-    "dl": 1309610
+    "dl": 1308235
    },
    {
     "org": "stepfun-ai",
-    "dl": 1281257
+    "dl": 1277434
    }
   ],
   "usOrgs": [
    {
     "org": "google",
-    "dl": 64217662
+    "dl": 63929887
    },
    {
     "org": "meta-llama",
@@ -75,7 +76,7 @@
    },
    {
     "org": "nvidia",
-    "dl": 23389088
+    "dl": 23449559
    },
    {
     "org": "openai",
@@ -87,11 +88,11 @@
    },
    {
     "org": "allenai",
-    "dl": 2828784
+    "dl": 2828696
    }
   ],
-  "cn": 321218765,
-  "us": 146370236
+  "cn": 321405136,
+  "us": 146142844
  },
  "equity_extra": {
   "BABA": [
@@ -1093,9 +1094,9 @@
  },
  "openrouter_week": {
   "week": "2026-07-13",
-  "cn_share": 0.5989,
-  "us_share": 0.3298,
-  "spi": 1.816,
-  "total_tokens": 2805440264995
+  "cn_share": 0.5947,
+  "us_share": 0.3356,
+  "spi": 1.772,
+  "total_tokens": 4391279047738
  }
 }
