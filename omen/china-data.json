@@ -1,6 +1,6 @@
 {
- "updated": "2026-07-13T23:02:40Z",
- "snapshot_date": "2026-07-13",
+ "updated": "2026-07-14T03:16:20Z",
+ "snapshot_date": "2026-07-14",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
   "cn_score": 51,
@@ -27,7 +27,7 @@
   "us_leader_score": 1505,
   "top10": 0,
   "top20": 1,
-  "asof": "2026-07-13"
+  "asof": "2026-07-14"
  },
  "hf": {
   "cnOrgs": [
@@ -1085,9 +1085,9 @@
  },
  "openrouter_week": {
   "week": "2026-07-13",
-  "cn_share": 0.5919,
-  "us_share": 0.3363,
-  "spi": 1.76,
-  "total_tokens": 8326720805367
+  "cn_share": 0.5938,
+  "us_share": 0.3346,
+  "spi": 1.774,
+  "total_tokens": 10114572833851
  }
 }
