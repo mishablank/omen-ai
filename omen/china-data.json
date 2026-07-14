@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-14T17:42:20Z",
+ "updated": "2026-07-14T19:25:14Z",
  "snapshot_date": "2026-07-14",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -589,7 +589,7 @@
    },
    {
     "d": "2026-07-14",
-    "c": 112.46
+    "c": 112.55
    }
   ],
   "KWEB": [
@@ -1093,9 +1093,9 @@
  },
  "openrouter_week": {
   "week": "2026-07-13",
-  "cn_share": 0.5962,
-  "us_share": 0.3327,
-  "spi": 1.792,
-  "total_tokens": 15943153358649
+  "cn_share": 0.5968,
+  "us_share": 0.3319,
+  "spi": 1.798,
+  "total_tokens": 16705095685337
  }
 }
