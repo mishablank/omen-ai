@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-14T09:10:40Z",
+ "updated": "2026-07-14T11:37:30Z",
  "snapshot_date": "2026-07-14",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -29,7 +29,6 @@
   "top20": 1,
   "asof": "2026-07-14"
  },
- "github_stars_per_day": 36.7,
  "hf": {
   "cnOrgs": [
    {
@@ -1086,9 +1085,9 @@
  },
  "openrouter_week": {
   "week": "2026-07-13",
-  "cn_share": 0.5947,
-  "us_share": 0.3344,
-  "spi": 1.778,
-  "total_tokens": 11964645139464
+  "cn_share": 0.5941,
+  "us_share": 0.3352,
+  "spi": 1.772,
+  "total_tokens": 13361571401322
  }
 }
