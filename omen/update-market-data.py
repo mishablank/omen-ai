@@ -12,6 +12,8 @@ Sources (all free / unauthenticated unless noted):
   - Cross-venue (Kalshi public API + Manifold public API + Metaculus, token optional)
   - Insider activity (SEC EDGAR Form 4): NVDA, AVGO, ORCL, CRWV
   - Realized GPU spot rent (vast.ai public bundles API): H100 SXM $/GPU-hr
+  - Kalshi GPU compute markets (H100/H200/B200/A100): second venue on the same
+    rents, settled on the Ornn index — the cross-venue basis check for vast.ai
 
 Optional env: METACULUS_TOKEN enables the Metaculus forecaster-crowd panel
 (create a free account at metaculus.com, token from the profile page).
@@ -85,6 +87,22 @@ KALSHI_SERIES = {
     "KXUSOPENAIANTH": "US stake in OpenAI & Anthropic",
 }
 MANIFOLD_TERMS = ["AI bubble", "NVIDIA crash", "AI winter"]
+# Kalshi GPU compute markets (launched 2026-07-14): the second venue pricing the
+# same GPU rents Polymarket brackets do, settled on the Ornn index rather than
+# vast.ai's ask tape — so the two venues disagree partly on basis, not just view.
+#   *W   weekly  — directional "price to beat"; its strike IS the Ornn reference
+#                  print at open_time (not live), which is how we read Ornn for free.
+#   *MON monthly — terminal ladder on the month-end value; the only real forward point.
+#   *MAX yearly  — resolves "above $X BY Dec 31" (running max, upward-biased).
+#                  Deliberately NOT fetched: it is not comparable to a terminal forward.
+KALSHI_GPU = {
+    "H100": {"label": "H100 SXM", "weekly": "KXH100W", "monthly": "KXH100MON"},
+    "H200": {"label": "H200", "weekly": "KXH200W", "monthly": "KXH200MON"},
+    "B200": {"label": "B200", "weekly": "KXB200W", "monthly": "KXB200MON"},
+    "A100": {"label": "A100 SXM4", "weekly": "KXA100W", "monthly": "KXA100MON"},
+}
+# a ladder strike wider than this is a quote, not a price
+KALSHI_MAX_SPREAD = 0.15
 POLY_IDS = {
     "bull": ["676829", "653788", "676837", "1087074", "656312", "656313", "2413330", "2109881", "676804", "2487206", "2255930"],
     "crash": ["691340", "676827", "676846"],
@@ -382,32 +400,144 @@ def metaculus():
 
 
 # ---------- Kalshi ----------
+KALSHI_B = "https://api.elections.kalshi.com/trade-api/v2"
+
+
+def _fnum(x):
+    try:
+        return float(x)
+    except (TypeError, ValueError):
+        return None
+
+
+def kalshi_mid(m):
+    """(mid, spread) in probability from a Kalshi market, or (None, None).
+
+    Kalshi's quote fields are *_dollars and already denominated in dollars
+    (0.23 = 23c), not cents. A book quoted at the bounds (bid 0 / ask 1) is
+    empty, not a coin flip, so it yields no price.
+    """
+    b, a = _fnum(m.get("yes_bid_dollars")), _fnum(m.get("yes_ask_dollars"))
+    if b is None or a is None or b <= 0.0 or a >= 1.0 or a < b:
+        return None, None
+    return (b + a) / 2, a - b
+
+
+def kalshi_price(m):
+    """Mid where the book is two-sided, else the last print. Display only."""
+    mid, _ = kalshi_mid(m)
+    if mid is not None:
+        return mid
+    last = _fnum(m.get("last_price_dollars"))
+    return last if last else None
+
+
+def kalshi_ladder(markets, max_spread=KALSHI_MAX_SPREAD):
+    """Strike ladder as a survival curve P(value > strike), cleaned.
+
+    Drops one-sided and wide books, then enforces monotonicity: survival cannot
+    increase with strike, so a higher print is a stale/thin quote, not news.
+    """
+    rows = []
+    for m in markets:
+        k = _fnum(m.get("floor_strike"))
+        mid, spread = kalshi_mid(m)
+        if k is None or mid is None or spread > max_spread:
+            continue
+        rows.append({"k": k, "p": mid, "spread": round(spread, 4)})
+    rows.sort(key=lambda r: r["k"])
+    last = 1.0
+    for r in rows:
+        r["p"] = round(min(r["p"], last), 4)
+        last = r["p"]
+    return rows
+
+
+def implied_median(rows):
+    """Strike where the survival curve crosses 50%, linearly interpolated.
+
+    None when the crossing lies outside the quoted strikes — the median is then
+    simply unknown, and inventing one from the edge of the ladder is the exact
+    artifact this guards against.
+    """
+    for i in range(len(rows) - 1):
+        k1, p1 = rows[i]["k"], rows[i]["p"]
+        k2, p2 = rows[i + 1]["k"], rows[i + 1]["p"]
+        if p1 >= 0.5 >= p2 and p1 != p2:
+            return k1 + (p1 - 0.5) * (k2 - k1) / (p1 - p2)
+    return None
+
+
+def kalshi_markets(series_ticker):
+    j = json.loads(get(KALSHI_B + f"/markets?series_ticker={series_ticker}&status=open&limit=200",
+                       timeout=20))
+    return j.get("markets") or []
+
+
+def kalshi_gpu():
+    """GPU compute prices from Kalshi, the second venue on the same underlying.
+
+    Returns per-chip: the Ornn reference print (weekly strike), the month-end
+    implied median where the ladder can carry one, and the ladder itself.
+    """
+    out = {"source": "Kalshi public API (settles on Ornn index)", "chips": []}
+    for chip, cfg in KALSHI_GPU.items():
+        row = {"chip": chip, "label": cfg["label"], "ref": None, "ref_date": None,
+               "implied": None, "strikes": 0, "expiry": None, "url": None, "note": None}
+        try:
+            wk = kalshi_markets(cfg["weekly"])
+        except Exception:
+            wk = []
+        # the weekly directional strike is set at the Ornn print when the market
+        # opens, so it dates to open_time — it is a reference, never a live spot.
+        for m in wk:
+            k = _fnum(m.get("floor_strike"))
+            if k is None:
+                continue
+            row["ref"] = k
+            row["ref_date"] = (m.get("open_time") or "")[:10]
+            row["ref_above"] = kalshi_price(m)
+            row["url"] = f"https://kalshi.com/markets/{cfg['weekly'].lower()}"
+            break
+        try:
+            mo = kalshi_markets(cfg["monthly"])
+        except Exception:
+            mo = []
+        if mo:
+            row["expiry"] = (mo[0].get("close_time") or "")[:10]
+            lad = kalshi_ladder(mo)
+            row["strikes"] = len(lad)
+            row["implied"] = implied_median(lad)
+            if row["implied"] is None:
+                row["note"] = ("book too thin to imply a month-end median"
+                               if len(lad) < 3 else "median sits outside the quoted strikes")
+        out["chips"].append(row)
+    return out
+
+
 def kalshi():
-    B = "https://api.elections.kalshi.com/trade-api/v2"
-    out = {"authed": False, "note": "Public Kalshi feed exposes market metadata but no quotes; add authenticated access for live cross-venue prices.", "markets": []}
+    out = {"authed": False, "note": "", "markets": []}
     for st, theme in KALSHI_SERIES.items():
         try:
-            j = json.loads(get(B + f"/events?with_nested_markets=true&series_ticker={st}", timeout=20))
+            j = json.loads(get(KALSHI_B + f"/events?with_nested_markets=true&series_ticker={st}",
+                               timeout=20))
         except Exception:
             continue
         for e in j.get("events", []):
             title = e.get("title", "")
             for m in e.get("markets", [])[:1]:
-                yb, ya = m.get("yes_bid"), m.get("yes_ask")
-                price = None
-                if yb is not None and ya is not None and (yb or ya):
-                    price = (yb + ya) / 2 / 100.0
-                elif m.get("last_price"):
-                    price = m["last_price"] / 100.0
                 out["markets"].append({
                     "theme": theme, "ticker": m.get("ticker"), "title": title,
                     "subtitle": m.get("yes_sub_title") or m.get("subtitle") or "",
-                    "price": price, "volume": m.get("volume"),
+                    "price": kalshi_price(m),
+                    "volume": _fnum(m.get("volume_fp")),
                     "url": f"https://kalshi.com/markets/{st.lower()}",
                 })
             break
     if any(x["price"] is not None for x in out["markets"]):
         out["authed"] = True
+    else:
+        out["note"] = "No live quotes on the tracked Kalshi series right now."
     return out
 
 
@@ -717,7 +847,7 @@ def build():
             "updated_date": now.strftime("%Y-%m-%d"),
             "basket": BASKET, "bench": "SPY",
             "equity": {}, "vol": {}, "skew": {}, "term": {}, "tail": {}, "credit": {},
-            "fred": {}, "kalshi": {}, "manifold": [], "metaculus": None,
+            "fred": {}, "kalshi": {}, "kalshi_gpu": None, "manifold": [], "metaculus": None,
             "fundamentals": None, "macro": None, "insiders": {}, "gpu": None}
 
     for sym in EQUITY + POWER_PROXY:
@@ -786,6 +916,16 @@ def build():
     except Exception as e:
         print(f"kalshi: FAIL {e}")
         data["kalshi"] = {"authed": False, "markets": [], "note": str(e)}
+
+    try:
+        data["kalshi_gpu"] = kalshi_gpu()
+        for c in data["kalshi_gpu"]["chips"]:
+            imp = f"${c['implied']:.2f}" if c["implied"] else f"n/a ({c['note']})"
+            print(f"kalshi_gpu {c['chip']}: ref ${c['ref']} ({c['ref_date']}) "
+                  f"month-end {imp}, {c['strikes']} usable strikes")
+    except Exception as e:
+        print(f"kalshi_gpu: FAIL {e}")
+        data["kalshi_gpu"] = None
 
     try:
         data["manifold"] = manifold()
