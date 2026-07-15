@@ -19,7 +19,7 @@ Optional env: METACULUS_TOKEN enables the Metaculus forecaster-crowd panel
 (create a free account at metaculus.com, token from the profile page).
 
 Also:
-  --snapshot   append a chain-linkable snapshot (3 Polymarket indexes + gauge) to snapshots.csv
+  --snapshot   append a chain-linkable snapshot (2 Polymarket indexes + gauge) to snapshots.csv
   --alert      compute the crash-pressure gauge server-side and push a Telegram/ntfy
                notification when the regime escalates (state kept in alert-state.json)
   --watch N    refresh every N seconds
@@ -103,12 +103,30 @@ KALSHI_GPU = {
 }
 # a ladder strike wider than this is a quote, not a price
 KALSHI_MAX_SPREAD = 0.15
+# Bear (OMN-X) is the short side: the union of two sleeves, priced as one flat
+# equal-weight basket of 9. The sleeves are series-identical to the indexes Bear
+# replaced – MKT to the old AI-Crash, GOV to the old AI-Regulation – which is what
+# lets the crash-pressure gauge and the lead-lag study keep reading MKT unchanged.
+BEAR_SLEEVES = {
+    "mkt": ["691340", "676827", "676846"],
+    "gov": ["2787889", "2787891", "2787890", "2698575", "676842", "2839991"],
+}
 POLY_IDS = {
     "bull": ["676829", "653788", "676837", "1087074", "656312", "656313", "2413330", "2109881", "676804", "2487206", "2255930"],
-    "crash": ["691340", "676827", "676846"],
-    "reg": ["2787889", "2787891", "2787890", "2698575", "676842", "2839991"],
+    "bear": BEAR_SLEEVES["mkt"] + BEAR_SLEEVES["gov"],
 }
 BUBBLE_ID = "691340"
+
+
+def index_level(price, side):
+    """100 x the equal-weight mean of the constituents we have a live price for."""
+    vals = [price[i] for i in POLY_IDS[side] if i in price]
+    return sum(vals) / len(vals) * 100 if vals else None
+
+
+def sleeve_level(price, sleeve):
+    vals = [price[i] for i in BEAR_SLEEVES[sleeve] if i in price]
+    return sum(vals) / len(vals) * 100 if vals else None
 
 
 def get(url, timeout=25, headers=None, data=None):
@@ -730,8 +748,10 @@ def gauge_groups(fam):
 
 def compute_regime(gauge, price):
     bubble = (price.get(BUBBLE_ID) or 0) * 100
-    crash_vals = [price[i] for i in POLY_IDS["crash"] if i in price]
-    level = sum(crash_vals) / len(crash_vals) * 100 if crash_vals else 0
+    # deliberately the MKT sleeve, not the Bear composite: these bands are calibrated to
+    # priced *crash* risk, and MKT is the old crash basket unchanged. Reading the
+    # composite here would let regulatory odds trip a crash regime.
+    level = sleeve_level(price, "mkt") or 0
     if (gauge is not None and gauge >= 55) or level >= 40 or bubble >= 25:
         return "stressed"
     if (gauge is not None and gauge >= 35) or level >= 25 or bubble >= 15:
@@ -740,17 +760,49 @@ def compute_regime(gauge, price):
 
 
 # ---------- snapshots ----------
+# `crash`/`reg` are kept past the Bear merge: they are exactly the MKT/GOV sleeve reads,
+# so the stored series stays comparable across the merge date and `bear` can be
+# backfilled from them for the rows that predate the column.
+SNAP_HEADER = ["date", "bull", "bull_n", "bear", "bear_n", "crash", "crash_n", "reg", "reg_n",
+               "gauge", "lead", "conf", "comp"]
+
+
+def snapshot_row(price):
+    """One snapshot row: Bear as the flat 9-market union, sleeves alongside it."""
+    row = {"date": datetime.date.today().isoformat()}
+    for side, ids in POLY_IDS.items():
+        lvl = index_level(price, side)
+        row[side] = round(lvl, 2) if lvl is not None else ""
+        row[side + "_n"] = len([i for i in ids if i in price])
+    for sleeve, col in (("mkt", "crash"), ("gov", "reg")):
+        lvl = sleeve_level(price, sleeve)
+        row[col] = round(lvl, 2) if lvl is not None else ""
+        row[col + "_n"] = len([i for i in BEAR_SLEEVES[sleeve] if i in price])
+    return row
+
+
+def backfill_bear(d):
+    """Bear for a pre-merge row: the flat union rebuilt from the two sleeve levels.
+    Counts are the live membership at that timestamp, so this is the same equal-weight
+    mean the composite computes now – the merge introduces no splice step."""
+    if d.get("bear") or not (d.get("crash") and d.get("reg")):
+        return d.get("bear", "")
+    try:
+        cn, rn = int(d["crash_n"]), int(d["reg_n"])
+        if cn + rn == 0:
+            return ""
+        return round((cn * float(d["crash"]) + rn * float(d["reg"])) / (cn + rn), 2)
+    except (ValueError, KeyError):
+        return ""
+
+
 def append_snapshot(data=None):
     try:
         price = poly_prices()
     except Exception as e:
         print("  snapshot skipped:", e)
         return
-    row = {"date": datetime.date.today().isoformat()}
-    for side, ids in POLY_IDS.items():
-        vals = [price[i] for i in ids if i in price]
-        row[side] = round(sum(vals) / len(vals) * 100, 2) if vals else ""
-        row[side + "_n"] = len(vals)
+    row = snapshot_row(price)
     gauge = lead = conf = ""
     if data:
         g, fam = compute_gauge(data, price)
@@ -762,7 +814,6 @@ def append_snapshot(data=None):
     row["lead"] = lead
     row["conf"] = conf
     row["comp"] = ",".join(sorted(price.keys()))
-    header = ["date", "bull", "bull_n", "crash", "crash_n", "reg", "reg_n", "gauge", "lead", "conf", "comp"]
     existing = {}
     if os.path.exists(SNAP):
         with open(SNAP) as f:
@@ -772,13 +823,17 @@ def append_snapshot(data=None):
             parts = line.split(",", len(old_header) - 1)
             if parts and parts[0]:
                 d = dict(zip(old_header, parts))
-                existing[parts[0]] = ",".join(str(d.get(h, "")) for h in header)
-    existing[row["date"]] = ",".join(str(row[h]) for h in header)
+                d["bear"] = backfill_bear(d)
+                if d["bear"] != "" and not d.get("bear_n"):
+                    d["bear_n"] = int(d.get("crash_n") or 0) + int(d.get("reg_n") or 0)
+                existing[parts[0]] = ",".join(str(d.get(h, "")) for h in SNAP_HEADER)
+    existing[row["date"]] = ",".join(str(row[h]) for h in SNAP_HEADER)
     with open(SNAP, "w") as f:
-        f.write(",".join(header) + "\n")
+        f.write(",".join(SNAP_HEADER) + "\n")
         for d in sorted(existing):
             f.write(existing[d] + "\n")
-    print(f"  snapshot: bull {row['bull']} crash {row['crash']} reg {row['reg']} gauge {gauge} -> {SNAP}")
+    print(f"  snapshot: bull {row['bull']} bear {row['bear']} "
+          f"(mkt {row['crash']} · gov {row['reg']}) gauge {gauge} -> {SNAP}")
 
 
 # ---------- alerting ----------
@@ -974,7 +1029,7 @@ def build():
         price = poly_prices()
         score, fam = compute_gauge(data, price)
         lead, conf = gauge_groups(fam)
-        crash_vals = [price[i] for i in POLY_IDS["crash"] if i in price]
+        mkt_level = sleeve_level(price, "mkt")
         data["server_gauge"] = {
             "score": round(score, 1) if score is not None else None,
             "lead": round(lead, 1) if lead is not None else None,
@@ -982,7 +1037,8 @@ def build():
             "fam": {k: (round(v, 1) if v is not None else None) for k, v in fam.items()},
             "regime": compute_regime(score, price),
             "bubble": price.get(BUBBLE_ID),
-            "crash_level": round(sum(crash_vals) / len(crash_vals) * 100, 2) if crash_vals else None,
+            # gauge context: still the crash basket (= Bear's MKT sleeve), not the composite
+            "crash_level": round(mkt_level, 2) if mkt_level is not None else None,
             "at": now.strftime("%Y-%m-%dT%H:%M:%SZ")}
         print(f"server gauge: {data['server_gauge']['score']} ({data['server_gauge']['regime']}) "
               f"lead {data['server_gauge']['lead']} conf {data['server_gauge']['conf']}")

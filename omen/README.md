@@ -17,10 +17,13 @@ else comes from `market-data.json`, produced by `update-market-data.py`.
 - **Regime chip** — Calm / Elevated / Stressed, and *which threshold fired* (e.g. "bubble market ≥ 15%").
   The fetcher embeds the same server-side gauge + regime into `market-data.json`
   (`server_gauge`), which the landing page reads — so the two pages can't disagree.
-- **Three composite indexes** (Bull / Crash / Regulation) as chain-linked small multiples with
-  event annotations, tile sparklines, and risk-direction-aware delta colors. Bull constituents
-  are tagged **TECH** (technology-progress odds) vs **CAP** (capital-markets odds) with
-  sub-readings, since tech progress can survive a financial unwind.
+- **Two composite indexes** (Bull / Bear) as chain-linked small multiples with
+  event annotations, tile sparklines, and risk-direction-aware delta colors. Each carries two
+  sleeve tags with sub-readings: Bull splits **TECH** (technology-progress odds) vs **CAP**
+  (capital-markets odds), since tech progress can survive a financial unwind; Bear splits
+  **MKT** (the unwind itself) vs **GOV** (the regulatory clampdown). A sleeve is a read on the
+  basket, not a sub-index – Bear is the flat equal-weight mean of all 9 constituents, not the
+  mean of its two unequal sleeves. The monitor also carries China AI and Macro indexes.
 - **LEAPS tail panel** — risk-neutral P(NVDA −50% / SOXX −40% in ~1y) from long-dated CBOE
   puts via N(−d2), as a deep-market cross-check on the thin Polymarket bubble book.
 - **Fundamentals panel** — combined quarterly capex and operating cash flow for
