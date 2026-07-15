@@ -1,6 +1,8 @@
 import importlib.util
 from pathlib import Path
 
+import pytest
+
 spec = importlib.util.spec_from_file_location(
     "umd", Path(__file__).parent / "update-market-data.py")
 umd = importlib.util.module_from_spec(spec)
@@ -217,3 +219,71 @@ def test_gauge_families_and_regime():
     assert umd.compute_regime(10, {umd.BUBBLE_ID: 0.30}) == "stressed"
     # bubble >= 15% forces at least elevated
     assert umd.compute_regime(10, {umd.BUBBLE_ID: 0.16}) == "elevated"
+
+
+def test_bear_basket_is_the_union_of_its_sleeves():
+    assert umd.POLY_IDS["bear"] == umd.BEAR_SLEEVES["mkt"] + umd.BEAR_SLEEVES["gov"]
+    assert len(umd.POLY_IDS["bear"]) == 9
+    assert len(set(umd.POLY_IDS["bear"])) == 9
+    assert umd.BUBBLE_ID in umd.BEAR_SLEEVES["mkt"]
+    # the two short-side sleeves are disjoint, so the union is a clean 3 + 6
+    assert not set(umd.BEAR_SLEEVES["mkt"]) & set(umd.BEAR_SLEEVES["gov"])
+    assert (len(umd.BEAR_SLEEVES["mkt"]), len(umd.BEAR_SLEEVES["gov"])) == (3, 6)
+
+
+def test_bear_level_is_the_flat_mean_of_all_nine_not_the_mean_of_sleeve_means():
+    # sleeves are unequal (3 vs 6), so a mean-of-means would differ from the flat mean –
+    # this pins the composite to the equal-weight union the methodology promises
+    price = {i: 0.10 for i in umd.BEAR_SLEEVES["mkt"]}
+    price.update({i: 0.40 for i in umd.BEAR_SLEEVES["gov"]})
+    assert umd.index_level(price, "bear") == pytest.approx(30.0)   # (3*10 + 6*40)/9
+    assert umd.sleeve_level(price, "mkt") == pytest.approx(10.0)
+    assert umd.sleeve_level(price, "gov") == pytest.approx(40.0)
+
+
+def test_index_level_skips_markets_missing_from_the_price_map():
+    price = {umd.BEAR_SLEEVES["mkt"][0]: 0.20, umd.BEAR_SLEEVES["gov"][0]: 0.60}
+    assert umd.index_level(price, "bear") == pytest.approx(40.0)   # mean of the 2 present
+    assert umd.index_level({}, "bear") is None
+
+
+def test_regime_reads_the_mkt_sleeve_not_the_bear_composite():
+    # the gauge is about priced *crash* risk: its thresholds must keep firing off the
+    # old crash basket (= the MKT sleeve). A hot GOV sleeve lifts Bear but must not
+    # move the regime, or the merge would silently retune the gauge.
+    price = {i: 0.02 for i in umd.BEAR_SLEEVES["mkt"]}
+    price.update({i: 0.95 for i in umd.BEAR_SLEEVES["gov"]})
+    assert umd.index_level(price, "bear") > 60      # composite is way past the 40 trip
+    assert umd.compute_regime(10, price) == "calm"  # ...but crash risk is not priced
+    # and the MKT sleeve still trips the bands on its own. Hold the bubble market cold
+    # so these exercise the sleeve-level rule, not the separate bubble-market rule.
+    cold_bubble = {umd.BUBBLE_ID: 0.10}
+    stressed = dict(cold_bubble, **{i: 0.60 for i in umd.BEAR_SLEEVES["mkt"][1:]})
+    assert umd.sleeve_level(stressed, "mkt") == pytest.approx(43.33, abs=0.01)
+    assert umd.compute_regime(10, stressed) == "stressed"      # level >= 40
+    elevated = dict(cold_bubble, **{i: 0.35 for i in umd.BEAR_SLEEVES["mkt"][1:]})
+    assert umd.sleeve_level(elevated, "mkt") == pytest.approx(26.67, abs=0.01)
+    assert umd.compute_regime(10, elevated) == "elevated"      # 25 <= level < 40
+
+
+def test_snapshot_row_keeps_crash_and_reg_as_sleeve_provenance():
+    price = {i: 0.10 for i in umd.BEAR_SLEEVES["mkt"]}
+    price.update({i: 0.40 for i in umd.BEAR_SLEEVES["gov"]})
+    price.update({i: 0.50 for i in umd.POLY_IDS["bull"]})
+    row = umd.snapshot_row(price)
+    assert row["bear"] == pytest.approx(30.0)
+    assert row["bear_n"] == 9
+    # crash/reg columns live on as the sleeve reads, so the stored series stays comparable
+    assert row["crash"] == pytest.approx(10.0)
+    assert row["crash_n"] == 3
+    assert row["reg"] == pytest.approx(40.0)
+    assert row["reg_n"] == 6
+    # the fallback backfill formula in the spec must reproduce the flat union
+    assert (row["crash_n"] * row["crash"] + row["reg_n"] * row["reg"]) / (
+        row["crash_n"] + row["reg_n"]) == pytest.approx(row["bear"])
+
+
+def test_snapshot_header_is_bear_plus_legacy_columns():
+    assert umd.SNAP_HEADER == ["date", "bull", "bull_n", "bear", "bear_n",
+                               "crash", "crash_n", "reg", "reg_n",
+                               "gauge", "lead", "conf", "comp"]

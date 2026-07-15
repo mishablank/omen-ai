@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OMEN — The AI-Cycle Index</title>
-<meta name="description" content="OMEN bundles Polymarket's AI markets into three indexes – Bull, Crash, Regulation – and distills market stress into one crash-pressure gauge.">
+<meta name="description" content="OMEN bundles Polymarket's AI markets into two indexes – Bull and Bear – and distills market stress into one crash-pressure gauge.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="favicon.svg">
 <meta name="theme-color" content="#0b0a08">
@@ -12,14 +12,14 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="OMEN">
 <meta property="og:title" content="OMEN — The AI-Cycle Index">
-<meta property="og:description" content="OMEN bundles Polymarket's AI markets into three indexes – Bull, Crash, Regulation – and distills market stress into one crash-pressure gauge.">
+<meta property="og:description" content="OMEN bundles Polymarket's AI markets into two indexes – Bull and Bear – and distills market stress into one crash-pressure gauge.">
 <meta property="og:image" content="og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="OMEN – a prediction-market index and crash-pressure gauge for the AI cycle.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="OMEN — The AI-Cycle Index">
-<meta name="twitter:description" content="Three prediction-market indexes – Bull, Crash, Regulation – plus a crash-pressure gauge for the AI cycle.">
+<meta name="twitter:description" content="Two prediction-market indexes – Bull and Bear – plus a crash-pressure gauge for the AI cycle.">
 <meta name="twitter:image" content="og-image.png">
 <style>
 :root{
@@ -28,6 +28,9 @@
   --ink:#ece7db; --mut:#a59c88; --dim:#6e6656;
   --acc:#e3a63c; --accT:#f2c977; --accD:#8a6420;
   --bull:#79c99a; --bullT:#a1e0bb; --bullD:#2c5c43;
+  /* --bear is the short-side index token; --crash/--reg stay as the gauge's own
+     palette (regime bands, signal families), which is not the index. */
+  --bear:#e2685a;
   --crash:#e2685a; --crashT:#f1968c; --crashD:#6e2c25;
   --reg:#8fa8d8; --regT:#b0c4e9; --regD:#37456b;
   --pos:#79c99a; --neg:#e2685a;
@@ -128,7 +131,7 @@ nav .btn{padding:9px 16px;margin-left:6px}
 .driver .meta b{color:var(--accT)}
 
 /* ---------- index panels ---------- */
-.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:start}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;align-items:start}
 @media(max-width:980px){.cards{grid-template-columns:1fr}}
 .ix{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:26px 26px 22px;transition:border-color .2s}
 .ix:hover{border-color:var(--line2)}
@@ -243,8 +246,7 @@ footer{border-top:1px solid var(--line);padding:64px 0 40px;position:relative;z-
 <div class="ticker">
   <div class="in">
     <span class="it"><span class="lab">BULL</span><b id="tk-bull">$0.446</b><span class="up" id="tkd-bull">+1.5¢</span></span>
-    <span class="it"><span class="lab">CRASH</span><b id="tk-crash">$0.088</b><span class="up" id="tkd-crash">+0.5¢</span></span>
-    <span class="it"><span class="lab">REG</span><b id="tk-reg">$0.245</b><span class="down" id="tkd-reg">−2.3¢</span></span>
+    <span class="it"><span class="lab">BEAR</span><b id="tk-bear">$0.219</b><span class="down" id="tkd-bear">−1.3¢</span></span>
     <span class="it"><span class="lab">CRASH PRESSURE</span><b id="tk-gauge">23.6/100</b><span id="tk-regime" style="color:var(--bull)">CALM</span></span>
     <span class="it"><span class="lab">SOURCE</span><b style="color:var(--mut)">POLYMARKET · CBOE · YAHOO</b></span>
   </div>
@@ -272,7 +274,7 @@ footer{border-top:1px solid var(--line);padding:64px 0 40px;position:relative;z-
     <div>
       <div class="kick">Prediction-market index · The AI cycle</div>
       <h1>Every turn in the cycle sends <em>omens</em> first.</h1>
-      <p class="sub">OMEN bundles Polymarket's AI markets into three indexes. Hold <b>Bull</b> when you expect the acceleration to continue, <b>Crash</b> when the music stops, <b>Reg</b> when Washington moves first – and read the <b>crash-pressure gauge</b> to see how much stress the wider market is pricing.</p>
+      <p class="sub">OMEN bundles Polymarket's AI markets into two indexes. Hold <b>Bull</b> when you expect the acceleration to continue, <b>Bear</b> when it breaks – whether the music stops or Washington moves first. Then read the <b>crash-pressure gauge</b> to see how much stress the wider market is pricing.</p>
       <div class="ctas">
         <a class="btn" href="polymarket-ai-index.html">Launch the monitor →</a>
         <a class="btn ghost" href="influencers.html">Sentiment board</a>
@@ -303,8 +305,7 @@ footer{border-top:1px solid var(--line);padding:64px 0 40px;position:relative;z-
       </div>
       <div class="minirows">
         <div class="mini"><span class="nm" style="color:var(--bull)">BULL</span><span class="th">Up and to the right</span><span class="px" id="hx-bull">$0.446</span><span class="chg up" id="hd-bull">+1.5¢</span></div>
-        <div class="mini"><span class="nm" style="color:var(--crash)">CRASH</span><span class="th">The music stops</span><span class="px" id="hx-crash">$0.088</span><span class="chg up" id="hd-crash">+0.5¢</span></div>
-        <div class="mini"><span class="nm" style="color:var(--reg)">REG</span><span class="th">Washington gets a vote</span><span class="px" id="hx-reg">$0.245</span><span class="chg down" id="hd-reg">−2.3¢</span></div>
+        <div class="mini"><span class="nm" style="color:var(--bear)">BEAR</span><span class="th">The music stops – or Washington stops it</span><span class="px" id="hx-bear">$0.219</span><span class="chg down" id="hd-bear">−1.3¢</span></div>
       </div>
     </aside>
   </div>
@@ -341,8 +342,8 @@ footer{border-top:1px solid var(--line);padding:64px 0 40px;position:relative;z-
   <div class="wrap">
     <div class="shead rv">
       <span class="kick">The indexes</span>
-      <h2>Three ways the cycle breaks.</h2>
-      <p>Twenty live Polymarket markets, sorted into the three stories the market tells about AI. Open a panel to see what's inside.</p>
+      <h2>Two sides of the cycle.</h2>
+      <p>Twenty live Polymarket markets, sorted into the two stories the market tells about AI. Open a panel to see what's inside.</p>
     </div>
     <div class="cards" id="cards"></div>
   </div>
@@ -411,7 +412,7 @@ footer{border-top:1px solid var(--line);padding:64px 0 40px;position:relative;z-
       <div class="stat">
         <div class="v" id="stat-live">20<span style="color:var(--dim)">/20</span></div>
         <div class="t">Markets live</div>
-        <p>Constituents currently trading on Polymarket across the three indexes.</p>
+        <p>Constituents currently trading on Polymarket across the two indexes.</p>
       </div>
       <div class="stat">
         <div class="v" id="stat-vol">$4.2M</div>
@@ -443,7 +444,7 @@ footer{border-top:1px solid var(--line);padding:64px 0 40px;position:relative;z-
       <div class="mrow">
         <span class="rom">i.</span>
         <h3>Curation</h3>
-        <p>Twenty Polymarket markets – 11 Bull, 3 Crash, 6 Regulation – screened for theme relevance and tradability. Closed or resolved markets drop out of the live index automatically.</p>
+        <p>Twenty Polymarket markets – 11 Bull, 9 Bear (3 MKT, 6 GOV) – screened for theme relevance and tradability. Closed or resolved markets drop out of the live index automatically.</p>
       </div>
       <div class="mrow">
         <span class="rom">ii.</span>
@@ -458,7 +459,7 @@ footer{border-top:1px solid var(--line);padding:64px 0 40px;position:relative;z-
       <div class="mrow">
         <span class="rom">iv.</span>
         <h3>Honesty</h3>
-        <p>The lead-lag study finds <b style="color:var(--ink)">no statistically significant lead</b> of the crash index over NVDA/SOXX (right sign, p ≈ 0.14–0.19). The bubble-burst market is partly reflexive – it resolves on the very drawdowns it prices. Treat OMEN as a market-pricing monitor, not a validated forecast.</p>
+        <p>The lead-lag study finds <b style="color:var(--ink)">no statistically significant lead</b> of the bear index (MKT sleeve) over NVDA/SOXX (right sign, p ≈ 0.14–0.19). The bubble-burst market is partly reflexive – it resolves on the very drawdowns it prices. Treat OMEN as a market-pricing monitor, not a validated forecast.</p>
       </div>
       <div class="mrow">
         <span class="num">05</span>
@@ -478,7 +479,7 @@ footer{border-top:1px solid var(--line);padding:64px 0 40px;position:relative;z-
     <div class="runbox rv">
       <div class="kick" style="justify-content:center;margin-bottom:20px">Run it yourself</div>
       <h2>Pick the cycle you see coming.</h2>
-      <p>Bull, Crash, or Reg. The full monitor runs locally – one HTML file, one Python script, no dependencies.</p>
+      <p>Bull or Bear. The full monitor runs locally – one HTML file, one Python script, no dependencies.</p>
       <div class="code">
         <span class="c"># pull the equity / vol / skew / credit feeds, then serve</span><br>
         <span class="p">$</span> python3 update-market-data.py --watch 600 --snapshot<br>
@@ -499,11 +500,11 @@ footer{border-top:1px solid var(--line);padding:64px 0 40px;position:relative;z-
           <svg viewBox="0 0 32 32" fill="none" style="width:22px;height:22px"><path d="M3 16C7 9.2 11.4 6 16 6s9 3.2 13 10c-4 6.8-8.4 10-13 10S7 22.8 3 16z" stroke="#e3a63c" stroke-width="2"/><circle cx="16" cy="16" r="4.6" fill="#e3a63c"/><circle cx="16" cy="16" r="1.8" fill="#0b0a08"/></svg>
           OMEN
         </a>
-        <span style="max-width:280px">Three prediction-market indexes and a crash-pressure gauge for the AI cycle.</span>
+        <span style="max-width:280px">Two prediction-market indexes and a crash-pressure gauge for the AI cycle.</span>
       </div>
       <div>
         <h4>Indexes</h4>
-        <a href="#indexes">Bull</a><a href="#indexes">Crash</a><a href="#indexes">Regulation</a><a href="#gauge">The Gauge</a><a href="influencers.html">Sentiment Board</a><a href="polymarket-ai-index.html">Live Monitor →</a>
+        <a href="#indexes">Bull</a><a href="#indexes">Bear</a><a href="#gauge">The Gauge</a><a href="influencers.html">Sentiment Board</a><a href="polymarket-ai-index.html">Live Monitor →</a>
       </div>
       <div>
         <h4>Data</h4>
@@ -544,15 +545,15 @@ const MARKETS=[
 {id:"676804",side:"bull",theme:"tech",ht:"event",label:"OpenAI consumer hardware product by Dec 31, 2026",yes:0.33,d1:0.025,slug:"will-openai-launch-a-consumer-hardware-product-by"},
 {id:"2487206",side:"bull",theme:"tech",ht:"event",label:"Next Mythos-class model by Sep 30, 2026",yes:0.815,d1:0.065,slug:"next-mythos-class-model-released-by"},
 {id:"2255930",side:"bull",theme:"tech",ht:"event",label:"AI data center in space by Dec 31, 2027",yes:0.255,d1:null,slug:"ai-data-center-in-space-by"},
-{id:"691340",side:"crash",ht:"structural",label:"AI bubble burst in 2026 (3+ crash triggers)",yes:0.1595,d1:0.007,slug:"ai-bubble-burst-by"},
-{id:"676827",side:"crash",ht:"event",label:"OpenAI acquired before 2027",yes:0.0615,d1:null,slug:"openai-acquired-before-2027"},
-{id:"676846",side:"crash",ht:"event",label:"Anthropic acquired before 2027",yes:0.044,d1:0.0025,slug:"anthropic-acquired-before-2027"},
-{id:"2787889",side:"reg",ht:"structural",label:"US gov removes access to a major AI model in 2026",yes:0.3,d1:0.07,slug:"us-government-removes-public-access-to-another-major-ai-model-in-2026-20260703202936862"},
-{id:"2787891",side:"reg",ht:"structural",label:"US gov removes access to an Anthropic model in 2026",yes:0.22,d1:null,slug:"us-government-removes-public-access-to-another-anthropic-ai-model-in-2026-20260703203121674"},
-{id:"2787890",side:"reg",ht:"structural",label:"US gov removes access to a Chinese AI model in 2026",yes:0.255,d1:0.04,slug:"us-government-removes-public-access-to-a-major-chinese-ai-model-in-2026-20260703203328223"},
-{id:"2698575",side:"reg",ht:"event",label:"Trump orders federal review of AI releases by Jul 31",yes:0.11,d1:-0.01,slug:"trump-orders-federal-review-for-ai-model-releases-by-may-31"},
-{id:"676842",side:"reg",ht:"event",label:"US enacts AI safety bill before 2027",yes:0.21,d1:null,slug:"us-enacts-ai-safety-bill-before-2027"},
-{id:"2839991",side:"reg",ht:"event",label:"Any state enacts data center moratorium by Dec 31",yes:0.375,d1:-0.19,slug:"will-any-state-enact-a-data-center-moratorium-by-december-31-20260707003733282"}
+{id:"691340",side:"bear",theme:"mkt",ht:"structural",label:"AI bubble burst in 2026 (3+ crash triggers)",yes:0.1595,d1:0.007,slug:"ai-bubble-burst-by"},
+{id:"676827",side:"bear",theme:"mkt",ht:"event",label:"OpenAI acquired before 2027",yes:0.0615,d1:null,slug:"openai-acquired-before-2027"},
+{id:"676846",side:"bear",theme:"mkt",ht:"event",label:"Anthropic acquired before 2027",yes:0.044,d1:0.0025,slug:"anthropic-acquired-before-2027"},
+{id:"2787889",side:"bear",theme:"gov",ht:"structural",label:"US gov removes access to a major AI model in 2026",yes:0.3,d1:0.07,slug:"us-government-removes-public-access-to-another-major-ai-model-in-2026-20260703202936862"},
+{id:"2787891",side:"bear",theme:"gov",ht:"structural",label:"US gov removes access to an Anthropic model in 2026",yes:0.22,d1:null,slug:"us-government-removes-public-access-to-another-anthropic-ai-model-in-2026-20260703203121674"},
+{id:"2787890",side:"bear",theme:"gov",ht:"structural",label:"US gov removes access to a Chinese AI model in 2026",yes:0.255,d1:0.04,slug:"us-government-removes-public-access-to-a-major-chinese-ai-model-in-2026-20260703203328223"},
+{id:"2698575",side:"bear",theme:"gov",ht:"event",label:"Trump orders federal review of AI releases by Jul 31",yes:0.11,d1:-0.01,slug:"trump-orders-federal-review-for-ai-model-releases-by-may-31"},
+{id:"676842",side:"bear",theme:"gov",ht:"event",label:"US enacts AI safety bill before 2027",yes:0.21,d1:null,slug:"us-enacts-ai-safety-bill-before-2027"},
+{id:"2839991",side:"bear",theme:"gov",ht:"event",label:"Any state enacts data center moratorium by Dec 31",yes:0.375,d1:-0.19,slug:"will-any-state-enact-a-data-center-moratorium-by-december-31-20260707003733282"}
 ];
 let GAUGE = 23.6;
 // g: "lead" = priced before the fact (can warn) · "conf" = moves with/after prices (confirms)
@@ -572,19 +573,25 @@ const EQ = {
 const SIDES = {
  bull:{name:"BULL", tick:"OMN-B", rom:"i.", color:"var(--bull)", mark:"#79c99a", thesis:"Up and to the right",
    desc:"BULL is a trade on AI acceleration. TECH rows price technology progress (models, benchmarks, hardware); CAP rows price the capital markets (IPOs, valuations). Only the CAP side reads on the investment cycle – tech progress has survived every historical unwind."},
- crash:{name:"CRASH", tick:"OMN-C", rom:"ii.", color:"var(--crash)", mark:"#e2685a", thesis:"The music stops",
-   desc:"CRASH is a trade on the unwind – the bubble-burst market plus distress-sale odds for the leading labs. It rises as the AI trade cracks."},
- reg:{name:"REG", tick:"OMN-R", rom:"iii.", color:"var(--reg)", mark:"#8fa8d8", thesis:"Washington gets a vote",
-   desc:"REG prices the clampdown: model-access removals, federal reviews, safety bills, and data-center moratoria."},
+ bear:{name:"BEAR", tick:"OMN-X", rom:"ii.", color:"var(--bear)", mark:"#e2685a", thesis:"The music stops – or Washington stops it",
+   desc:"BEAR is a trade on the cycle breaking. MKT rows price the unwind itself – the bubble-burst market plus distress-sale odds for the leading labs; GOV rows price the clampdown – model-access removals, federal reviews, safety bills, and data-center moratoria. Either way, the party ends."},
+};
+// row tags: each index reads its own two sleeves
+const THEMES = {
+ tech:{tag:"TECH"}, capital:{tag:"CAP"},
+ mkt:{tag:"MKT"}, gov:{tag:"GOV"},
 };
 const GAMMA="https://gamma-api.polymarket.com", CLOB="https://clob.polymarket.com";
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 /* ================= index math ================= */
-function indexOf(side){
-  const ms=MARKETS.filter(m=>m.side===side&&!m.closed);
-  return ms.reduce((a,m)=>a+m.yes,0)/ms.length*100;
+// theme is optional: pass it to read one sleeve (Bear's MKT/GOV, Bull's TECH/CAP)
+// instead of the whole index. Bear's sleeves are unequal (3 vs 6), so the composite
+// is the flat mean of all 9 – never the mean of the two sleeve means.
+function indexOf(side,theme){
+  const ms=MARKETS.filter(m=>m.side===side&&!m.closed&&(!theme||m.theme===theme));
+  return ms.length?ms.reduce((a,m)=>a+m.yes,0)/ms.length*100:0;
 }
 function d1Of(side){
   const ms=MARKETS.filter(m=>m.side===side&&!m.closed&&m.d1!=null);
@@ -597,7 +604,7 @@ function chgHtml(v){
 
 /* ================= hero + ticker + cards render ================= */
 function renderHero(){
-  for(const side of ["bull","crash","reg"]){
+  for(const side of Object.keys(SIDES)){
     const px="$"+(indexOf(side)/100).toFixed(3);
     const d=d1Of(side);
     const dTxt=(d>=0?"+":"−")+Math.abs(d).toFixed(1)+"¢", dCls=d>=0?"up":"down";
@@ -609,12 +616,12 @@ function renderHero(){
 }
 function renderCards(){
   const host=$("cards"); host.innerHTML="";
-  for(const side of ["bull","crash","reg"]){
+  for(const side of Object.keys(SIDES)){
     const S=SIDES[side], v=indexOf(side), d=d1Of(side);
     const ms=MARKETS.filter(m=>m.side===side).sort((a,b)=>b.yes-a.yes);
     const rows=ms.map(m=>`<tr>
       <td title="${esc(m.label)}"><a href="https://polymarket.com/event/${esc(m.slug)}" target="_blank" rel="noopener">${esc(m.label)}</a></td>
-      <td class="ht">${m.ht==="event"?"EVENT":"STRUCT †"}${m.theme?(m.theme==="tech"?" · TECH":" · CAP"):""}</td>
+      <td class="ht">${m.ht==="event"?"EVENT":"STRUCT †"}${m.theme&&THEMES[m.theme]?" · "+THEMES[m.theme].tag:""}</td>
       <td style="color:${S.color}">${(m.yes*100).toFixed(1)}%</td></tr>`).join("");
     const el=document.createElement("article");
     el.className="ix rv"; el.innerHTML=`
@@ -756,7 +763,10 @@ function applyServerData(mkt){
   // the landing headline can no longer contradict the monitor
   const bm=MARKETS.find(m=>m.id==="691340");
   const bubble=(bm&&!bm.closed?bm.yes:(sg.bubble||0))*100;
-  const crashLevel=indexOf("crash");
+  // the gauge's bands are calibrated to priced crash risk, so they keep reading the
+  // crash basket – now Bear's MKT sleeve, unchanged in membership. Reading the Bear
+  // composite here would let regulatory odds trip a crash regime.
+  const crashLevel=indexOf("bear","mkt");
   let regime="calm";
   if(sg.score>=55||crashLevel>=40||bubble>=25) regime="stressed";
   else if(sg.score>=35||crashLevel>=25||bubble>=15) regime="elevated";
@@ -793,7 +803,7 @@ function applyServerData(mkt){
     const trips=[];
     if(bubble>=25) trips.push(`AI bubble-burst market at ${bubble.toFixed(1)}% – single-market trip (≥25% = Stressed)`);
     else if(bubble>=15) trips.push(`AI bubble-burst market at ${bubble.toFixed(1)}% – single-market trip (≥15% = Elevated)`);
-    if(crashLevel>=25) trips.push(`Crash index at ${crashLevel.toFixed(1)} (≥25 = Elevated)`);
+    if(crashLevel>=25) trips.push(`Crash markets at ${crashLevel.toFixed(1)} (≥25 = Elevated)`);
     if(sg.score>=35) trips.push(`Blended gauge at ${sg.score.toFixed(0)} (≥35 = Elevated)`);
     if(regime!=="calm"&&trips.length){
       q.textContent=trips[0];
@@ -858,7 +868,7 @@ async function fetchSparks(){
       if(j.history&&j.history.length>3) hist[m.id]=j.history;
     }catch(e){}
   }));
-  for(const side of ["bull","crash","reg"]){
+  for(const side of Object.keys(SIDES)){
     const ids=MARKETS.filter(m=>m.side===side&&hist[m.id]).map(m=>m.id);
     const el=document.getElementById("sp7-"+side); if(!el) continue;
     if(ids.length<2){ el.innerHTML='<svg width="100%" height="100%" viewBox="0 0 300 52"><text x="150" y="30" text-anchor="middle" fill="#6e6656" font-size="9" font-family="monospace" letter-spacing="2">LIVE HISTORY UNAVAILABLE</text></svg>'; continue; }

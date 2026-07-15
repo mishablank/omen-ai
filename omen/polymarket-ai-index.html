@@ -11,7 +11,7 @@
     --text-primary: #ece7db; --text-secondary: #a59c88; --muted: #6e6656;
     --grid: #262117; --baseline: #3a3222; --border: rgba(236,231,219,0.12);
     --acc: #e3a63c; --accT: #f2c977;
-    --bull: #79c99a; --crash: #e2685a; --reg: #8fa8d8; --aqua: #79c99a; --violet: #e3a63c;
+    --bull: #79c99a; --bear: #e2685a; --crash: #e2685a; --reg: #8fa8d8; --aqua: #79c99a; --violet: #e3a63c;
     --bull-wash: rgba(121,201,154,0.12);
     --delta-up: #79c99a; --delta-down: #e2685a;
     --good: #79c99a; --warn: #e3a63c; --serious: #e08a4f; --crit: #e2685a;
@@ -131,7 +131,7 @@
   <h1>AI Crash Monitor</h1>
   <span class="chip calm" id="regime"><i></i>Loading</span>
   <span id="regimeWhy"></span>
-  <p class="sub">A blended crash-pressure gauge over Polymarket odds plus options skew, the volatility complex, credit stress, and equity drawdowns. Five prediction-market indexes underneath: <strong style="color:var(--bull)">Bull</strong> (YES = acceleration), <strong style="color:var(--crash)">Crash</strong> (YES = AI market distress), <strong style="color:var(--reg)">Regulation</strong> (YES = government clampdown), <strong style="color:var(--acc)">China AI</strong> (YES = Chinese substitution pressure), <strong style="color:var(--aqua)">Macro</strong> (YES = recession/rate risk).</p>
+  <p class="sub">A blended crash-pressure gauge over Polymarket odds plus options skew, the volatility complex, credit stress, and equity drawdowns. Four prediction-market indexes underneath: <strong style="color:var(--bull)">Bull</strong> (YES = acceleration), <strong style="color:var(--bear)">Bear</strong> (YES = the unwind, market or regulatory), <strong style="color:var(--acc)">China AI</strong> (YES = Chinese substitution pressure), <strong style="color:var(--aqua)">Macro</strong> (YES = recession/rate risk).</p>
 </header>
 
 <div class="toolbar">
@@ -163,11 +163,10 @@
 
 <div class="tiles" style="margin-top:16px">
   <div class="tile"><div class="label"><span class="key" style="background:var(--bull)"></span>AI-Bull Index</div><div class="value" id="bullVal">&ndash;</div><div class="delta" id="bullDelta"></div><svg class="spark" id="bullSpark"></svg></div>
-  <div class="tile"><div class="label"><span class="key" style="background:var(--crash)"></span>AI-Crash Index</div><div class="value" id="crashVal">&ndash;</div><div class="delta" id="crashDelta"></div><svg class="spark" id="crashSpark"></svg></div>
-  <div class="tile"><div class="label"><span class="key" style="background:var(--reg)"></span>AI-Regulation Index</div><div class="value" id="regVal">&ndash;</div><div class="delta" id="regDelta"></div><svg class="spark" id="regSpark"></svg></div>
+  <div class="tile"><div class="label"><span class="key" style="background:var(--bear)"></span>AI-Bear Index</div><div class="value" id="bearVal">&ndash;</div><div class="delta" id="bearDelta"></div><svg class="spark" id="bearSpark"></svg></div>
   <div class="tile"><div class="label"><span class="key" style="background:var(--acc)"></span>AI-China Index</div><div class="value" id="chinaVal">&ndash;</div><div class="delta" id="chinaDelta"></div><svg class="spark" id="chinaSpark"></svg></div>
   <div class="tile"><div class="label"><span class="key" style="background:var(--aqua)"></span>AI-Macro Index</div><div class="value" id="macroVal">&ndash;</div><div class="delta" id="macroDelta"></div><svg class="spark" id="macroSpark"></svg></div>
-  <div class="tile"><div class="label">Net sentiment (bull &minus; crash)</div><div class="value" id="netVal">&ndash;</div><div class="delta dim">Positive = leans toward acceleration</div><svg class="spark" id="netSpark"></svg></div>
+  <div class="tile"><div class="label">Net sentiment (bull &minus; bear)</div><div class="value" id="netVal">&ndash;</div><div class="delta dim">Positive = leans toward acceleration</div><svg class="spark" id="netSpark"></svg></div>
 </div>
 
 <div class="card">
@@ -320,7 +319,7 @@
 </div>
 
 <div class="card">
-  <h2>Equity check &ndash; NVDA &amp; SOXX vs. the crash index</h2>
+  <h2>Equity check &ndash; NVDA &amp; SOXX vs. the bear index</h2>
   <div class="cap">Closes rebased to 100 at window start. Shown on its own axis &ndash; different units never share one.</div>
   <div class="chartwrap" id="eqWrap"><svg id="eqChart" viewBox="0 0 1000 220" role="img" aria-label="Equity rebased"></svg><div class="tip" id="eqTip"></div></div>
   <div class="legend" id="eqLegend"></div>
@@ -328,10 +327,10 @@
 </div>
 
 <div class="card">
-  <h2>Does the crash index lead prices?</h2>
+  <h2>Does the bear index (MKT sleeve) lead prices?</h2>
   <details id="leadlagDetails">
     <summary id="leadlagSummary">Computing&hellip;</summary>
-    <div class="cap">Correlation of <em>non-overlapping</em> crash-index changes with the equity&rsquo;s subsequent return. Because the &ldquo;bubble burst&rdquo; market <em>resolves on</em> NVDA/SOXX drawdowns, that market is reflexive with the very prices we test &ndash; so the crash-<em>ex-bubble</em> row is the cleaner read. p is a permutation test (2,000 shuffles); n is independent windows. Recomputed only when history refreshes, not on every price tick.</div>
+    <div class="cap">Correlation of <em>non-overlapping</em> MKT-sleeve changes with the equity&rsquo;s subsequent return. The sleeve is the market-unwind side of Bear (bubble burst plus lab distress sales), series-identical to the crash index this study was built on. Because the &ldquo;bubble burst&rdquo; market <em>resolves on</em> NVDA/SOXX drawdowns, that market is reflexive with the very prices we test &ndash; so the <em>ex-bubble</em> row is the cleaner read. p is a permutation test (2,000 shuffles); n is independent windows. Recomputed only when history refreshes, not on every price tick.</div>
     <div class="tscroll"><table id="leadlagTable"></table></div>
     <div class="note" id="leadlagNote"></div>
   </details>
@@ -344,9 +343,8 @@
 </div>
 <div class="grid2" style="margin-top:0">
   <div class="card"><h2 style="font-size:13px">AI-Bull <span class="sub" id="bullMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="bullTable"></table></div></div>
-  <div class="card"><h2 style="font-size:13px">AI-Crash <span class="sub" id="crashMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="crashTable"></table></div></div>
+  <div class="card"><h2 style="font-size:13px">AI-Bear <span class="sub" id="bearMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="bearTable"></table></div></div>
 </div>
-<div class="card"><h2 style="font-size:13px">AI-Regulation <span class="sub" id="regMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="regTable"></table></div></div>
 <div class="grid2" style="margin-top:0">
   <div class="card"><h2 style="font-size:13px">AI-China <span class="sub" id="chinaMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="chinaTable"></table></div></div>
   <div class="card"><h2 style="font-size:13px">AI-Macro <span class="sub" id="macroMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="macroTable"></table></div></div>
@@ -388,16 +386,19 @@ const CONSTITUENTS = [
   { id:"2487206", side:"bull",  htype:"event",      theme:"tech",    label:"Next Mythos-class model by Sep 30, 2026" },
   { id:"2255930", side:"bull",  htype:"event",      theme:"tech",    label:"AI data center in space by Dec 31, 2027" },
 
-  { id:"691340",  side:"crash", htype:"structural", label:"AI bubble burst in 2026 (3+ crash triggers)", reflexive:true },
-  { id:"676827",  side:"crash", htype:"event",      label:"OpenAI acquired before 2027" },
-  { id:"676846",  side:"crash", htype:"event",      label:"Anthropic acquired before 2027" },
+  /* BEAR – the short side, one flat equal-weight basket of 9 read through two sleeves.
+     MKT is series-identical to the old AI-Crash index and GOV to the old AI-Regulation
+     index, which is what keeps the crash gauge and the lead-lag study reading MKT valid. */
+  { id:"691340",  side:"bear",  htype:"structural", theme:"mkt", label:"AI bubble burst in 2026 (3+ crash triggers)", reflexive:true },
+  { id:"676827",  side:"bear",  htype:"event",      theme:"mkt", label:"OpenAI acquired before 2027" },
+  { id:"676846",  side:"bear",  htype:"event",      theme:"mkt", label:"Anthropic acquired before 2027" },
 
-  { id:"2787889", side:"reg",   htype:"structural", label:"US gov removes access to a major AI model in 2026" },
-  { id:"2787891", side:"reg",   htype:"structural", label:"US gov removes access to an Anthropic model in 2026" },
-  { id:"2787890", side:"reg",   htype:"structural", label:"US gov removes access to a Chinese AI model in 2026" },
-  { id:"2698575", side:"reg",   htype:"event",      label:"Trump orders federal review of AI releases by Jul 31" },
-  { id:"676842",  side:"reg",   htype:"event",      label:"US enacts AI safety bill before 2027" },
-  { id:"2839991", side:"reg",   htype:"event",      label:"Any state enacts data center moratorium by Dec 31" },
+  { id:"2787889", side:"bear",  htype:"structural", theme:"gov", label:"US gov removes access to a major AI model in 2026" },
+  { id:"2787891", side:"bear",  htype:"structural", theme:"gov", label:"US gov removes access to an Anthropic model in 2026" },
+  { id:"2787890", side:"bear",  htype:"structural", theme:"gov", label:"US gov removes access to a Chinese AI model in 2026" },
+  { id:"2698575", side:"bear",  htype:"event",      theme:"gov", label:"Trump orders federal review of AI releases by Jul 31" },
+  { id:"676842",  side:"bear",  htype:"event",      theme:"gov", label:"US enacts AI safety bill before 2027" },
+  { id:"2839991", side:"bear",  htype:"event",      theme:"gov", label:"Any state enacts data center moratorium by Dec 31" },
 
   /* CHINA AI COMPETITION — the opposing force to US AI stocks.
      Rising = negative for NVDA/MSFT/OpenAI (substitution pressure, pricing compression).
@@ -424,10 +425,18 @@ const EVENTS = [
   { d:"2026-07-10", label:"Constituent set curated" },
 ];
 
-const SIDES = ["bull","crash","reg","china","macro"];
-const SIDE_COLOR = { bull:"var(--bull)", crash:"var(--crash)", reg:"var(--reg)", china:"var(--acc)", macro:"var(--aqua)" };
-const SIDE_NAME = { bull:"Bull", crash:"Crash", reg:"Regulation", china:"China AI", macro:"Macro" };
-const RISK_UP = { bull:false, crash:true, reg:true, china:true, macro:true };   // for crash/reg/china/macro, a rising index is the bad direction
+const SIDES = ["bull","bear","china","macro"];
+const SIDE_COLOR = { bull:"var(--bull)", bear:"var(--bear)", china:"var(--acc)", macro:"var(--aqua)" };
+const SIDE_NAME = { bull:"Bull", bear:"Bear", china:"China AI", macro:"Macro" };
+const RISK_UP = { bull:false, bear:true, china:true, macro:true };   // for bear/china/macro, a rising index is the bad direction
+// sleeve tags shown on constituent rows; each index reads its own pair
+const THEME_TAG = { tech:"TECH", capital:"CAP", mkt:"MKT", gov:"GOV" };
+const THEME_TIP = {
+  tech:"technology-progress odds – can stay high straight through a financial unwind",
+  capital:"capital-markets odds – the financial-cycle read",
+  mkt:"the unwind itself – bubble-burst odds and distress-sale odds for the leading labs",
+  gov:"the clampdown – model-access removals, federal reviews, safety bills, moratoria",
+};
 const BUBBLE_ID = "691340";
 const FUNDING_IDS = ["656312","2413330"];
 // Bubble-sentiment markets: existing bull constituents whose extreme probability = euphoria
@@ -441,7 +450,7 @@ let coverage = { loaded:0, total:CONSTITUENTS.length, excluded:[], suggestions:[
 let sig = {}, lastRegime=null, alertsOn=false;
 let leadlagCache = null, gaugeHistCache = null;
 let lastPolyRefresh = null;
-const sortState = { bull:{k:"yes",dir:-1}, crash:{k:"yes",dir:-1}, reg:{k:"yes",dir:-1}, china:{k:"yes",dir:-1}, macro:{k:"yes",dir:-1} };
+const sortState = { bull:{k:"yes",dir:-1}, bear:{k:"yes",dir:-1}, china:{k:"yes",dir:-1}, macro:{k:"yes",dir:-1} };
 
 const $ = id => document.getElementById(id);
 const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
@@ -619,16 +628,16 @@ function indexNow(side, theme){
   return den?(num/den)*100:null;
 }
 // fixed methodology (equal, raw, skip closed) for regime/snapshot comparability
-function indexNowFixed(side){
-  let num=0,den=0; for(const c of CONSTITUENTS){ if(c.side!==side) continue; const m=markets.get(c.id);
+function indexNowFixed(side, theme){
+  let num=0,den=0; for(const c of CONSTITUENTS){ if(c.side!==side||(theme&&c.theme!==theme)) continue; const m=markets.get(c.id);
     if(!m||m.closed) continue; num+=m.yes; den++; } return den?(num/den)*100:0;
 }
 // core chain-linker: returns {buckets, vals} in probability units, composition-neutral, anchored to present
 function chainedSeries(side, opts){
-  const { store, bucketSec, days, weighted, hazard, exclude } = opts;
+  const { store, bucketSec, days, weighted, hazard, exclude, theme } = opts;
   const nowSec=Math.floor(Date.now()/1000), startSec=nowSec-days*86400;
   const buckets=[]; for(let t=Math.ceil(startSec/bucketSec)*bucketSec; t<=nowSec; t+=bucketSec) buckets.push(t);
-  const mem=CONSTITUENTS.filter(c=>c.side===side && store.has(c.id) && !(exclude&&exclude.has(c.id)));
+  const mem=CONSTITUENTS.filter(c=>c.side===side && (!theme||c.theme===theme) && store.has(c.id) && !(exclude&&exclude.has(c.id)));
   const cur=new Map(); for(const c of mem) cur.set(c.id,{i:0,h:store.get(c.id)});
   const wf = id => weighted ? Math.max(markets.get(id)?.volume??0,1) : 1;
   function valAt(c,t){ const o=cur.get(c.id), h=o.h; if(h[0].t>t) return null;
@@ -663,10 +672,10 @@ function buildComposite(){
   const useFine=rangeDays<=7&&historiesFine.size, store=useFine?historiesFine:histories;
   const bucketSec=(useFine?60:720)*60;
   const s={}; for(const side of SIDES) s[side]=chainedSeries(side,{store,bucketSec,days:rangeDays,weighted:weighting==="volume",hazard:basis==="hazard"});
-  return { buckets:s.bull.buckets, bull:s.bull.vals, crash:s.crash.vals, reg:s.reg.vals, china:s.china.vals, macro:s.macro.vals };
+  return { buckets:s.bull.buckets, bull:s.bull.vals, bear:s.bear.vals, china:s.china.vals, macro:s.macro.vals };
 }
-function dailyChained(side, days, exclude){
-  return chainedSeries(side,{store:histories, bucketSec:86400, days, weighted:false, hazard:false, exclude});
+function dailyChained(side, days, exclude, theme){
+  return chainedSeries(side,{store:histories, bucketSec:86400, days, weighted:false, hazard:false, exclude, theme});
 }
 
 /* ================= Signals & gauge ================= */
@@ -690,11 +699,15 @@ function drawdown(series){ if(!series||!series.length) return null; const hi=Mat
 
 function computeSignals(){
   const s={};
-  for(const side of SIDES){ const ser=dailyChained(side,90).vals.filter(v=>v!=null);
-    if(ser.length<15){ s[side]=null; continue; }
+  const stat=ser=>{ if(ser.length<15) return null;
     const mean=ser.reduce((a,b)=>a+b,0)/ser.length, sd=Math.sqrt(ser.reduce((a,b)=>a+(b-mean)**2,0)/ser.length)||1;
     const last=ser[ser.length-1], wk=ser[Math.max(0,ser.length-8)];
-    s[side]={z:(last-mean)/sd, d7:last-wk, last, series:ser}; }
+    return {z:(last-mean)/sd, d7:last-wk, last, series:ser}; };
+  for(const side of SIDES) s[side]=stat(dailyChained(side,90).vals.filter(v=>v!=null));
+  // the MKT sleeve on its own: the gauge's regime bands are calibrated against the crash
+  // basket's own distribution, and MKT is that basket unchanged. Its z must come from the
+  // sleeve's series, not the Bear composite's, or the bands would silently retune.
+  s.bearMkt=stat(dailyChained("bear",90,null,"mkt").vals.filter(v=>v!=null));
   s.spikes=CONSTITUENTS.map(c=>{ const m=markets.get(c.id); if(!m||m.closed||m.vol24<1000||!m.vol1wk) return null;
     const r=m.vol24/(m.vol1wk/7); return r>=2?{c,m,ratio:r}:null; }).filter(Boolean).sort((a,b)=>b.ratio-a.ratio);
   const bubble=markets.get(BUBBLE_ID);
@@ -760,17 +773,20 @@ function computeGauge(){
 }
 // returns { r, why: [human-readable triggered conditions] }
 function computeRegime(){
-  const g=sig.gauge?.score, z=sig.crash?sig.crash.z:0, level=indexNowFixed("crash");
+  // deliberately the MKT sleeve, not the Bear composite: these bands are calibrated to
+  // priced crash risk, and MKT is the old crash basket unchanged. Reading the composite
+  // here would let regulatory odds trip a crash regime.
+  const g=sig.gauge?.score, z=sig.bearMkt?sig.bearMkt.z:0, level=indexNowFixed("bear","mkt");
   let stackMax=0, stackName="";
   for(const x of sig.stack) if(x.v!=null&&!x.isDelta&&x.v>stackMax){ stackMax=x.v; stackName=x.name; }
   const stressed=[], elevated=[];
   if(g!=null&&g>=55) stressed.push(`gauge ${g.toFixed(0)} ≥ 55`);
-  if(level>=40) stressed.push(`crash index ${level.toFixed(1)} ≥ 40`);
+  if(level>=40) stressed.push(`crash markets ${level.toFixed(1)} ≥ 40`);
   if(level>=25&&z>=2) stressed.push(`crash ${level.toFixed(1)} ≥ 25 with z ${z.toFixed(1)} ≥ 2`);
   if(stackMax>=25) stressed.push(`${stackName} at ${stackMax.toFixed(1)}% ≥ 25%`);
   if(stressed.length) return { r:"stressed", why:stressed };
   if(g!=null&&g>=35) elevated.push(`gauge ${g.toFixed(0)} ≥ 35`);
-  if(level>=25) elevated.push(`crash index ${level.toFixed(1)} ≥ 25`);
+  if(level>=25) elevated.push(`crash markets ${level.toFixed(1)} ≥ 25`);
   if(z>=1.5) elevated.push(`crash z-score ${z.toFixed(1)} ≥ 1.5`);
   if(stackMax>=15) elevated.push(`${stackName} at ${stackMax.toFixed(1)}% ≥ 15%`);
   if(elevated.length) return { r:"elevated", why:elevated };
@@ -835,7 +851,7 @@ function permP(xs,ys,robs,K){ if(robs==null) return null; let c=0; const y=ys.sl
 function computeLeadLagCache(){
   if(!mkt?.equity?.NVDA){ leadlagCache=null; return; }
   const lags=[1,5];
-  const dailies={ full:dailyChained("crash",120,null), ex:dailyChained("crash",120,new Set([BUBBLE_ID])),
+  const dailies={ full:dailyChained("bear",120,null,"mkt"), ex:dailyChained("bear",120,new Set([BUBBLE_ID]),"mkt"),
                   china:dailyChained("china",120,null), macro:dailyChained("macro",120,null) };
   const cache={ lags, rows:{} };
   for(const [key,daily] of Object.entries(dailies)){
@@ -920,26 +936,27 @@ function renderGaugeChart(){
 function renderTiles(){
   const v={}; for(const s of SIDES) v[s]=indexNow(s);
   $("bullVal").textContent=v.bull!=null?v.bull.toFixed(1):"–";
-  $("crashVal").textContent=v.crash!=null?v.crash.toFixed(1):"–";
-  $("regVal").textContent=v.reg!=null?v.reg.toFixed(1):"–";
+  $("bearVal").textContent=v.bear!=null?v.bear.toFixed(1):"–";
   $("chinaVal").textContent=v.china!=null?v.china.toFixed(1):"–";
   $("macroVal").textContent=v.macro!=null?v.macro.toFixed(1):"–";
-  $("netVal").textContent=(v.bull!=null&&v.crash!=null)?(v.bull>=v.crash?"+":"")+(v.bull-v.crash).toFixed(1):"–";
-  for(const [s,el] of [["bull","bullDelta"],["crash","crashDelta"],["reg","regDelta"],["china","chinaDelta"],["macro","macroDelta"]]){ const gg=sig[s];
+  $("netVal").textContent=(v.bull!=null&&v.bear!=null)?(v.bull>=v.bear?"+":"")+(v.bull-v.bear).toFixed(1):"–";
+  for(const [s,el] of [["bull","bullDelta"],["bear","bearDelta"],["china","chinaDelta"],["macro","macroDelta"]]){ const gg=sig[s];
     $(el).innerHTML=gg?`7d ${deltaSpan(gg.d7,1,"",RISK_UP[s])} pts &middot; z ${deltaSpan(gg.z,2,"",RISK_UP[s])}`:'<span class="dim">history pending</span>'; }
   // tech-progress odds ≠ investment-cycle odds: show the split under the bull tile
   const bt=indexNow("bull","tech"), bc=indexNow("bull","capital");
   if(bt!=null&&bc!=null) $("bullDelta").innerHTML+=`<div class="sub" title="Tech = model releases, benchmarks, hardware. Capital = IPOs, valuation flips. Only the capital side reads on the investment cycle.">Tech ${bt.toFixed(1)} &middot; Capital ${bc.toFixed(1)}</div>`;
-  if(bc!=null&&v.crash!=null) $("netVal").parentElement.querySelector(".delta").innerHTML=`Positive = leans toward acceleration<div class="sub" title="Capital-markets bull constituents only vs crash – the cleaner financial-cycle read (tech progress can survive a financial unwind).">Capital-only net ${(bc>=v.crash?"+":"")+(bc-v.crash).toFixed(1)}</div>`;
+  // market unwind ≠ regulatory clampdown: same split under the bear tile
+  const bm=indexNow("bear","mkt"), bg=indexNow("bear","gov");
+  if(bm!=null&&bg!=null) $("bearDelta").innerHTML+=`<div class="sub" title="Mkt = the unwind itself (bubble burst, distress sales). Gov = the clampdown (model-access removals, reviews, safety bills, moratoria). Sleeves are unequal (3 vs 6), so the composite is the flat mean of all 9, not the mean of these two.">Mkt ${bm.toFixed(1)} &middot; Gov ${bg.toFixed(1)}</div>`;
+  if(bc!=null&&v.bear!=null) $("netVal").parentElement.querySelector(".delta").innerHTML=`Positive = leans toward acceleration<div class="sub" title="Capital-markets bull constituents only vs bear – the cleaner financial-cycle read (tech progress can survive a financial unwind).">Capital-only net ${(bc>=v.bear?"+":"")+(bc-v.bear).toFixed(1)}</div>`;
   const last30=ser=>ser?ser.slice(-30):null;
   spark("bullSpark", last30(sig.bull?.series), "var(--bull)");
-  spark("crashSpark", last30(sig.crash?.series), "var(--crash)");
-  spark("regSpark", last30(sig.reg?.series), "var(--reg)");
+  spark("bearSpark", last30(sig.bear?.series), "var(--bear)");
   spark("chinaSpark", last30(sig.china?.series), "var(--acc)");
   spark("macroSpark", last30(sig.macro?.series), "var(--aqua)");
-  if(sig.bull?.series&&sig.crash?.series){
-    const n=Math.min(sig.bull.series.length, sig.crash.series.length);
-    const net=[]; for(let i=0;i<n;i++) net.push(sig.bull.series[sig.bull.series.length-n+i]-sig.crash.series[sig.crash.series.length-n+i]);
+  if(sig.bull?.series&&sig.bear?.series){
+    const n=Math.min(sig.bull.series.length, sig.bear.series.length);
+    const net=[]; for(let i=0;i<n;i++) net.push(sig.bull.series[sig.bull.series.length-n+i]-sig.bear.series[sig.bear.series.length-n+i]);
     spark("netSpark", net.slice(-30), "var(--aqua)");
   }
 }
@@ -975,12 +992,12 @@ function renderMomentum(){
   $("momStats").innerHTML=SIDES.map(s=>{ const g=sig[s];
     return `<div class="stat"><div class="l">${SIDE_NAME[s]} 90d z</div><div class="v">${g?(g.z>0?"+":"")+g.z.toFixed(2):"–"}</div></div>
       <div class="stat"><div class="l">${SIDE_NAME[s]} 7d Δ</div><div class="v">${g?(g.d7>0?"+":"")+g.d7.toFixed(1):"–"}</div></div>`; }).join("");
-  const b=sig.bull, c=sig.crash; let d="Divergence: insufficient history.";
-  if(b&&c){ if(c.d7>1&&b.d7<-1) d="Divergence: <strong>risk-off rotation</strong> &ndash; crash odds rising while bull odds fall. The classic pre-drawdown pattern.";
-    else if(c.d7>1) d="Divergence: crash odds rising without bull deterioration &ndash; hedging demand; watch for follow-through.";
-    else if(c.d7<-1&&b.d7<-1) d="Divergence: both falling &ndash; disengagement/cooling, not crash positioning.";
-    else if(b.d7>1&&c.d7<=0) d="Divergence: risk-on &ndash; bull rising, crash flat/falling.";
-    else d="Divergence: no meaningful bull/crash divergence this week."; }
+  const b=sig.bull, c=sig.bear; let d="Divergence: insufficient history.";
+  if(b&&c){ if(c.d7>1&&b.d7<-1) d="Divergence: <strong>risk-off rotation</strong> &ndash; bear odds rising while bull odds fall. The classic pre-drawdown pattern.";
+    else if(c.d7>1) d="Divergence: bear odds rising without bull deterioration &ndash; hedging demand; watch for follow-through.";
+    else if(c.d7<-1&&b.d7<-1) d="Divergence: both falling &ndash; disengagement/cooling, not bear positioning.";
+    else if(b.d7>1&&c.d7<=0) d="Divergence: risk-on &ndash; bull rising, bear flat/falling.";
+    else d="Divergence: no meaningful bull/bear divergence this week."; }
   $("divNote").innerHTML=d;
   $("spikeNote").innerHTML=sig.spikes.length?"&#9889; Unusual 24h volume: "+sig.spikes.slice(0,4).map(s=>`${esc(s.c.label)} (${s.ratio.toFixed(1)}× run-rate, ${fmtVol(s.m.vol24)})`).join("; "):"No unusual 24h volume across constituents.";
 }
@@ -1357,12 +1374,12 @@ function renderTable(side){
     const effN=1/rows.reduce((s,r)=>{ const w=weightOf(r.c.id)/totW; return s+w*w; },0);
     const topW=Math.max(...rows.map(r=>weightOf(r.c.id)/totW))*100;
     const el=$(side+"Meta");
-    if(el) el.innerHTML=`&ndash; ${rows.length} markets &middot; eff. N ${effN.toFixed(1)} &middot; top weight ${topW.toFixed(0)}%${side==="crash"?' &middot; bubble market dominates &amp; is reflexive':''}`;
+    if(el) el.innerHTML=`&ndash; ${rows.length} markets &middot; eff. N ${effN.toFixed(1)} &middot; top weight ${topW.toFixed(0)}%${side==="bear"?' &middot; bubble market is the largest MKT constituent &amp; is reflexive':''}`;
   }
   for(const {c,m} of rows){ const w=totW?(weightOf(c.id)/totW)*100:0;
     const spike=m.vol24>=1000&&m.vol1wk&&m.vol24/(m.vol1wk/7)>=2, thin=m.spread!=null&&m.spread>0.06;
     const padj=adjustP(m.yes,m.endDate,now,c.htype);
-    const themeTag=c.theme?`<span class="badge" style="margin-left:5px" title="${c.theme==="tech"?"technology-progress odds – can stay high straight through a financial unwind":"capital-markets odds – the financial-cycle read"}">${c.theme==="tech"?"TECH":"CAP"}</span>`:"";
+    const themeTag=c.theme&&THEME_TAG[c.theme]?`<span class="badge" style="margin-left:5px" title="${esc(THEME_TIP[c.theme]||"")}">${THEME_TAG[c.theme]}</span>`:"";
     h+=`<tr><td><a href="${m.url}" target="_blank" rel="noopener">${esc(c.label)}</a>${themeTag}${c.htype==="structural"?'<span class="flag" title="structural question – not annualized">†</span>':""}${thin?'<span class="flag" title="wide bid/ask spread">⚠</span>':""}${spike?'<span class="flag" title="unusual 24h volume">⚡</span>':""}
       <div class="bar" style="max-width:150px"><i style="width:${(m.yes*100).toFixed(1)}%;background:${color}"></i></div></td>
       <td class="num">${(m.yes*100).toFixed(1)}%</td>${hz?`<td class="num dim">${c.htype==="event"?(padj*100).toFixed(1)+"%":"–"}</td>`:""}
@@ -1503,8 +1520,7 @@ function renderMainChart(){
   const comp=buildComposite();
   multiPanelChart("chart","mainTip","mainWrap",comp.buckets,[
     {vals:comp.bull,color:"var(--bull)",name:"Bull"},
-    {vals:comp.crash,color:"var(--crash)",name:"Crash"},
-    {vals:comp.reg,color:"var(--reg)",name:"Regulation"},
+    {vals:comp.bear,color:"var(--bear)",name:"Bear"},
     {vals:comp.china,color:"var(--acc)",name:"China AI"},
     {vals:comp.macro,color:"var(--aqua)",name:"Macro"}]);
   $("chartCap").textContent=`Chain-linked composite (${weighting} weight, ${basis==="hazard"?"deadline-adjusted":"raw"} odds), last ${rangeDays} days. Each panel has its own scale — read shapes, not cross-panel levels. Dashed verticals are annotated events (hover).`;
@@ -1537,7 +1553,7 @@ function renderLeadLag(){
   for(const key of ["china","macro"]) for(const sym of ["NVDA","SOXX"]) for(const l of lags){ const c=rows[key]?.[sym]?.[l];
     if(c&&c.r!=null&&c.p!=null&&c.p<0.05&&(!sigCell||c.p<sigCell.p)) sigCell={...c,sym,l,key}; }
   $("leadlagSummary").innerHTML = sigCell
-    ? `<strong>Signal detected:</strong> crash index (ex-bubble) leads ${sigCell.sym} at ${sigCell.l}d &ndash; r=${sigCell.r.toFixed(2)}, p=${sigCell.p.toFixed(2)} <span class="sub">(details)</span>`
+    ? `<strong>Signal detected:</strong> bear MKT sleeve (ex-bubble) leads ${sigCell.sym} at ${sigCell.l}d &ndash; r=${sigCell.r.toFixed(2)}, p=${sigCell.p.toFixed(2)} <span class="sub">(details)</span>`
     : best
       ? `No significant lead detected &ndash; best ex-bubble cell: ${best.sym} +${best.l}d, r=${best.r.toFixed(2)}${best.p!=null?", p="+best.p.toFixed(2):""} <span class="sub">(event study details)</span>`
       : `Lead-lag study: insufficient overlapping data <span class="sub">(details)</span>`;
@@ -1553,10 +1569,28 @@ function renderLeadLag(){
 
 /* snapshots */
 const SNAP_KEY="ai-crash-monitor-snaps-v3";
+const sleeveIds=t=>CONSTITUENTS.filter(c=>c.side==="bear"&&c.theme===t).map(c=>c.id);
+// One-time, in-place migration of snapshots taken before the Bear merge: those rows carry
+// `crash`/`reg` but no `bear`. Rebuilding it as the count-weighted mean of the two sleeves
+// is the same flat equal-weight union the composite computes now, so the migrated history
+// joins the new series with no step. Counts come from each row's own stored membership.
+function migrateSnaps(store){
+  const mkt=sleeveIds("mkt"), gov=sleeveIds("gov");
+  for(const d of Object.keys(store)){ const s=store[d];
+    if(s.bear!=null||s.crash==null||s.reg==null) continue;
+    const live=new Set(String(s.comp||"").split(","));
+    const cn=mkt.filter(i=>live.has(i)).length, rn=gov.filter(i=>live.has(i)).length;
+    if(cn+rn) s.bear=+((cn*s.crash+rn*s.reg)/(cn+rn)).toFixed(2);
+  }
+  return store;
+}
 function takeSnapshot(){
-  let store={}; try{ store=JSON.parse(localStorage.getItem(SNAP_KEY)||"{}"); }catch(e){}
+  let store={}; try{ store=migrateSnaps(JSON.parse(localStorage.getItem(SNAP_KEY)||"{}")); }catch(e){}
   const today=new Date().toISOString().slice(0,10), comp=CONSTITUENTS.filter(c=>{const m=markets.get(c.id);return m&&!m.closed;}).map(c=>c.id).join(",");
   const save={comp}; for(const s of SIDES) save[s]=+indexNowFixed(s).toFixed(2);
+  // sleeve reads kept under their historical names, so the stored series stays comparable
+  save.crash=+indexNowFixed("bear","mkt").toFixed(2);
+  save.reg=+indexNowFixed("bear","gov").toFixed(2);
   if(sig.gauge?.score!=null) save.gauge=+sig.gauge.score.toFixed(1);
   store[today]=save; try{ localStorage.setItem(SNAP_KEY,JSON.stringify(store)); }catch(e){}
   const days=Object.keys(store).sort(), breaks=days.filter((d,i)=>i>0&&store[d].comp!==store[days[i-1]].comp).length;
@@ -1564,9 +1598,9 @@ function takeSnapshot(){
   const server = snapshotsCsv ? snapshotsCsv.trim().split("\n").length-1 : 0;
   $("snapServer").innerHTML = snapshotsCsv ? `Server-side <code>snapshots.csv</code>: ${server} row(s) (durable, cross-machine &ndash; the GitHub Action appends daily).` : `No server-side snapshots.csv yet &ndash; run <code>update-market-data.py --snapshot</code> for durable, cross-machine history.`;
 }
-$("snapExport").onclick=()=>{ let store={}; try{ store=JSON.parse(localStorage.getItem(SNAP_KEY)||"{}"); }catch(e){}
-  const days=Object.keys(store).sort(); let csv="date,bull,crash,regulation,china,macro,gauge,composition_changed\n";
-  for(let i=0;i<days.length;i++){ const d=days[i],s=store[d]; csv+=`${d},${s.bull},${s.crash},${s.reg},${s.china??""},${s.macro??""},${s.gauge??""},${i>0&&s.comp!==store[days[i-1]].comp?1:0}\n`; }
+$("snapExport").onclick=()=>{ let store={}; try{ store=migrateSnaps(JSON.parse(localStorage.getItem(SNAP_KEY)||"{}")); }catch(e){}
+  const days=Object.keys(store).sort(); let csv="date,bull,bear,bear_mkt,bear_gov,china,macro,gauge,composition_changed\n";
+  for(let i=0;i<days.length;i++){ const d=days[i],s=store[d]; csv+=`${d},${s.bull??""},${s.bear??""},${s.crash??""},${s.reg??""},${s.china??""},${s.macro??""},${s.gauge??""},${i>0&&s.comp!==store[days[i-1]].comp?1:0}\n`; }
   const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="ai-crash-snapshots.csv"; a.click(); };
 
 /* ================= Orchestration ================= */
@@ -1607,7 +1641,7 @@ $("alertBtn").onclick=async()=>{ if(!("Notification" in window)){ alert("This br
   if(alertsOn) new Notification("AI Crash Monitor","Alerts enabled. You'll be notified when the crash regime escalates."); };
 
 $("foot").innerHTML=`<p style="margin-top:8px"><strong>Composite.</strong> 100×Σ(wᵢ·pᵢ)/Σwᵢ over constituents live at each timestamp; the history panels are <strong>chain-linked</strong> (only common-member moves shift the line, so markets entering/leaving cause no step) and back-adjusted to read in probability units. Closed/resolved markets are dropped from the live index (see coverage). <strong>Deadline-adjusted</strong> basis annualizes only one-time-event markets (pᵢ→1−(1−p)^(365/days)); structural questions (†) are left raw.</p>
-<p style="margin-top:8px"><strong>Crash-Pressure Gauge.</strong> Five equally-weighted families, each normalized 0–100 vs calm→stress refs: prediction markets (bubble 0–40%, NVDA tail 0–25%, H100&lt;$2 0–30%), options skew (NVDA RR 1–10pt, SOXX 4–15pt), vol complex (VIX/VIX3M 0.82–1.05, VXN 18–40, SKEW 115–160, VVIX 90–130), credit (HYG &amp; HY/IG drawdown 0→−8%/−6%, HY OAS 2.5–5.0%, CCC OAS 8.5–14%), equity drawdown (NVDA 0→−50%, SOXX 0→−40%). The gauge history chart is reconstructed from stored daily series; its prediction-market family is bubble-market-only, so it slightly understates days when the NVDA-tail or H100 signals were hot. Regime: stressed at gauge≥55 / crash≥40 / crash≥25 with z≥2 / any stack≥25%; elevated at gauge≥35 / crash≥25 / z≥1.5 / stack≥15%. The chip states which condition fired.</p>
+<p style="margin-top:8px"><strong>Crash-Pressure Gauge.</strong> Five equally-weighted families, each normalized 0–100 vs calm→stress refs: prediction markets (bubble 0–40%, NVDA tail 0–25%, H100&lt;$2 0–30%), options skew (NVDA RR 1–10pt, SOXX 4–15pt), vol complex (VIX/VIX3M 0.82–1.05, VXN 18–40, SKEW 115–160, VVIX 90–130), credit (HYG &amp; HY/IG drawdown 0→−8%/−6%, HY OAS 2.5–5.0%, CCC OAS 8.5–14%), equity drawdown (NVDA 0→−50%, SOXX 0→−40%). The gauge history chart is reconstructed from stored daily series; its prediction-market family is bubble-market-only, so it slightly understates days when the NVDA-tail or H100 signals were hot. Regime: stressed at gauge≥55 / crash≥40 / crash≥25 with z≥2 / any stack≥25%; elevated at gauge≥35 / crash≥25 / z≥1.5 / stack≥15%. The chip states which condition fired. “Crash” here means the crash-market basket – Bear’s MKT sleeve, unchanged in membership by the Bear merge – and not the Bear composite: these bands price crash risk, so regulatory odds must not trip them.</p>
 <p style="margin-top:8px"><strong>Leading vs confirming.</strong> The five families are also split into a <em>leading</em> sub-score (prediction markets, options skew, credit – all priced before the fact) and a <em>confirming</em> sub-score (vol complex, equity drawdown – both move with or after prices). The headline gauge stays the mean of all five for continuity, but the split is the honest read: only the leading side can warn, and the lead-lag study below shows even that lead is unproven.</p>
 <p style="margin-top:8px"><strong>Bull split.</strong> Bull constituents are tagged TECH (model releases, benchmarks, hardware – technology-progress odds) or CAP (IPOs, valuation flips – capital-markets odds). Technology progress historically survives financial unwinds (railways, dot-com), so the capital-only sub-reading is the cleaner cycle signal; the tech side mostly tells you the release calendar is intact.</p>
 <p style="margin-top:8px"><strong>LEAPS tail.</strong> From the same CBOE chains: the expiry nearest 365d (min 250d), the listed put nearest each drawdown level, and P(S<sub>T</sub>&lt;K)=N(&minus;d2) at that strike&rsquo;s IV with r=4%. Risk-neutral, so it overstates real-world odds by the variance risk premium – use it as a deep-market ceiling to sanity-check the thin Polymarket bubble book, not as a forecast.</p>
