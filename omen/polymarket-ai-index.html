@@ -231,7 +231,7 @@
   </div>
   <div class="card">
     <h2 id="h100Title">H100 GPU rent &ndash; implied vs realized</h2>
-    <div class="cap">Polymarket&rsquo;s implied month-end distribution vs the realized spot ask on vast.ai. A sustained H100 rent &le; $1.00 is one of the bubble market&rsquo;s crash triggers.</div>
+    <div class="cap">Polymarket&rsquo;s implied month-end distribution vs two independent reads of the same rent: Kalshi&rsquo;s month-end ladder (settled on the <a href="https://dashboard.ornnai.com/" target="_blank" rel="noopener">Ornn</a> index) and the realized ask tape on vast.ai. <strong>The two spot sources are different indices, not the same number</strong> &ndash; the gap between them is basis, and it is most of any implied-vs-realized divergence. A sustained H100 rent &le; $1.00 is one of the bubble market&rsquo;s crash triggers.</div>
     <div class="statrow" id="h100Stats"></div>
     <div id="h100Dist"></div>
   </div>
@@ -269,6 +269,14 @@
     <div id="depBars"></div>
     <div class="note" id="depNote"></div>
   </div>
+</div>
+
+<div class="card">
+  <h2>GPU generational price ladder <span class="sub" style="font-weight:400">&ndash; Kalshi compute markets, the market-priced decay curve</span></h2>
+  <div class="cap">The market&rsquo;s live estimate of how fast silicon decays &ndash; the counterpart to the depreciation panel above, which argues the same case from accounting alone. Each chip&rsquo;s reference is the Ornn print that Kalshi&rsquo;s weekly &ldquo;price to beat&rdquo; strike is set at; the month-end figure is the implied median of the Kalshi ladder, shown <strong>only where the book supports one</strong>. Last-gen silicon walking toward the bubble market&rsquo;s $1.00 H100 trigger is the obsolescence thesis priced, not asserted.</div>
+  <div class="statrow" id="kgpuStats"></div>
+  <div id="kgpuBars"></div>
+  <div class="note" id="kgpuNote"></div>
 </div>
 
 <div class="grid2">
@@ -666,6 +674,7 @@ function nvdaTailProb(){ return (nvda&&nvda.lows.length)?nvda.lows[nvda.lows.len
 function h100Sub2(){ if(!h100) return null; let p=0; for(const b of h100.brackets) if(b.hi!=null&&b.hi<=2.0) p+=b.p; return p*100; }
 function h100Expected(){ if(!h100) return null; let ev=0,pt=0; for(const b of h100.brackets){ const mid=b.lo==null?b.hi-0.15:b.hi==null?b.lo+0.15:(b.lo+b.hi)/2; ev+=b.p*mid; pt+=b.p; } return pt?ev/pt:null; }
 function fundingDelta(){ let best=null; for(const id of FUNDING_IDS){ const m=markets.get(id); if(m&&m.d7!=null&&(!best||m.yes>best.yes)) best=m; } return best?best.d7*100:null; }
+function kalshiChip(chip){ return mkt?.kalshi_gpu?.chips?.find(c=>c.chip===chip)||null; }
 function b200Sub3(){ if(!b200) return null; let p=0; for(const b of b200.brackets) if(b.hi!=null&&b.hi<=3.0) p+=b.p; return p*100; }
 function b200Expected(){ if(!b200) return null; let ev=0,pt=0; for(const b of b200.brackets){ const mid=b.lo==null?b.hi-0.15:b.hi==null?b.lo+0.15:(b.lo+b.hi)/2; ev+=b.p*mid; pt+=b.p; } return pt?ev/pt:null; }
 function bubbleSentiment(){
@@ -1086,21 +1095,68 @@ function renderH100(){
   if(!h100&&!spot){ $("h100Dist").innerHTML='<div class="note">H100 bracket event not found and no realized spot data.</div>'; $("h100Stats").innerHTML=""; return; }
   if(h100) $("h100Title").innerHTML=`H100 GPU rent &ndash; implied vs realized <span class="sub" style="font-weight:400">&ndash; <a href="${h100.url}" target="_blank" rel="noopener">${esc(h100.title)}</a></span>`;
   const exp=h100Expected(), sub2=h100Sub2();
+  const kg=kalshiChip("H100");
   const cells=[];
-  if(exp!=null) cells.push(`<div class="stat"><div class="l">Market-implied month-end</div><div class="v">$${exp.toFixed(2)}</div></div>`);
-  if(spot) cells.push(`<div class="stat"><div class="l">Realized spot median <small>(${esc(spot.source)})</small></div><div class="v">$${spot.median_dph.toFixed(2)}<small>/hr · ${spot.n_offers} offers</small></div></div>`);
-  if(spot) cells.push(`<div class="stat"><div class="l">Realized p10 / min ask</div><div class="v">$${spot.p10_dph.toFixed(2)} / $${spot.min_dph.toFixed(2)}</div></div>`);
-  if(sub2!=null) cells.push(`<div class="stat"><div class="l">P(below $2.00)</div><div class="v">${sub2.toFixed(1)}%</div></div>`);
+  if(exp!=null) cells.push(`<div class="stat"><div class="l">Polymarket implied month-end</div><div class="v">$${exp.toFixed(2)}</div></div>`);
+  if(kg&&kg.implied!=null) cells.push(`<div class="stat"><div class="l">Kalshi implied month-end <small>(Ornn)</small></div><div class="v">$${kg.implied.toFixed(2)}<small> · ${kg.strikes} strikes</small></div></div>`);
+  if(kg&&kg.ref!=null) cells.push(`<div class="stat"><div class="l">Ornn reference <small>(week open ${esc(kg.ref_date||"")})</small></div><div class="v">$${kg.ref.toFixed(2)}</div></div>`);
+  if(spot) cells.push(`<div class="stat"><div class="l">vast.ai ask median <small>(${esc(spot.source)})</small></div><div class="v">$${spot.median_dph.toFixed(2)}<small>/hr · ${spot.n_offers} offers</small></div></div>`);
+  if(spot) cells.push(`<div class="stat"><div class="l">vast.ai p10 / min ask</div><div class="v">$${spot.p10_dph.toFixed(2)} / $${spot.min_dph.toFixed(2)}</div></div>`);
+  if(sub2!=null) cells.push(`<div class="stat"><div class="l">P(below $2.00) <small>(Polymarket)</small></div><div class="v">${sub2.toFixed(1)}%</div></div>`);
   cells.push(`<div class="stat"><div class="l">Bubble trigger</div><div class="v">&le; $1.00</div></div>`);
   $("h100Stats").innerHTML=cells.join("");
   let h="";
-  if(exp!=null&&spot){
-    const gap=(exp/spot.median_dph-1)*100;
-    h+=`<div class="note">Market-implied month-end is <strong>${gap>0?"+":""}${gap.toFixed(0)}%</strong> vs today&rsquo;s realized spot median &ndash; ${gap>5?"the market prices firmer rents than the spot tape shows":gap<-5?"the market prices rent deflation below today&rsquo;s tape &ndash; a live crash-trigger watch":"roughly consistent with the current tape"}.</div>`;
+  // Read the implied-vs-realized gap against the index the other market actually
+  // settles on. vast.ai is a decentralized ask tape (interruptible hosts, spot
+  // capacity) and prints structurally below Ornn; charging that basis to
+  // "the market prices firmer rents" was the old bug.
+  if(kg&&kg.ref!=null&&spot){
+    const basis=(kg.ref/spot.median_dph-1)*100;
+    h+=`<div class="note"><strong>Index basis:</strong> Ornn $${kg.ref.toFixed(2)} vs vast.ai $${spot.median_dph.toFixed(2)} &ndash; <strong>${basis>0?"+":""}${basis.toFixed(0)}%</strong> for the same chip on the same day. Read any implied-vs-realized gap smaller than this as basis, not signal.</div>`;
+  }
+  if(exp!=null&&kg&&kg.implied!=null){
+    const d=(exp/kg.implied-1)*100;
+    h+=`<div class="note"><strong>Cross-venue:</strong> Polymarket $${exp.toFixed(2)} vs Kalshi $${kg.implied.toFixed(2)} for the same month-end &ndash; a <strong>${d>0?"+":""}${d.toFixed(0)}%</strong> spread. ${Math.abs(d)<4?"The venues agree.":"Real disagreement only to the extent both settle on the same index &ndash; confirm the resolution source before trading the spread."}</div>`;
+  }
+  if(exp!=null&&kg&&kg.implied!=null&&kg.ref!=null){
+    const dir=kg.implied<kg.ref?"below":"above";
+    h+=`<div class="note">On its own index, Kalshi prices month-end <strong>${dir}</strong> the Ornn reference ($${kg.implied.toFixed(2)} vs $${kg.ref.toFixed(2)}) &ndash; ${kg.implied<kg.ref?"mild backwardation, i.e. the market expects rents to soften, not firm":"mild contango"}.</div>`;
   }
   if(h100) h+=h100.brackets.map(b=>{ const label=b.lo==null?`&lt; $${b.hi.toFixed(2)}`:b.hi==null?`&ge; $${b.lo.toFixed(2)}`:`$${b.lo.toFixed(2)}&ndash;${b.hi.toFixed(2)}`;
     return hbar(label, b.p*100, b.hi!=null&&b.hi<=2.0?"var(--crash)":"var(--bull)"); }).join("");
   $("h100Dist").innerHTML=h;
+}
+function renderKalshiGpu(){
+  const G=mkt?.kalshi_gpu;
+  if(!G||!G.chips||!G.chips.length){
+    $("kgpuStats").innerHTML='<div class="sub">Kalshi GPU compute markets unavailable this cycle.</div>';
+    $("kgpuBars").innerHTML=""; $("kgpuNote").innerHTML=""; return; }
+  // ascending by reference price = the generational ladder, oldest silicon first
+  const chips=G.chips.filter(c=>c.ref!=null).sort((a,b)=>a.ref-b.ref);
+  $("kgpuStats").innerHTML=chips.map(c=>{
+    const imp=c.implied!=null?`$${c.implied.toFixed(2)}`:"&mdash;";
+    // the weekly quote is P(still above the reference) — it dates the reference:
+    // well above 50% means the chip has risen since the strike was set.
+    const mv=c.ref_above!=null?` · wk ${(c.ref_above*100).toFixed(0)}% above`:"";
+    return `<div class="stat"><div class="l">${esc(c.label)} <small>(Ornn ref ${esc(c.ref_date||"")})</small></div>`
+      +`<div class="v">$${c.ref.toFixed(2)}<small>/hr · month-end ${imp}${mv}</small></div></div>`;
+  }).join("");
+  const top=chips.length?chips[chips.length-1].ref:1;
+  $("kgpuBars").innerHTML='<div class="note" style="margin-top:10px"><strong>Reference $/GPU-hr by generation</strong> &ndash; bar is price relative to the most expensive chip</div>'
+    +chips.map(c=>{
+      // the $1.00 H100 crash trigger is the level last-gen silicon decays toward
+      const col=c.ref<=1.0?"var(--crash)":c.ref<=2.5?"var(--reg)":"var(--bull)";
+      const w=clamp(c.ref/top*100,0,100);
+      return `<div class="hbar"><span class="k">${esc(c.label)}</span><span class="track"><i style="width:${w}%;background:${col}"></i></span><span class="v">$${c.ref.toFixed(2)}</span></div>`;
+    }).join("");
+  const thin=G.chips.filter(c=>c.implied==null);
+  const a100=chips.find(c=>c.chip==="A100"), b200=chips.find(c=>c.chip==="B200");
+  let n="";
+  if(a100&&b200) n+=`Last-gen ${esc(a100.label)} rents at <strong>$${a100.ref.toFixed(2)}</strong> &ndash; <strong>${(a100.ref/b200.ref*100).toFixed(0)}%</strong> of current-gen ${esc(b200.label)} ($${b200.ref.toFixed(2)}), and already inside touching distance of the bubble market&rsquo;s $1.00 H100 trigger. That spread is the decay curve the depreciation panel argues about from filings. `;
+  n+=`References are the Ornn print at each weekly market&rsquo;s open, not a live tape &ndash; they date to the week open shown, and Kalshi&rsquo;s weekly quote tells you which way the chip has moved since. `;
+  if(thin.length) n+=`<strong>No month-end median for ${thin.map(c=>esc(c.label)).join(", ")}</strong>: ${thin.length===1?"its":"their"} ladder is one-sided or too wide to price (${thin.map(c=>`${esc(c.chip)} ${c.strikes} usable strike${c.strikes===1?"":"s"}`).join(", ")}). Publishing a median off a bid-0/ask-99 book would be an artifact, so the panel shows none. `;
+  n+=`Kalshi&rsquo;s Dec-31 GPU contracts are deliberately excluded: they resolve on &ldquo;above $X <em>by</em> Dec 31&rdquo; &ndash; a running maximum, upward-biased, and not comparable to these month-end terminal points. There is no long-dated compute forward yet, only the weekly and the monthly.`;
+  $("kgpuNote").innerHTML=n;
 }
 function renderB200(){
   if(!b200){ $("b200Stats").innerHTML='<div class="sub">B200 bracket event not found right now.</div>'; $("b200Dist").innerHTML=""; return; }
@@ -1125,9 +1181,21 @@ function renderValuations(){
       return hbar(label, b.p*100, b.lo!=null&&b.lo>=500?"var(--acc)":"var(--reg)"); }).join("");
   }
   $("valDist").innerHTML=h;
-  const openaiHigh=valuations.firms.find(f=>f.name==="OpenAI")?.brackets.filter(b=>b.lo!=null&&b.lo>=500);
-  const euphoric=openaiHigh&&openaiHigh.length?openaiHigh.reduce((s,b)=>s+b.p,0)*100:null;
-  $("valNote").innerHTML=euphoric!=null?`P(OpenAI ≥ $500B valuation): <strong>${euphoric.toFixed(1)}%</strong> ${euphoric>70?'— <strong>euphoric zone</strong>':euphoric>40?'— elevated':''}.`:"";
+  // "hit $X" brackets are nested cumulative claims, not disjoint buckets: P(hit $600B)
+  // already contains P(hit $900B). Summing them double-counts and can exceed 100%
+  // (it printed 185%). The $500B threshold is simply its own market.
+  const openaiHigh=(valuations.firms.find(f=>f.name==="OpenAI")?.brackets||[])
+    .filter(b=>b.lo!=null&&b.lo>=500).sort((a,b)=>a.lo-b.lo);
+  const euphoric=openaiHigh.length?openaiHigh[0].p*100:null;
+  const lo=openaiHigh.length?openaiHigh[0].lo:null;
+  // nested claims must be non-increasing in threshold; if they are not, the ladder
+  // is mis-parsed or stale and no single number off it is trustworthy.
+  const monotonic=openaiHigh.every((b,i)=>i===0||b.p<=openaiHigh[i-1].p+1e-9);
+  const zone=euphoric>70?' — <strong>euphoric zone</strong>':euphoric>40?' — elevated':'';
+  $("valNote").innerHTML=euphoric!=null
+    ?`P(OpenAI ≥ $${lo}B valuation): <strong>${euphoric.toFixed(1)}%</strong>${zone}.`
+      +(monotonic?"":' <strong>⚠ Ladder is not monotonic</strong> — these nested “hit $X” markets should fall as the threshold rises, and they do not. The bracket parse or the feed is off; treat this panel as unreliable until it is reconciled.')
+    :"";
 }
 function renderLeaps(){
   const T=mkt?.tail;
@@ -1265,7 +1333,8 @@ function renderCrossVenue(){
     $("manifoldTable").innerHTML=h+"</tbody>";
   }
   $("kalshiCap").innerHTML="Where the same theme trades on several venues, disagreement is a confidence signal. "
-    +(K&&!K.authed?`<strong>${esc(K.note||"Kalshi public feed exposes no live quotes — add a KALSHI_API_KEY repo secret to the fetcher for authenticated cross-venue prices. Macro markets (Fed decisions, CPI, GDP, recession) are highest-value on Kalshi.")}</strong> `:"")
+    +"Kalshi quotes are public and need no API key &ndash; bid/ask and depth come straight off the unauthenticated feed. "
+    +(K&&!K.authed&&K.note?`<strong>${esc(K.note)}</strong> `:"")
     +(MC&&!MC.enabled?"Metaculus panel off &ndash; add a free <code>METACULUS_TOKEN</code> repo secret to enable a real forecaster crowd with a published calibration record. ":"")
     +(MC&&MC.enabled&&MC.questions.length?"Metaculus is a forecaster crowd (no capital at risk, but a strong calibration record) &ndash; best for long-horizon structural questions where Polymarket books are thin. ":"")
     +(M&&M.length?"Manifold is play-money &ndash; treat as crowd sentiment, not capital at risk.":"");
@@ -1505,7 +1574,7 @@ function renderAll(){
   computeSignals();
   renderGauge(); renderTiles(); renderRegime(); renderStack(); renderMomentum();
   renderVol(); renderCredit(); renderBreadth(); renderInsiders();
-  renderNvda(); renderH100(); renderB200(); renderValuations(); renderLeaps(); renderFundamentals(); renderMacro(); renderDepreciation(); renderAiCredit(); renderPower(); renderCrossVenue();
+  renderNvda(); renderH100(); renderB200(); renderKalshiGpu(); renderValuations(); renderLeaps(); renderFundamentals(); renderMacro(); renderDepreciation(); renderAiCredit(); renderPower(); renderCrossVenue();
   renderMainChart(); renderEquity(); renderLeadLag();
   for(const s of SIDES) renderTable(s);
   renderCoverage(); renderFresh(); takeSnapshot();
@@ -1545,7 +1614,8 @@ $("foot").innerHTML=`<p style="margin-top:8px"><strong>Composite.</strong> 100×
 <p style="margin-top:8px"><strong>Fundamentals.</strong> SEC XBRL companyconcept quarterlies for MSFT/GOOGL/AMZN/META/ORCL (cumulative cash-flow lines differenced into single quarters, fiscal periods mapped to calendar quarters by end date; AMZN&rsquo;s post-2017 capex tag handled). Capex/OCF is the metric that actually distinguishes &ldquo;bubble&rdquo; (price vs fundamentals) from &ldquo;popping&rdquo; (price vs price) – everything else on this page is market-priced and can be collectively wrong.</p>
 <p style="margin-top:8px"><strong>Kedrosky panels.</strong> Four non-price or real-economy signals from Paul Kedrosky&rsquo;s bubble thesis. <em>AI capex vs. the economy</em>: combined filer capex (SEC), annualized, over nominal GDP (FRED GDP, SAAR); &ldquo;share of GDP growth&rdquo; is Δ(annualized capex)/Δ(GDP), noisy but the scale argument. <em>GPU depreciation gap</em>: combined D&amp;A addback vs. cash capex; a falling ratio while capex climbs flags cost recognition lagging the spend (the extended-useful-life earnings flatter). <em>AI &amp; private-credit stress</em>: BIZD (BDC/private-credit proxy) + CCC OAS + drawdown of the levered-AI names (CRWV/ORCL/NBIS/IREN) &ndash; no free issuer-level spread exists for neocloud debt, so equity stands in. <em>Power &amp; electricity</em>: residential electricity CPI (FRED) plus XLU and merchant-power equities (VST/CEG). All are slow-moving or proxied by design; read them as context, not triggers.</p>
 <p style="margin-top:8px"><strong>Lead-lag.</strong> Non-overlapping windows, 2,000-shuffle permutation test, recomputed on history refresh only. The bubble market is reflexive with NVDA/SOXX so the ex-bubble row is the cleaner read – treat all of it as descriptive.</p>
-<p style="margin-top:8px"><strong>Cadence &amp; sources.</strong> Live Polymarket data (Gamma + CLOB, incl. bubble-market order-book depth) refreshes every 60s; histories, market-data.json and cached studies every 10min; NVDA/H100 events re-discovered hourly. market-data.json is produced by <code>update-market-data.py</code> (GitHub Action, ~30min cadence): Yahoo Finance (equity/vol/credit proxies), CBOE delayed quotes (25Δ risk reversals, single-name IV term structure, LEAPS tail), FRED keyless CSV (HY OAS, CCC OAS, NFCI, nominal GDP, electricity CPI), SEC EDGAR Form 4 (open-market S/P only, recent-filings sample), SEC XBRL companyconcept (capex/OCF/depreciation fundamentals), vast.ai public asks (realized H100 $/GPU-hr), Kalshi public API, Metaculus (optional token), Manifold public API (play-money). Constituents curated 2026-07-10; not investment advice.</p>`;
+<p style="margin-top:8px"><strong>Cadence &amp; sources.</strong> Live Polymarket data (Gamma + CLOB, incl. bubble-market order-book depth) refreshes every 60s; histories, market-data.json and cached studies every 10min; NVDA/H100 events re-discovered hourly. market-data.json is produced by <code>update-market-data.py</code> (GitHub Action, ~30min cadence): Yahoo Finance (equity/vol/credit proxies), CBOE delayed quotes (25Δ risk reversals, single-name IV term structure, LEAPS tail), FRED keyless CSV (HY OAS, CCC OAS, NFCI, nominal GDP, electricity CPI), SEC EDGAR Form 4 (open-market S/P only, recent-filings sample), SEC XBRL companyconcept (capex/OCF/depreciation fundamentals), vast.ai public asks (realized H100 $/GPU-hr), Kalshi public API (cross-venue themes <em>and</em> the GPU compute markets: H100/H200/B200/A100 weekly + monthly, quotes unauthenticated, settled on the Ornn index), Metaculus (optional token), Manifold public API (play-money). Constituents curated 2026-07-10; not investment advice.</p>
+<p style="margin-top:8px"><strong>GPU compute, two venues, two indices.</strong> Polymarket and Kalshi both price GPU rents, but they do not settle on the same underlying: Kalshi resolves on the <a href="https://dashboard.ornnai.com/" target="_blank" rel="noopener">Ornn</a> index, while this dashboard&rsquo;s realized tape is vast.ai&rsquo;s public asks &ndash; a decentralized marketplace of interruptible hosts that prints structurally below a curated index. The Ornn reference is read for free from each Kalshi weekly market&rsquo;s &ldquo;price to beat&rdquo; strike, which is set at the Ornn print when the market opens, so it dates to that week&rsquo;s open rather than to now. Implied medians come from the monthly ladder as the 50% crossing of the survival curve P(value &gt; strike), after dropping one-sided books (bid 0 / ask 1) and quotes wider than 15c and forcing survival to be non-increasing in strike; where the crossing falls outside the quoted strikes the panel shows no median rather than an invented one. Kalshi&rsquo;s Dec-31 GPU contracts resolve &ldquo;above $X <em>by</em> Dec 31&rdquo; &ndash; a running maximum, upward-biased vs. a terminal value &ndash; and are excluded on purpose. Only the weekly and monthly are true forward points, so no long-dated compute curve is claimed here.</p>`;
 
 (async()=>{
   try{
