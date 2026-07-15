@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-15T06:23:05Z",
+ "updated": "2026-07-15T09:16:05Z",
  "snapshot_date": "2026-07-15",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -29,7 +29,6 @@
   "top20": 1,
   "asof": "2026-07-15"
  },
- "github_stars_per_day": 44.1,
  "hf": {
   "cnOrgs": [
    {
@@ -38,11 +37,11 @@
    },
    {
     "org": "deepseek-ai",
-    "dl": 34703294
+    "dl": 34691846
    },
    {
     "org": "zai-org",
-    "dl": 14932936
+    "dl": 14932228
    },
    {
     "org": "moonshotai",
@@ -68,11 +67,11 @@
   "usOrgs": [
    {
     "org": "google",
-    "dl": 64069882
+    "dl": 63764963
    },
    {
     "org": "meta-llama",
-    "dl": 37424648
+    "dl": 37443260
    },
    {
     "org": "nvidia",
@@ -84,15 +83,15 @@
    },
    {
     "org": "microsoft",
-    "dl": 7158412
+    "dl": 7184437
    },
    {
     "org": "allenai",
-    "dl": 2856003
+    "dl": 2857493
    }
   ],
-  "cn": 322136737,
-  "us": 147173147
+  "cn": 322124581,
+  "us": 146914355
  },
  "equity_extra": {
   "BABA": [
@@ -1086,9 +1085,9 @@
  },
  "openrouter_week": {
   "week": "2026-07-13",
-  "cn_share": 0.5983,
-  "us_share": 0.3308,
+  "cn_share": 0.5987,
+  "us_share": 0.331,
   "spi": 1.809,
-  "total_tokens": 20571546275220
+  "total_tokens": 21727914889224
  }
 }
