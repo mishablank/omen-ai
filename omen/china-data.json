@@ -1,6 +1,6 @@
 {
- "updated": "2026-07-14T23:03:22Z",
- "snapshot_date": "2026-07-14",
+ "updated": "2026-07-15T03:16:18Z",
+ "snapshot_date": "2026-07-15",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
   "cn_score": 51,
@@ -21,13 +21,13 @@
  "lmarena": {
   "best_model": "qwen3.7-max-preview",
   "best_org": "Alibaba",
-  "best_rank": 17,
+  "best_rank": 16,
   "best_score": 1475,
   "us_leader": "claude-fable-5",
-  "us_leader_score": 1505,
+  "us_leader_score": 1508,
   "top10": 0,
   "top20": 1,
-  "asof": "2026-07-14"
+  "asof": "2026-07-15"
  },
  "hf": {
   "cnOrgs": [
@@ -1085,9 +1085,9 @@
  },
  "openrouter_week": {
   "week": "2026-07-13",
-  "cn_share": 0.5974,
-  "us_share": 0.3311,
-  "spi": 1.804,
-  "total_tokens": 17723139365609
+  "cn_share": 0.5976,
+  "us_share": 0.331,
+  "spi": 1.806,
+  "total_tokens": 19084697605431
  }
 }
