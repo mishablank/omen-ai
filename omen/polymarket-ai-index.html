@@ -30,8 +30,19 @@
   .chip.calm { background: rgba(12,163,12,0.12); } .chip.calm i { background: var(--good); }
   .chip.elevated { background: rgba(250,178,25,0.16); } .chip.elevated i { background: var(--warn); }
   .chip.stressed { background: rgba(208,59,59,0.14); } .chip.stressed i { background: var(--crit); }
-  #regimeWhy { font-size: 12px; color: var(--text-secondary); }
+  /* hollow badge = a rule tripped while the blended gauge is still calm. Solid = the gauge
+     agrees. The distinction is the whole point: "rule tripped" is not "everything is on fire". */
+  .chip.hollow { background: transparent; border: 1px solid currentColor; }
+  .chip.hollow.elevated { color: var(--warn); }
+  .chip.hollow.stressed { color: var(--crit); }
   header p.sub { color: var(--text-secondary); font-size: 13.5px; margin-top: 4px; flex-basis: 100%; line-height: 1.5; }
+  /* verdict block: the first thing a reader sees, three plain-English lines */
+  .verdict { background: var(--surface-1); border: 1px solid var(--grid); border-radius: 12px; padding: 15px 17px; margin-top: 14px; }
+  .verdict .vhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .verdict .vsay { font-size: 15px; font-weight: 600; }
+  .verdict .vtrigger { font-size: 13.5px; margin-top: 8px; line-height: 1.5; }
+  .verdict .vctx { font-size: 13px; color: var(--text-secondary); margin-top: 5px; line-height: 1.55; }
+  .verdict .vsince { color: var(--muted); }
   .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 16px 0 10px; }
   .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface-1); }
   .seg button { font: inherit; font-size: 12.5px; padding: 6px 11px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; }
@@ -129,10 +140,17 @@
 <header>
   <a class="backlink" href="index.html">&larr; OMEN</a> <a class="backlink" href="china-ai-monitor.html">China Watch &rarr;</a>
   <h1>AI Crash Monitor</h1>
-  <span class="chip calm" id="regime"><i></i>Loading</span>
-  <span id="regimeWhy"></span>
   <p class="sub">A blended crash-pressure gauge over Polymarket odds plus options skew, the volatility complex, credit stress, and equity drawdowns. Four prediction-market indexes underneath: <strong style="color:var(--bull)">Bull</strong> (YES = acceleration), <strong style="color:var(--bear)">Bear</strong> (YES = the unwind, market or regulatory), <strong style="color:var(--acc)">China AI</strong> (YES = Chinese substitution pressure), <strong style="color:var(--aqua)">Macro</strong> (YES = recession/rate risk).</p>
 </header>
+
+<section class="verdict" id="verdict">
+  <div class="vhead">
+    <span class="chip calm" id="regime"><i></i>Loading</span>
+    <span class="vsay" id="regimeSay">Reading the rule set&hellip;</span>
+  </div>
+  <div class="vtrigger" id="regimeTrigger"></div>
+  <div class="vctx" id="regimeContext"></div>
+</section>
 
 <div class="toolbar">
   <div class="seg" id="weightSeg" title="Constituent weighting"><button data-v="equal" class="active">Equal weight</button><button data-v="volume">Volume weight</button><button data-v="thesis">Thesis weight</button></div>
@@ -711,15 +729,17 @@ function computeSignals(){
   s.spikes=CONSTITUENTS.map(c=>{ const m=markets.get(c.id); if(!m||m.closed||m.vol24<1000||!m.vol1wk) return null;
     const r=m.vol24/(m.vol1wk/7); return r>=2?{c,m,ratio:r}:null; }).filter(Boolean).sort((a,b)=>b.ratio-a.ratio);
   const bubble=markets.get(BUBBLE_ID);
+  // `plain` is the jargon-free name the verdict block uses when this row is the regime trigger;
+  // `pl` marks a plural subject so the verdict block's verbs agree
   s.stack=[
-    {name:"AI bubble burst in 2026 (Polymarket)", v:bubble&&!bubble.closed?bubble.yes*100:null, sub:"3+ triggers: NVDA −50% ATH, SOXX −40%, lab bankruptcy/acquisition, H100 ≤ $1, supplier collapse"},
-    {name:"NVDA deep-downside touch this month", v:nvdaTailProb(), sub:"lowest listed strike, monthly bracket markets"},
-    {name:"H100 rent below $2.00 at month end", v:h100Sub2(), sub:"GPU rental bracket markets"},
-    {name:"B200 rent below $3.00 at month end", v:b200Sub3(), sub:"B200 (Blackwell) GPU rental bracket markets — next-gen demand proxy"},
-    {name:"Funding window: IPO odds 7d change", v:fundingDelta(), sub:"max of OpenAI / Anthropic 2026 IPO; sharp drop = funding window closing", isDelta:true},
-    {name:"Bubble sentiment (extreme euphoria)", v:bubbleSentiment(), sub:"avg of OpenAI $1T IPO + AGI + Anthropic IPO odds; >70% = euphoric"},
-    {name:"US recession probability", v:macroRecession(), sub:"Polymarket: US recession by end of 2026"},
-    {name:"China AI: top-3 model odds", v:chinaTop3(), sub:"Polymarket: Chinese company has a top-3 AI model by Dec 31"},
+    {name:"AI bubble burst in 2026 (Polymarket)", plain:"bubble-burst odds", pl:true, v:bubble&&!bubble.closed?bubble.yes*100:null, sub:"3+ triggers: NVDA −50% ATH, SOXX −40%, lab bankruptcy/acquisition, H100 ≤ $1, supplier collapse"},
+    {name:"NVDA deep-downside touch this month", plain:"the odds NVDA touches its deep-downside level this month", pl:true, v:nvdaTailProb(), sub:"lowest listed strike, monthly bracket markets"},
+    {name:"H100 rent below $2.00 at month end", plain:"the odds H100 rent ends the month below $2.00", pl:true, v:h100Sub2(), sub:"GPU rental bracket markets"},
+    {name:"B200 rent below $3.00 at month end", plain:"the odds B200 rent ends the month below $3.00", pl:true, v:b200Sub3(), sub:"B200 (Blackwell) GPU rental bracket markets — next-gen demand proxy"},
+    {name:"Funding window: IPO odds 7d change", plain:"the AI funding window", v:fundingDelta(), sub:"max of OpenAI / Anthropic 2026 IPO; sharp drop = funding window closing", isDelta:true},
+    {name:"Bubble sentiment (extreme euphoria)", plain:"bubble sentiment", v:bubbleSentiment(), sub:"avg of OpenAI $1T IPO + AGI + Anthropic IPO odds; >70% = euphoric"},
+    {name:"US recession probability", plain:"US recession odds", pl:true, v:macroRecession(), sub:"Polymarket: US recession by end of 2026"},
+    {name:"China AI: top-3 model odds", plain:"the odds a Chinese lab has a top-3 model", pl:true, v:chinaTop3(), sub:"Polymarket: Chinese company has a top-3 AI model by Dec 31"},
   ];
   s.gauge=computeGauge();
   sig=s; return s;
@@ -771,26 +791,107 @@ function computeGauge(){
   const lead=mean(["pred","opt","credit","macro"]), conf=mean(["vol","equity"]);
   return { score, fam, n:avail.length, total:Object.keys(fam).length, lead, conf };
 }
-// returns { r, why: [human-readable triggered conditions] }
+const GAUGE_BANDS=[{max:35,name:"Calm"},{max:55,name:"Elevated"},{max:Infinity,name:"Stressed"}];
+const gaugeBand = g => g==null ? null : GAUGE_BANDS.find(b=>g<b.max).name;
+
+// The rule inputs, read once. The level and z are deliberately the MKT sleeve, not the Bear
+// composite: these bands are calibrated to priced crash risk, and MKT is the old crash basket
+// unchanged. Reading the composite here would let regulatory odds trip a crash regime.
+function regimeInputs(){
+  let stackMax=0, stackName="", stackPlain="", stackPl=false;
+  for(const x of sig.stack||[]) if(x.v!=null&&!x.isDelta&&x.v>stackMax){ stackMax=x.v; stackName=x.name; stackPlain=x.plain||x.name; stackPl=!!x.pl; }
+  return { gauge:sig.gauge?.score ?? null, z:sig.bearMkt?sig.bearMkt.z:0,
+           level:indexNowFixed("bear","mkt"), stackMax, stackName, stackPlain, stackPl };
+}
+// The same thresholds, firing order and outcome as before — the rules are just data now, so
+// the verdict block can compose its own sentences instead of reading a pre-baked string.
+// `quiet` marks a rule whose value is a z-score: it has no lay unit, so its sentences state
+// the condition without the number rather than leaking a z into the verdict block (§2.2).
+// `near` is value/threshold, used only to name the closest rule while calm.
+function regimeRules(i){
+  // gTxt stays null when the gauge is dark, so the "closest rule" line can't name a rule
+  // whose value it doesn't know
+  const g=i.gauge, pct=v=>v.toFixed(1)+"%", gTxt=g!=null?`${g.toFixed(0)}/100`:null;
+  return [
+    { id:"gauge55", tier:"stressed", fired:g!=null&&g>=55, why:`gauge ${g?.toFixed(0)} ≥ 55`,
+      plain:"the blended gauge", valTxt:gTxt, thrTxt:"55/100", near:g!=null?g/55:0 },
+    { id:"level40", tier:"stressed", fired:i.level>=40, why:`crash markets ${i.level.toFixed(1)} ≥ 40`,
+      plain:"crash-market odds", pl:true, valTxt:pct(i.level), thrTxt:"40%", near:i.level/40 },
+    { id:"level25z2", tier:"stressed", fired:i.level>=25&&i.z>=2, why:`crash ${i.level.toFixed(1)} ≥ 25 with z ${i.z.toFixed(1)} ≥ 2`,
+      plain:`crash-market odds at ${pct(i.level)} and climbing unusually fast`, pl:true, quiet:true, near:0 },
+    { id:"stack25", tier:"stressed", fired:i.stackMax>=25, why:`${i.stackName} at ${i.stackMax.toFixed(1)}% ≥ 25%`,
+      plain:i.stackPlain, pl:i.stackPl, valTxt:pct(i.stackMax), thrTxt:"25%", near:i.stackMax/25 },
+    { id:"gauge35", tier:"elevated", fired:g!=null&&g>=35, why:`gauge ${g?.toFixed(0)} ≥ 35`,
+      plain:"the blended gauge", valTxt:gTxt, thrTxt:"35/100", near:g!=null?g/35:0 },
+    { id:"level25", tier:"elevated", fired:i.level>=25, why:`crash markets ${i.level.toFixed(1)} ≥ 25`,
+      plain:"crash-market odds", pl:true, valTxt:pct(i.level), thrTxt:"25%", near:i.level/25 },
+    { id:"z15", tier:"elevated", fired:i.z>=1.5, why:`crash z-score ${i.z.toFixed(1)} ≥ 1.5`,
+      plain:"crash-market odds are climbing unusually fast", pl:true, quiet:true, near:i.z/1.5 },
+    { id:"stack15", tier:"elevated", fired:i.stackMax>=15, why:`${i.stackName} at ${i.stackMax.toFixed(1)}% ≥ 15%`,
+      plain:i.stackPlain, pl:i.stackPl, valTxt:pct(i.stackMax), thrTxt:"15%", near:i.stackMax/15 },
+  ];
+}
+// returns { r, trips, why: [human-readable triggered conditions], inp, rules }
 function computeRegime(){
-  // deliberately the MKT sleeve, not the Bear composite: these bands are calibrated to
-  // priced crash risk, and MKT is the old crash basket unchanged. Reading the composite
-  // here would let regulatory odds trip a crash regime.
-  const g=sig.gauge?.score, z=sig.bearMkt?sig.bearMkt.z:0, level=indexNowFixed("bear","mkt");
-  let stackMax=0, stackName="";
-  for(const x of sig.stack) if(x.v!=null&&!x.isDelta&&x.v>stackMax){ stackMax=x.v; stackName=x.name; }
-  const stressed=[], elevated=[];
-  if(g!=null&&g>=55) stressed.push(`gauge ${g.toFixed(0)} ≥ 55`);
-  if(level>=40) stressed.push(`crash markets ${level.toFixed(1)} ≥ 40`);
-  if(level>=25&&z>=2) stressed.push(`crash ${level.toFixed(1)} ≥ 25 with z ${z.toFixed(1)} ≥ 2`);
-  if(stackMax>=25) stressed.push(`${stackName} at ${stackMax.toFixed(1)}% ≥ 25%`);
-  if(stressed.length) return { r:"stressed", why:stressed };
-  if(g!=null&&g>=35) elevated.push(`gauge ${g.toFixed(0)} ≥ 35`);
-  if(level>=25) elevated.push(`crash markets ${level.toFixed(1)} ≥ 25`);
-  if(z>=1.5) elevated.push(`crash z-score ${z.toFixed(1)} ≥ 1.5`);
-  if(stackMax>=15) elevated.push(`${stackName} at ${stackMax.toFixed(1)}% ≥ 15%`);
-  if(elevated.length) return { r:"elevated", why:elevated };
-  return { r:"calm", why:[] };
+  const inp=regimeInputs(), rules=regimeRules(inp);
+  for(const tier of ["stressed","elevated"]){
+    const trips=rules.filter(r=>r.tier===tier&&r.fired);
+    if(trips.length) return { r:tier, trips, why:trips.map(r=>r.why), inp, rules };
+  }
+  return { r:"calm", trips:[], why:[], inp, rules };
+}
+// "Gauge +3 vs yesterday; regime unchanged." Omitted silently when there is no prior day.
+function sinceYesterday(r, g){
+  let store={}; try{ store=migrateSnaps(JSON.parse(localStorage.getItem(SNAP_KEY)||"{}")); }catch(e){ return ""; }
+  const today=new Date().toISOString().slice(0,10);
+  const prior=Object.keys(store).filter(d=>d<today).sort().pop();
+  if(!prior) return "";
+  const p=store[prior], bits=[];
+  if(p.gauge!=null&&g!=null){ const d=g-p.gauge;
+    bits.push(`Gauge ${d>=0?"+":"−"}${Math.abs(d).toFixed(0)} vs yesterday`); }
+  if(p.regime) bits.push(p.regime===r?"regime unchanged":`regime was ${p.regime}`);
+  return bits.length?bits.join("; ")+".":"";
+}
+// The three lines. Plain English only: no "single-signal trip", no z-scores, no family names,
+// no methodology (§2.2). Every number is interpolated from the live rule set, never baked in.
+function regimeExplainer(reg){
+  const R={calm:"Calm",elevated:"Elevated",stressed:"Stressed"}[reg.r];
+  const g=reg.inp.gauge, band=gaugeBand(g), broad=g!=null&&g>=35, n=reg.trips.length;
+  const closest=()=>reg.rules.filter(r=>r.tier==="elevated"&&!r.quiet&&r.valTxt).sort((a,b)=>b.near-a.near)[0];
+
+  let say;
+  if(reg.r==="calm") say="Regime: Calm – no rule has tripped.";
+  else if(n===1&&!broad) say=`Regime: ${R} – tripped by a single rule, not broad pressure.`;
+  else if(!broad) say=`Regime: ${R} – ${n} rules have tripped, but the broad gauge is still calm.`;
+  else if(n===1) say=`Regime: ${R} – tripped by the broad gauge itself.`;
+  else say=`Regime: ${R} – ${n} rules have tripped and the broad gauge agrees.`;
+
+  let trig;
+  if(reg.r==="calm"){
+    const c=closest();
+    trig = c ? `Closest rule: ${c.plain} at ${c.valTxt}, below the ${c.thrTxt} rule threshold.`
+             : "No rule is close to its threshold.";
+  } else {
+    const shown=reg.trips.slice(0,2).map(r=>r.quiet?r.plain:`${r.plain} at ${r.valTxt}, above the ${r.thrTxt} rule threshold`);
+    trig=`Trigger: ${shown.join("; and ")}.${n>2?` +${n-2} more.`:""}`;
+  }
+
+  let ctx = g==null ? "The blended gauge has not loaded yet."
+    : `The blended gauge is ${g.toFixed(0)}/100 (${band}) – broad markets are ${reg.r==="calm"?"quiet too":broad?"confirming":"not confirming"}.`;
+  const parts=[];
+  if(reg.r!=="calm"){
+    if(n===1){ const t=reg.trips[0];
+      parts.push(t.quiet?"This clears if that climb slows back to normal":`This clears if ${t.plain} ${t.pl?"close":"closes"} below ${t.thrTxt}`); }
+    else parts.push(`This clears when all ${n} triggers fall back below their thresholds`);
+    if(g!=null&&g<35) parts.push("it escalates if the blended gauge crosses 35");
+    else if(g!=null&&g<55) parts.push("it escalates if the blended gauge crosses 55");
+  } else {
+    const c=closest();
+    if(c) parts.push(`It turns Elevated if ${c.plain} ${c.pl?"cross":"crosses"} ${c.thrTxt}`);
+  }
+  if(parts.length) ctx+=" "+parts.join("; ")+".";
+  const since=sinceYesterday(reg.r,g);
+  return { say, trig, ctx, since, broad };
 }
 
 /* ================= Historical gauge reconstruction =================
@@ -961,13 +1062,13 @@ function renderTiles(){
   }
 }
 function renderRegime(){
-  const {r,why}=computeRegime(), el=$("regime");
-  el.className="chip "+r;
-  el.innerHTML=`<i></i>${r==="calm"?"Calm":r==="elevated"?"Elevated":"Stressed"} crash regime`;
-  const gs=sig.gauge?.score;
-  let whyTxt=why.length?"— driven by: "+why.join("; "):"";
-  if(r!=="calm" && gs!=null && gs<35) whyTxt+=`  ·  single-signal trip: blended gauge (${gs.toFixed(0)}) is still in the Calm band, not broad stress`;
-  $("regimeWhy").textContent=whyTxt;
+  const reg=computeRegime(), {r,why}=reg, ex=regimeExplainer(reg), el=$("regime");
+  // hollow while a rule has tripped but the blended gauge is still calm
+  el.className="chip "+r+(r!=="calm"&&!ex.broad?" hollow":"");
+  el.innerHTML=`<i></i>${r.toUpperCase()}`;
+  $("regimeSay").textContent=ex.say;
+  $("regimeTrigger").textContent=ex.trig;
+  $("regimeContext").innerHTML=esc(ex.ctx)+(ex.since?` <span class="vsince">${esc(ex.since)}</span>`:"");
   el.title=why.join("\n");
   document.title=(r==="stressed"?"🔴 STRESSED – ":r==="elevated"?"⚠ Elevated – ":"")+"AI Crash Monitor";
   const rank={calm:0,elevated:1,stressed:2};
@@ -1592,6 +1693,7 @@ function takeSnapshot(){
   save.crash=+indexNowFixed("bear","mkt").toFixed(2);
   save.reg=+indexNowFixed("bear","gov").toFixed(2);
   if(sig.gauge?.score!=null) save.gauge=+sig.gauge.score.toFixed(1);
+  if(lastRegime!=null) save.regime=lastRegime;   // lets the verdict block say "regime unchanged"
   store[today]=save; try{ localStorage.setItem(SNAP_KEY,JSON.stringify(store)); }catch(e){}
   const days=Object.keys(store).sort(), breaks=days.filter((d,i)=>i>0&&store[d].comp!==store[days[i-1]].comp).length;
   $("snapCap").innerHTML=`Daily snapshot (equal weight, raw odds, gauge) kept in this browser. <strong>${days.length}</strong> day(s)${days.length?" since "+days[0]:""}${breaks?`; ${breaks} composition change(s) flagged for chain-linking`:""}. The history chart above is already chain-linked, so composition turnover doesn&rsquo;t create artificial steps.`;
