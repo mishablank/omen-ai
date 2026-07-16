@@ -19,6 +19,9 @@
     --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* the view switcher hides with [hidden]; author display rules (.grid2, .tiles, .seg …)
+     out-specify the UA [hidden] rule, so state it once here and win */
+  [hidden] { display: none !important; }
   body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--page); color: var(--text-primary); padding: 22px 20px 48px; max-width: 1160px; margin: 0 auto;
     background-image: radial-gradient(900px 380px at 78% -120px, rgba(227,166,60,.06), transparent 70%); }
   a { color: inherit; }
@@ -55,7 +58,9 @@
   .fresh { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; font-size: 11.5px; color: var(--text-secondary); background: var(--surface-1); border: 1px solid var(--border); border-radius: 9px; padding: 7px 12px; margin-bottom: 14px; }
   .fresh span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
   .fresh i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; }
-  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  /* 200px floors to one column at 375px and stacks five tiles into a wall; 148px keeps two up */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 12px; }
+  @media (min-width: 700px) { .tiles { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); } }
   .tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 15px 17px 12px; }
   .tile .label { font-size: 12.5px; color: var(--text-secondary); display: flex; align-items: center; gap: 7px; }
   .tile .key { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
@@ -120,7 +125,7 @@
   .meterlab { position: relative; height: 14px; font-size: 11px; color: var(--muted); margin-top: 5px; }
   .meterlab span { position: absolute; transform: translateX(-50%); }
   .cats { display: flex; flex-direction: column; gap: 0; }
-  .cat { display: grid; grid-template-columns: 150px 1fr 40px; gap: 10px; align-items: center; font-size: 12.5px; padding: 5px 0; }
+  .cat { display: grid; grid-template-columns: 150px 1fr 40px; gap: 10px; align-items: center; font-size: 12.5px; padding: 2px 0; }
   .cat .track { height: 8px; background: var(--grid); border-radius: 4px; overflow: hidden; }
   .cat .track i { display: block; height: 100%; border-radius: 4px; }
   .cat .cv { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
@@ -153,6 +158,19 @@
   .topnav > a:hover { color: var(--text-primary); }
   .topnav > a[aria-current="page"] { color: var(--accT); border-bottom-color: var(--acc); font-weight: 600; }
   .topnav .corner { margin-left: auto; display: flex; gap: 8px; }
+  /* ---- Today: what-changed + nav cards (§1.2) ---- */
+  .chg { display: flex; align-items: baseline; gap: 9px; padding: 6px 0; border-bottom: 1px solid var(--grid); font-size: 13px; }
+  .chg:last-child { border-bottom: none; }
+  .chg .m { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+  .chg .n { flex: 1; color: var(--text-secondary); }
+  .chg .w { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+  .navcards { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 12px; margin-top: 16px; }
+  @media (min-width: 700px) { .navcards { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); } }
+  .navcard { background: var(--surface-1); border: 1px solid var(--grid); border-radius: 12px; padding: 14px 16px; text-decoration: none; display: block; }
+  .navcard:hover { border-color: var(--acc); }
+  .navcard .t { font-size: 13.5px; font-weight: 600; color: var(--text-primary); }
+  .navcard .v { font-size: 22px; font-weight: 600; margin-top: 6px; font-variant-numeric: tabular-nums; color: var(--accT); }
+  .navcard .l { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
   footer { margin-top: 22px; font-size: 12px; color: var(--muted); line-height: 1.6; }
   .backlink { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; white-space: nowrap; }
   .backlink:hover { color: var(--accT); border-color: var(--acc); }
@@ -162,15 +180,15 @@
 
 <header id="top">
   <h1>AI Crash Monitor</h1>
-  <p class="sub">A blended crash-pressure gauge over Polymarket odds plus options skew, the volatility complex, credit stress, and equity drawdowns. Four prediction-market indexes underneath: <strong style="color:var(--bull)">Bull</strong> (YES = acceleration), <strong style="color:var(--bear)">Bear</strong> (YES = the unwind, market or regulatory), <strong style="color:var(--acc)">China AI</strong> (YES = Chinese substitution pressure), <strong style="color:var(--aqua)">Macro</strong> (YES = recession/rate risk).</p>
+  <p class="sub" data-view="methodology">A blended crash-pressure gauge over Polymarket odds plus options skew, the volatility complex, credit stress, and equity drawdowns. Four prediction-market indexes underneath: <strong style="color:var(--bull)">Bull</strong> (YES = acceleration), <strong style="color:var(--bear)">Bear</strong> (YES = the unwind, market or regulatory), <strong style="color:var(--acc)">China AI</strong> (YES = Chinese substitution pressure), <strong style="color:var(--aqua)">Macro</strong> (YES = recession/rate risk).</p>
 </header>
 
 <nav class="topnav" id="topnav">
-  <a href="#top" aria-current="page">Today</a>
-  <a href="#p-vol">Market signals</a>
-  <a href="#p-h100">GPU &amp; fundamentals</a>
-  <a href="#p-stack">Prediction markets</a>
-  <a href="#methodology">Methodology</a>
+  <a href="/polymarket-ai-index" data-nav="today" aria-current="page">Today</a>
+  <a href="/polymarket-ai-index/markets" data-nav="markets">Market signals</a>
+  <a href="/polymarket-ai-index/gpu" data-nav="gpu">GPU &amp; fundamentals</a>
+  <a href="/polymarket-ai-index/prediction-markets" data-nav="prediction-markets">Prediction markets</a>
+  <a href="/polymarket-ai-index/methodology" data-nav="methodology">Methodology</a>
   <span class="corner">
     <a class="backlink" href="index.html">&larr; OMEN</a>
     <a class="backlink" href="china-ai-monitor.html">China Watch &rarr;</a>
@@ -187,9 +205,12 @@
 </section>
 
 <div class="toolbar">
-  <div class="seg" id="weightSeg" title="Constituent weighting"><button data-v="equal" class="active">Equal weight</button><button data-v="volume">Volume weight</button><button data-v="thesis">Thesis weight</button></div>
-  <div class="seg" id="basisSeg" title="Probability basis"><button data-v="raw" class="active">Raw odds</button><button data-v="hazard">Deadline-adjusted</button></div>
-  <div class="seg" id="rangeSeg"><button data-v="7">7d</button><button data-v="30" class="active">30d</button><button data-v="90">90d</button></div>
+  <!-- §5.3: the weighting/basis/range controls only drive the gauge, tiles, history and
+       constituent tables, so they ride with those views instead of looking global. Alerts
+       and the freshness strip stay global. -->
+  <div class="seg" id="weightSeg" title="Constituent weighting" data-view="today prediction-markets"><button data-v="equal" class="active">Equal weight</button><button data-v="volume">Volume weight</button><button data-v="thesis">Thesis weight</button></div>
+  <div class="seg" id="basisSeg" title="Probability basis" data-view="today prediction-markets"><button data-v="raw" class="active">Raw odds</button><button data-v="hazard">Deadline-adjusted</button></div>
+  <div class="seg" id="rangeSeg" data-view="today prediction-markets"><button data-v="7">7d</button><button data-v="30" class="active">30d</button><button data-v="90">90d</button></div>
   <div class="grow">
     <button class="btn" id="alertBtn" title="Browser notification when the regime escalates">Enable alerts</button>
     <span class="status" id="status">Loading&hellip;</span>
@@ -198,8 +219,9 @@
 
 <div class="fresh" id="freshStrip"></div>
 
-<div class="card" id="p-gauge" style="margin-top:14px">
-  <h2>AI Crash-Pressure Gauge <span class="sub" style="font-weight:400">&ndash; blended 0&ndash;100 across six independent signal families</span></h2>
+<div class="card" id="p-gauge" data-view="today" style="margin-top:14px">
+  <h2>AI Crash-Pressure Gauge <span class="sub" style="font-weight:400">&ndash; blended 0&ndash;100 across six independent signal families</span>
+    <a href="/polymarket-ai-index/prediction-markets" data-nav="prediction-markets" class="sub" style="font-weight:600;color:var(--accT);margin-left:auto">History &rarr;</a></h2>
   <div class="vline" id="gaugeVerdict"></div>
   <div class="gauge">
     <div>
@@ -210,13 +232,20 @@
     </div>
     <div class="cats" id="cats"></div>
   </div>
-  <div class="chartwrap" id="gaugeWrap"><svg id="gaugeChart" viewBox="0 0 1000 190" role="img" aria-label="Gauge history"></svg><div class="tip" id="gaugeTip"></div></div>
   <details class="howto"><summary>How to read this</summary>
     <div class="note" id="gaugeNote"></div>
   </details>
 </div>
 
-<div class="tiles" style="margin-top:16px">
+<div class="card" id="p-gauge-history" data-view="prediction-markets">
+  <h2>Crash-pressure gauge &ndash; 90-day history</h2>
+  <div class="chartwrap" id="gaugeWrap"><svg id="gaugeChart" viewBox="0 0 1000 190" role="img" aria-label="Gauge history"></svg><div class="tip" id="gaugeTip"></div></div>
+  <details class="howto"><summary>How to read this</summary>
+    <div class="note">Reconstructed from stored daily series. Its prediction-market family uses the bubble market only &ndash; the NVDA-tail and H100 events are rediscovered monthly and have no persistent history &ndash; so the line can sit slightly below the live gauge. Bands match the regime thresholds (35 / 55).</div>
+  </details>
+</div>
+
+<div class="tiles" id="indexTiles" data-view="today" style="margin-top:16px">
   <div class="tile"><div class="label"><span class="key" style="background:var(--bull)"></span>AI-Bull Index</div><div class="value" id="bullVal">&ndash;</div><div class="delta" id="bullDelta"></div><svg class="spark" id="bullSpark"></svg></div>
   <div class="tile"><div class="label"><span class="key" style="background:var(--bear)"></span>AI-Bear Index</div><div class="value" id="bearVal">&ndash;</div><div class="delta" id="bearDelta"></div><svg class="spark" id="bearSpark"></svg></div>
   <div class="tile"><div class="label"><span class="key" style="background:var(--acc)"></span>AI-China Index</div><div class="value" id="chinaVal">&ndash;</div><div class="delta" id="chinaDelta"></div><svg class="spark" id="chinaSpark"></svg></div>
@@ -224,14 +253,21 @@
   <div class="tile"><div class="label">Net sentiment (bull &minus; bear)</div><div class="value" id="netVal">&ndash;</div><div class="delta dim">Positive = leans toward acceleration</div><svg class="spark" id="netSpark"></svg></div>
 </div>
 
-<div class="card" id="p-history">
+<div class="card" id="whatChanged" data-view="today">
+  <h2>What changed</h2>
+  <div id="changedList"></div>
+</div>
+
+<div class="navcards" id="navCards" data-view="today"></div>
+
+<div class="card" id="p-history" data-view="prediction-markets">
   <h2>Composite index history <span class="sub" id="chainBadge" style="font-weight:400"></span></h2>
   <div class="cap" id="chartCap"></div>
   <div class="chartwrap" id="mainWrap"><svg id="chart" viewBox="0 0 1000 540" role="img" aria-label="AI index history, five panels"></svg><div class="tip" id="mainTip"></div></div>
 </div>
 
 <div class="grid2">
-  <div class="card" id="p-stack">
+  <div class="card" id="p-stack" data-view="prediction-markets">
     <h2>Crash signal stack</h2>
     <div class="vline" id="stackVerdict"></div>
     <div class="stack" id="stack"></div>
@@ -240,7 +276,7 @@
       <div class="note" id="bookNote"></div>
     </details>
   </div>
-  <div class="card" id="p-momentum">
+  <div class="card" id="p-momentum" data-view="prediction-markets">
     <h2>Momentum &amp; divergence</h2>
     <div class="vline" id="divNote"></div>
     <div class="statrow" id="momStats"></div>
@@ -252,7 +288,7 @@
 </div>
 
 <div class="grid2">
-  <div class="card" id="p-vol">
+  <div class="card" id="p-vol" data-view="markets">
     <h2>Volatility complex</h2>
     <div class="vline" id="volVerdict"></div>
     <div class="statrow" id="volStats"></div>
@@ -260,7 +296,7 @@
       <div class="cap">Options-market crash pricing. Term structure &gt; 1 (backwardation) and rising put skew are the classic pre-drawdown tells.</div>
     </details>
   </div>
-  <div class="card" id="p-credit">
+  <div class="card" id="p-credit" data-view="markets">
     <h2>Credit stress</h2>
     <div class="vline" id="creditVerdict"></div>
     <div class="statrow" id="creditStats"></div>
@@ -271,7 +307,7 @@
 </div>
 
 <div class="grid2">
-  <div class="card" id="p-breadth">
+  <div class="card" id="p-breadth" data-view="markets">
     <h2>AI-complex breadth <span class="sub" id="breadthCount" style="font-weight:400"></span></h2>
     <div class="vline" id="breadthVerdict"></div>
     <div class="statrow" id="breadthStats"></div>
@@ -280,7 +316,7 @@
       <div class="cap">Equal-weight basket of AI-capex names (hyperscalers, semis, power, neoclouds). Narrowing breadth while the index holds is the classic late-cycle tell.</div>
     </details>
   </div>
-  <div class="card" id="p-insiders">
+  <div class="card" id="p-insiders" data-view="markets">
     <h2>Insider activity &ndash; Form 4 <span class="sub" style="font-weight:400">last 90 days</span></h2>
     <div class="vline" id="insiderVerdict"></div>
     <div class="statrow" id="insiderStats"></div>
@@ -293,7 +329,7 @@
 </div>
 
 <div class="grid2">
-  <div class="card" id="p-nvda">
+  <div class="card" id="p-nvda" data-view="markets">
     <h2 id="nvdaTitle">NVDA market-implied tail</h2>
     <div class="vline" id="nvdaVerdict"></div>
     <div id="nvdaLadder"></div>
@@ -301,7 +337,7 @@
       <div class="cap">Probability NVDA touches each level this month, from Polymarket bracket markets. A fattening downside tail is the leading signal.</div>
     </details>
   </div>
-  <div class="card" id="p-h100">
+  <div class="card" id="p-h100" data-view="gpu">
     <h2 id="h100Title">H100 GPU rent &ndash; implied vs realized</h2>
     <div class="vline" id="h100Verdict"></div>
     <div class="statrow" id="h100Stats"></div>
@@ -314,7 +350,7 @@
 </div>
 
 <div class="grid2">
-  <div class="card" id="p-leaps">
+  <div class="card" id="p-leaps" data-view="markets">
     <h2>Options-implied 1-year tail <span class="sub" style="font-weight:400">&ndash; LEAPS, the deepest crash market</span></h2>
     <div class="vline" id="leapsVerdict"></div>
     <div class="statrow" id="leapsStats"></div>
@@ -324,7 +360,7 @@
       <div class="note" id="leapsNote"></div>
     </details>
   </div>
-  <div class="card" id="p-fund">
+  <div class="card" id="p-fund" data-view="gpu">
     <h2>Fundamentals check <span class="sub" style="font-weight:400">&ndash; AI-capex filers, SEC XBRL</span></h2>
     <div class="vline" id="fundVerdict"></div>
     <div class="statrow" id="fundStats"></div>
@@ -337,7 +373,7 @@
 </div>
 
 <div class="grid2">
-  <div class="card" id="p-capex">
+  <div class="card" id="p-capex" data-view="gpu">
     <h2>AI capex vs. the economy <span class="sub" style="font-weight:400">&ndash; scale check, BEA + SEC</span></h2>
     <div class="vline" id="macroVerdict"></div>
     <div class="statrow" id="macroStats"></div>
@@ -347,7 +383,7 @@
       <div class="note" id="macroNote"></div>
     </details>
   </div>
-  <div class="card" id="p-dep">
+  <div class="card" id="p-dep" data-view="gpu">
     <h2>GPU depreciation gap <span class="sub" style="font-weight:400">&ndash; the fast-obsolescence tell</span></h2>
     <div class="vline" id="depVerdict"></div>
     <div class="statrow" id="depStats"></div>
@@ -359,7 +395,7 @@
   </div>
 </div>
 
-<div class="card" id="p-kgpu">
+<div class="card" id="p-kgpu" data-view="gpu">
   <h2>GPU generational price ladder <span class="sub" style="font-weight:400">&ndash; Kalshi compute markets, the market-priced decay curve</span></h2>
   <div class="vline" id="kgpuVerdict"></div>
   <div class="statrow" id="kgpuStats"></div>
@@ -371,7 +407,7 @@
 </div>
 
 <div class="grid2">
-  <div class="card" id="p-aicredit">
+  <div class="card" id="p-aicredit" data-view="gpu">
     <h2>AI &amp; private-credit stress <span class="sub" style="font-weight:400">&ndash; the contagion channel</span></h2>
     <div class="vline" id="aicreditVerdict"></div>
     <div class="statrow" id="aicreditStats"></div>
@@ -381,7 +417,7 @@
       <div class="note" id="aicreditNote"></div>
     </details>
   </div>
-  <div class="card" id="p-power">
+  <div class="card" id="p-power" data-view="gpu">
     <h2>Power &amp; electricity <span class="sub" style="font-weight:400">&ndash; the real-economy externality</span></h2>
     <div class="vline" id="powerVerdict"></div>
     <div class="statrow" id="powerStats"></div>
@@ -394,7 +430,7 @@
 </div>
 
 <div class="grid2">
-  <div class="card" id="p-b200">
+  <div class="card" id="p-b200" data-view="gpu">
     <h2 id="b200Title">B200 GPU rent <span class="sub" style="font-weight:400">&ndash; Blackwell next-gen demand proxy</span></h2>
     <div class="vline" id="b200Verdict"></div>
     <div class="statrow" id="b200Stats"></div>
@@ -403,7 +439,7 @@
       <div class="cap">Polymarket's B200 (Blackwell) rental brackets — the current-generation GPU. B200 rent below a threshold signals demand destruction for NVDA's flagship product.</div>
     </details>
   </div>
-  <div class="card" id="p-val">
+  <div class="card" id="p-val" data-view="prediction-markets">
     <h2>AI valuation brackets <span class="sub" style="font-weight:400">&ndash; OpenAI &amp; Anthropic euphoria gauge</span></h2>
     <div class="vline" id="valVerdict"></div>
     <div id="valDist"></div>
@@ -414,7 +450,7 @@
   </div>
 </div>
 
-<div class="card" id="p-cross">
+<div class="card" id="p-cross" data-view="prediction-markets">
   <h2>Cross-venue check <span class="sub" style="font-weight:400">&ndash; Kalshi, Metaculus &amp; Manifold</span></h2>
   <div class="vline" id="crossVerdict"></div>
   <div class="tscroll"><table id="kalshiTable"></table></div>
@@ -425,7 +461,7 @@
   </details>
 </div>
 
-<div class="card" id="p-equity">
+<div class="card" id="p-equity" data-view="markets">
   <h2>Equity check &ndash; NVDA &amp; SOXX vs. the bear index</h2>
   <div class="cap">Closes rebased to 100 at window start. Shown on its own axis &ndash; different units never share one.</div>
   <div class="chartwrap" id="eqWrap"><svg id="eqChart" viewBox="0 0 1000 220" role="img" aria-label="Equity rebased"></svg><div class="tip" id="eqTip"></div></div>
@@ -433,7 +469,7 @@
   <div class="statrow" id="eqStats"></div>
 </div>
 
-<div class="card" id="p-leadlag">
+<div class="card" id="p-leadlag" data-view="markets">
   <h2>Does the bear index (MKT sleeve) lead prices?</h2>
   <details id="leadlagDetails">
     <summary id="leadlagSummary">Computing&hellip;</summary>
@@ -443,21 +479,21 @@
   </details>
 </div>
 
-<div class="card" id="p-constituents">
+<div class="card" id="p-constituents" data-view="prediction-markets">
   <h2>Constituents <span class="sub" id="coverage" style="font-weight:400"></span></h2>
   <div class="cap">Price = order-book midpoint. Click a column header to sort. &#9888; spread &gt; 6&cent; (thin). &#9889; 24h volume &ge; 2&times; weekly run-rate. &dagger; structural question &ndash; deadline-adjustment not applied (only one-time-event markets are annualized).</div>
   <div id="coverageNote" class="note"></div>
 </div>
-<div class="grid2" style="margin-top:0">
+<div class="grid2" data-view="prediction-markets" style="margin-top:0">
   <div class="card"><h2 style="font-size:13px">AI-Bull <span class="sub" id="bullMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="bullTable"></table></div></div>
   <div class="card"><h2 style="font-size:13px">AI-Bear <span class="sub" id="bearMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="bearTable"></table></div></div>
 </div>
-<div class="grid2" style="margin-top:0">
+<div class="grid2" data-view="prediction-markets" style="margin-top:0">
   <div class="card"><h2 style="font-size:13px">AI-China <span class="sub" id="chinaMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="chinaTable"></table></div></div>
   <div class="card"><h2 style="font-size:13px">AI-Macro <span class="sub" id="macroMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="macroTable"></table></div></div>
 </div>
 
-<div class="card" id="p-snapshots">
+<div class="card" id="p-snapshots" data-view="methodology">
   <h2>Durable snapshots</h2>
   <div class="cap" id="snapCap"></div>
   <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
@@ -468,8 +504,8 @@
 
 <p class="err" id="err"></p>
 
-<footer id="methodology">
-  <details id="methodDetails"><summary><strong>Methodology &amp; sources</strong></summary><div id="foot"></div></details>
+<footer id="methodology" data-view="methodology">
+  <details id="methodDetails" open><summary><strong>Methodology &amp; sources</strong></summary><div id="foot"></div></details>
 </footer>
 
 <script>
@@ -699,15 +735,19 @@ function loadLocalBundle(){
   if("__MARKET_DATA__" in window || "__SNAPSHOTS_CSV__" in window) return Promise.resolve();
   if(_bundleP) return _bundleP;
   _bundleP=new Promise(res=>{ const s=document.createElement("script");
-    s.src="market-data.js"; s.onload=()=>res(); s.onerror=()=>res(); document.head.appendChild(s); });
+    s.src=DATA_BASE+"market-data.js"; s.onload=()=>res(); s.onerror=()=>res(); document.head.appendChild(s); });
   return _bundleP;
 }
+// The data files live at the site root, but the page also serves from /polymarket-ai-index/<view>,
+// where a relative fetch would look for them under the route and 404. Absolute paths fix that
+// over http; file:// has no routing, so it keeps the sibling lookup that makes the bundle work.
+const DATA_BASE = location.protocol==="file:" ? "" : "/";
 async function fetchMkt(){
-  try{ const r=await fetch("market-data.json",{cache:"no-store"}); if(r.ok){ mkt=await r.json(); return; } }catch(e){}
+  try{ const r=await fetch(DATA_BASE+"market-data.json",{cache:"no-store"}); if(r.ok){ mkt=await r.json(); return; } }catch(e){}
   await loadLocalBundle(); if(window.__MARKET_DATA__) mkt=window.__MARKET_DATA__;
 }
 async function fetchSnapshots(){
-  try{ const r=await fetch("snapshots.csv",{cache:"no-store"}); if(r.ok){ snapshotsCsv=await r.text(); return; } }catch(e){}
+  try{ const r=await fetch(DATA_BASE+"snapshots.csv",{cache:"no-store"}); if(r.ok){ snapshotsCsv=await r.text(); return; } }catch(e){}
   await loadLocalBundle(); if(typeof window.__SNAPSHOTS_CSV__==="string") snapshotsCsv=window.__SNAPSHOTS_CSV__;
 }
 // best-effort successor discovery for excluded core constituents
@@ -1171,12 +1211,12 @@ function renderRegime(){
   $("regimeTrigger").textContent=ex.trig;
   $("regimeContext").innerHTML=esc(ex.ctx)+(ex.since?` <span class="vsince">${esc(ex.since)}</span>`:"");
   el.title=why.join("\n");
-  document.title=(r==="stressed"?"🔴 STRESSED – ":r==="elevated"?"⚠ Elevated – ":"")+"AI Crash Monitor";
   const rank={calm:0,elevated:1,stressed:2};
   if(alertsOn && lastRegime!=null && rank[r]>rank[lastRegime] && "Notification" in window && Notification.permission==="granted"){
     new Notification("AI Crash Monitor: regime escalated to "+r.toUpperCase(), { body:(why[0]||"")+` · gauge ${sig.gauge?.score?.toFixed(0)??"?"}/100.` });
   }
   lastRegime=r;
+  applyRegimeTitle();   // view-aware: keeps the regime emoji on every route
 }
 function renderStack(){
   $("stack").innerHTML=sig.stack.map(s=>{ let dot="var(--good)";
@@ -1925,6 +1965,101 @@ $("snapExport").onclick=()=>{ let store={}; try{ store=migrateSnaps(JSON.parse(l
   for(let i=0;i<days.length;i++){ const d=days[i],s=store[d]; csv+=`${d},${s.bull??""},${s.bear??""},${s.crash??""},${s.reg??""},${s.china??""},${s.macro??""},${s.gauge??""},${i>0&&s.comp!==store[days[i-1]].comp?1:0}\n`; }
   const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="ai-crash-snapshots.csv"; a.click(); };
 
+/* ================= Views (§1) =================
+   One document, five views. The Worker serves this same asset for every
+   /polymarket-ai-index/<view> path, so routing is real and shareable while the data is
+   fetched once and switching is instant. Elements carry data-view (space-separated);
+   anything without one is global and shows on every view. */
+const VIEWS = {
+  "today":              { name:"Today",              title:null },
+  "markets":            { name:"Market signals",     title:"Market signals" },
+  "gpu":                { name:"GPU & fundamentals", title:"GPU & fundamentals" },
+  "prediction-markets": { name:"Prediction markets", title:"Prediction markets" },
+  "methodology":        { name:"Methodology & data", title:"Methodology" },
+};
+const BASE = "/polymarket-ai-index";
+let view = "today";
+
+function viewFromPath(){
+  const m = location.pathname.match(/\/polymarket-ai-index\/([a-z-]+)\/?$/);
+  return (m && VIEWS[m[1]]) ? m[1] : "today";
+}
+function applyView(v){
+  view = VIEWS[v] ? v : "today";
+  for(const el of document.querySelectorAll("[data-view]")){
+    const views = el.dataset.view.split(/\s+/);
+    el.hidden = !views.includes(view);
+  }
+  // A two-up row whose partner moved to another view must not hold an empty column.
+  // Rows with their own data-view were already decided above — don't second-guess them.
+  for(const g of document.querySelectorAll(".grid2")){
+    if(g.dataset.view) continue;
+    const kids = [...g.children].filter(c => !c.hidden);
+    g.hidden = kids.length === 0;
+    g.style.gridTemplateColumns = kids.length === 1 ? "1fr" : "";
+  }
+  for(const a of document.querySelectorAll(".topnav > a[data-nav]"))
+    a.setAttribute("aria-current", a.dataset.nav === view ? "page" : "false");
+  applyRegimeTitle();
+}
+// the regime emoji stays in the title on every view (§1.1)
+function applyRegimeTitle(){
+  const r = lastRegime;
+  const prefix = r==="stressed" ? "🔴 STRESSED – " : r==="elevated" ? "⚠ Elevated – " : "";
+  const suffix = VIEWS[view]?.title ? " · " + VIEWS[view].title : "";
+  document.title = prefix + "AI Crash Monitor" + suffix;
+}
+function navigate(v, push=true){
+  if(push) history.pushState({v}, "", v==="today" ? BASE : `${BASE}/${v}`);
+  applyView(v);
+  window.scrollTo(0,0);
+}
+document.addEventListener("click", e => {
+  const a = e.target.closest("a[data-nav]");
+  if(!a || e.metaKey || e.ctrlKey || e.shiftKey) return;
+  e.preventDefault();
+  navigate(a.dataset.nav);
+});
+window.addEventListener("popstate", () => applyView(viewFromPath()));
+
+/* "What changed": the biggest movers across every tracked market, computed rather than
+   picked. Ranked by |24h move|, with the existing unusual-volume detection as the tiebreak
+   signal — a big move on heavy volume is the one worth reading. */
+function renderWhatChanged(){
+  const spike = new Map(sig.spikes.map(s => [s.c.id, s.ratio]));
+  const movers = CONSTITUENTS.map(c => {
+    const m = markets.get(c.id);
+    if(!m || m.closed || m.d1 == null) return null;
+    return { label:c.label, d1:m.d1*100, vol:spike.get(c.id)||null };
+  }).filter(Boolean).sort((a,b) => Math.abs(b.d1) - Math.abs(a.d1)).slice(0,3);
+  const el = $("changedList");
+  if(!movers.length || Math.abs(movers[0].d1) < 0.5){
+    el.innerHTML = '<div class="note">Nothing moved materially in the last 24 hours.</div>';
+    return;
+  }
+  el.innerHTML = movers.map(m =>
+    `<div class="chg"><span class="m ${m.d1>0?"up":"down"}">${m.d1>0?"+":"−"}${Math.abs(m.d1).toFixed(1)} pts</span>`
+    + `<span class="n">${esc(m.label)}</span>`
+    + `<span class="w">${m.vol?`⚡ ${m.vol.toFixed(1)}× volume`:""}</span></div>`).join("");
+}
+/* Nav cards: each deep-dive page fronted by its single most important live number. */
+function renderNavCards(){
+  const g = sig.gauge?.fam || {};
+  const capex = (()=>{ const F=mkt?.fundamentals; if(!F?.quarters?.length) return null;
+    const n=F.quarters.length, o=F.ocf_b[n-1]; return o?F.capex_b[n-1]/o*100:null; })();
+  const bubble = markets.get(BUBBLE_ID);
+  const fresh = mkt?.updated ? ageTxt(Date.now()-Date.parse(mkt.updated))+" old" : "no data";
+  const cards = [
+    { v:"markets",            t:"Market signals",     val: g.opt?.v!=null ? g.opt.v.toFixed(0) : "–", l:"options skew" },
+    { v:"gpu",                t:"GPU & fundamentals", val: capex!=null ? capex.toFixed(0)+"%" : "–", l:"capex / operating cash flow" },
+    { v:"prediction-markets", t:"Prediction markets", val: bubble&&!bubble.closed ? (bubble.yes*100).toFixed(1)+"%" : "–", l:"AI bubble burst in 2026" },
+    { v:"methodology",        t:"Methodology & data", val: fresh, l:"fetcher freshness" },
+  ];
+  $("navCards").innerHTML = cards.map(c =>
+    `<a class="navcard" href="${BASE}/${c.v}" data-nav="${c.v}"><div class="t">${esc(c.t)} &rarr;</div>`
+    + `<div class="v">${c.val}</div><div class="l">${esc(c.l)}</div></a>`).join("");
+}
+
 /* ================= Orchestration ================= */
 function renderAll(){
   computeSignals();
@@ -1933,6 +2068,7 @@ function renderAll(){
   renderNvda(); renderH100(); renderB200(); renderKalshiGpu(); renderValuations(); renderLeaps(); renderFundamentals(); renderMacro(); renderDepreciation(); renderAiCredit(); renderPower(); renderCrossVenue();
   renderMainChart(); renderEquity(); renderLeadLag();
   for(const s of SIDES) renderTable(s);
+  renderWhatChanged(); renderNavCards();
   renderCoverage(); renderFresh(); renderStatuses(); takeSnapshot();
 }
 async function refreshPrices(){
@@ -1972,6 +2108,8 @@ $("foot").innerHTML=`<p style="margin-top:8px"><strong>Composite.</strong> 100×
 <p style="margin-top:8px"><strong>Lead-lag.</strong> Non-overlapping windows, 2,000-shuffle permutation test, recomputed on history refresh only. The bubble market is reflexive with NVDA/SOXX so the ex-bubble row is the cleaner read – treat all of it as descriptive.</p>
 <p style="margin-top:8px"><strong>Cadence &amp; sources.</strong> Live Polymarket data (Gamma + CLOB, incl. bubble-market order-book depth) refreshes every 60s; histories, market-data.json and cached studies every 10min; NVDA/H100 events re-discovered hourly. market-data.json is produced by <code>update-market-data.py</code> (GitHub Action, ~30min cadence): Yahoo Finance (equity/vol/credit proxies), CBOE delayed quotes (25Δ risk reversals, single-name IV term structure, LEAPS tail), FRED keyless CSV (HY OAS, CCC OAS, NFCI, nominal GDP, electricity CPI), SEC EDGAR Form 4 (open-market S/P only, recent-filings sample), SEC XBRL companyconcept (capex/OCF/depreciation fundamentals), vast.ai public asks (realized H100 $/GPU-hr), Kalshi public API (cross-venue themes <em>and</em> the GPU compute markets: H100/H200/B200/A100 weekly + monthly, quotes unauthenticated, settled on the Ornn index), Metaculus (optional token), Manifold public API (play-money). Constituents curated 2026-07-10; not investment advice.</p>
 <p style="margin-top:8px"><strong>GPU compute, two venues, two indices.</strong> Polymarket and Kalshi both price GPU rents, but they do not settle on the same underlying: Kalshi resolves on the <a href="https://dashboard.ornnai.com/" target="_blank" rel="noopener">Ornn</a> index, while this dashboard&rsquo;s realized tape is vast.ai&rsquo;s public asks &ndash; a decentralized marketplace of interruptible hosts that prints structurally below a curated index. The Ornn reference is read for free from each Kalshi weekly market&rsquo;s &ldquo;price to beat&rdquo; strike, which is set at the Ornn print when the market opens, so it dates to that week&rsquo;s open rather than to now. Implied medians come from the monthly ladder as the 50% crossing of the survival curve P(value &gt; strike), after dropping one-sided books (bid 0 / ask 1) and quotes wider than 15c and forcing survival to be non-increasing in strike; where the crossing falls outside the quoted strikes the panel shows no median rather than an invented one. Kalshi&rsquo;s Dec-31 GPU contracts resolve &ldquo;above $X <em>by</em> Dec 31&rdquo; &ndash; a running maximum, upward-biased vs. a terminal value &ndash; and are excluded on purpose. Only the weekly and monthly are true forward points, so no long-dated compute curve is claimed here.</p>`;
+
+applyView(viewFromPath());   // before any fetch, so the right view paints immediately
 
 (async()=>{
   try{
