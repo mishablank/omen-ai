@@ -328,6 +328,12 @@
   </div>
 </div>
 
+<!-- §4.2: the four GPU panels tell one story; assembleGpuStory() moves them in here at boot
+     so the narrative runs ladder -> current gen -> last gen -> the accounting mirror. -->
+<section id="gpuStory" data-view="gpu">
+  <p class="note" style="margin:16px 0 0">Four reads on the same question: how fast does AI silicon lose value?</p>
+</section>
+
 <div class="grid2">
   <div class="card" id="p-nvda" data-view="markets">
     <h2 id="nvdaTitle">NVDA market-implied tail</h2>
@@ -602,6 +608,9 @@ const fmtUsd = v => { const a=Math.abs(v), s=v<0?"−$":"$"; return a>=1e9?s+(a/
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 // toFixed() emits a hyphen-minus; prose uses a real minus sign
 const mnum = (v,d=0) => (v<0?"−":"")+Math.abs(v).toFixed(d);
+// §4.1 cross-link: a fact lives in exactly one panel; everywhere else points at it.
+const xlink = (label, view, panel) =>
+  `<a href="/polymarket-ai-index/${view}#${panel}" data-nav="${view}" data-anchor="${panel}" style="color:var(--text-secondary)">${label} <span style="color:var(--acc)">&#8599;</span></a>`;
 
 /* ================= Fetching ================= */
 function parseMarket(m){
@@ -865,11 +874,11 @@ function computeSignals(){
   // `pl` marks a plural subject so the verdict block's verbs agree
   s.stack=[
     {name:"AI bubble burst in 2026 (Polymarket)", plain:"bubble-burst odds", pl:true, v:bubble&&!bubble.closed?bubble.yes*100:null, sub:"3+ triggers: NVDA −50% ATH, SOXX −40%, lab bankruptcy/acquisition, H100 ≤ $1, supplier collapse"},
-    {name:"NVDA deep-downside touch this month", plain:"the odds NVDA touches its deep-downside level this month", pl:true, v:nvdaTailProb(), sub:"lowest listed strike, monthly bracket markets"},
-    {name:"H100 rent below $2.00 at month end", plain:"the odds H100 rent ends the month below $2.00", pl:true, v:h100Sub2(), sub:"GPU rental bracket markets"},
-    {name:"B200 rent below $3.00 at month end", plain:"the odds B200 rent ends the month below $3.00", pl:true, v:b200Sub3(), sub:"B200 (Blackwell) GPU rental bracket markets — next-gen demand proxy"},
+    {name:"NVDA deep-downside touch this month", plain:"the odds NVDA touches its deep-downside level this month", pl:true, v:nvdaTailProb(), sub:"lowest listed strike, monthly bracket markets", link:["markets","p-nvda"]},
+    {name:"H100 rent below $2.00 at month end", plain:"the odds H100 rent ends the month below $2.00", pl:true, v:h100Sub2(), sub:"GPU rental bracket markets", link:["gpu","p-h100"]},
+    {name:"B200 rent below $3.00 at month end", plain:"the odds B200 rent ends the month below $3.00", pl:true, v:b200Sub3(), sub:"B200 (Blackwell) GPU rental bracket markets — next-gen demand proxy", link:["gpu","p-b200"]},
     {name:"Funding window: IPO odds 7d change", plain:"the AI funding window", v:fundingDelta(), sub:"max of OpenAI / Anthropic 2026 IPO; sharp drop = funding window closing", isDelta:true},
-    {name:"Bubble sentiment (extreme euphoria)", plain:"bubble sentiment", v:bubbleSentiment(), sub:"avg of OpenAI $1T IPO + AGI + Anthropic IPO odds; >70% = euphoric"},
+    {name:"Bubble sentiment (extreme euphoria)", plain:"bubble sentiment", v:bubbleSentiment(), sub:"avg of OpenAI $1T IPO + AGI + Anthropic IPO odds; >70% = euphoric", link:["prediction-markets","p-constituents"]},
     {name:"US recession probability", plain:"US recession odds", pl:true, v:macroRecession(), sub:"Polymarket: US recession by end of 2026"},
     {name:"China AI: top-3 model odds", plain:"the odds a Chinese lab has a top-3 model", pl:true, v:chinaTop3(), sub:"Polymarket: Chinese company has a top-3 AI model by Dec 31"},
   ];
@@ -1222,7 +1231,9 @@ function renderStack(){
   $("stack").innerHTML=sig.stack.map(s=>{ let dot="var(--good)";
     if(s.v!=null){ if(s.isDelta) dot=s.v<=-5?"var(--crit)":s.v<=-2?"var(--warn)":"var(--good)"; else dot=s.v>=25?"var(--crit)":s.v>=15?"var(--warn)":"var(--good)"; }
     const val=s.v==null?"&ndash;":(s.isDelta?(s.v>0?"+":"")+s.v.toFixed(1)+" pts":s.v.toFixed(1)+"%");
-    return `<div class="row"><span class="dot" style="background:${dot}"></span><span class="name">${s.name}<div class="sub">${s.sub}</div></span><span class="val">${val}</span></div>`;
+    // §4.1: the row keeps the probability; the panel that owns the underlying fact is one hop away
+    const name=s.link?xlink(esc(s.name),s.link[0],s.link[1]):esc(s.name);
+    return `<div class="row"><span class="dot" style="background:${dot}"></span><span class="name">${name}<div class="sub">${s.sub}</div></span><span class="val">${val}</span></div>`;
   }).join("");
   if(book&&(book.bid||book.ask)){
     const tot=book.bid+book.ask, pctBid=tot?book.bid/tot*100:50;
@@ -1285,9 +1296,9 @@ function renderCredit(){
     cell("NFCI (Chicago Fed)", F.NFCI?F.NFCI.last.toFixed(2):"–", F.NFCI?` <small>${F.NFCI.last<0?"loose":"tight"}</small>`:""),
     cell("HYG drawdown (6mo)", hygDD!=null?hygDD.toFixed(1)+"%":"–"),
     cell("HY/IG ratio drawdown", hyig!=null?hyig.toFixed(1)+"%":"–"),
-    cell("CRWV drawdown", E.CRWV?drawdown(E.CRWV).toFixed(1)+"%":"–"),
-    cell("ORCL drawdown", E.ORCL?drawdown(E.ORCL).toFixed(1)+"%":"–"),
-  ].join("");
+    // §4.1: the levered-AI drawdowns are Breadth's number — this panel points at them
+    // rather than printing a third copy
+  ].join("")+`<div class="stat"><div class="l">${xlink("Levered-AI drawdowns","markets","p-breadth")}</div><div class="v"><small>see breadth</small></div></div>`;
   const oas=F.HY_OAS?.last;
   $("creditVerdict").innerHTML = oas!=null
     ? (oas<3.2 ? `HY OAS at ${oas.toFixed(2)}% is historically tight &ndash; credit is pricing no AI stress. A move through ~4% would be the early warning.`
@@ -1980,6 +1991,15 @@ const VIEWS = {
 const BASE = "/polymarket-ai-index";
 let view = "today";
 
+/* §4.2: the ladder, both rent panels and the depreciation gap argue one thesis, so the GPU
+   view runs them in narrative order instead of the historical source order. Moved once at
+   boot — never per view switch — so charts and listeners are built exactly once. */
+function assembleGpuStory(){
+  const host=$("gpuStory"); if(!host) return;
+  for(const id of ["p-kgpu","p-b200","p-h100","p-dep"]){
+    const el=$(id); if(el) host.appendChild(el);
+  }
+}
 function viewFromPath(){
   const m = location.pathname.match(/\/polymarket-ai-index\/([a-z-]+)\/?$/);
   return (m && VIEWS[m[1]]) ? m[1] : "today";
@@ -2009,18 +2029,25 @@ function applyRegimeTitle(){
   const suffix = VIEWS[view]?.title ? " · " + VIEWS[view].title : "";
   document.title = prefix + "AI Crash Monitor" + suffix;
 }
-function navigate(v, push=true){
-  if(push) history.pushState({v}, "", v==="today" ? BASE : `${BASE}/${v}`);
+function navigate(v, push=true, anchor=null){
+  const path = (v==="today" ? BASE : `${BASE}/${v}`) + (anchor?`#${anchor}`:"");
+  if(push) history.pushState({v,anchor}, "", path);
   applyView(v);
-  window.scrollTo(0,0);
+  // a cross-link has to land on its target, not the top of the destination view
+  const t = anchor && $(anchor);
+  if(t) t.scrollIntoView({block:"start"}); else window.scrollTo(0,0);
 }
 document.addEventListener("click", e => {
   const a = e.target.closest("a[data-nav]");
   if(!a || e.metaKey || e.ctrlKey || e.shiftKey) return;
   e.preventDefault();
-  navigate(a.dataset.nav);
+  navigate(a.dataset.nav, true, a.dataset.anchor || null);
 });
-window.addEventListener("popstate", () => applyView(viewFromPath()));
+window.addEventListener("popstate", () => {
+  applyView(viewFromPath());
+  const id = location.hash.slice(1), t = id && $(id);
+  if(t) t.scrollIntoView({block:"start"});
+});
 
 /* "What changed": the biggest movers across every tracked market, computed rather than
    picked. Ranked by |24h move|, with the existing unusual-volume detection as the tiebreak
@@ -2109,7 +2136,10 @@ $("foot").innerHTML=`<p style="margin-top:8px"><strong>Composite.</strong> 100×
 <p style="margin-top:8px"><strong>Cadence &amp; sources.</strong> Live Polymarket data (Gamma + CLOB, incl. bubble-market order-book depth) refreshes every 60s; histories, market-data.json and cached studies every 10min; NVDA/H100 events re-discovered hourly. market-data.json is produced by <code>update-market-data.py</code> (GitHub Action, ~30min cadence): Yahoo Finance (equity/vol/credit proxies), CBOE delayed quotes (25Δ risk reversals, single-name IV term structure, LEAPS tail), FRED keyless CSV (HY OAS, CCC OAS, NFCI, nominal GDP, electricity CPI), SEC EDGAR Form 4 (open-market S/P only, recent-filings sample), SEC XBRL companyconcept (capex/OCF/depreciation fundamentals), vast.ai public asks (realized H100 $/GPU-hr), Kalshi public API (cross-venue themes <em>and</em> the GPU compute markets: H100/H200/B200/A100 weekly + monthly, quotes unauthenticated, settled on the Ornn index), Metaculus (optional token), Manifold public API (play-money). Constituents curated 2026-07-10; not investment advice.</p>
 <p style="margin-top:8px"><strong>GPU compute, two venues, two indices.</strong> Polymarket and Kalshi both price GPU rents, but they do not settle on the same underlying: Kalshi resolves on the <a href="https://dashboard.ornnai.com/" target="_blank" rel="noopener">Ornn</a> index, while this dashboard&rsquo;s realized tape is vast.ai&rsquo;s public asks &ndash; a decentralized marketplace of interruptible hosts that prints structurally below a curated index. The Ornn reference is read for free from each Kalshi weekly market&rsquo;s &ldquo;price to beat&rdquo; strike, which is set at the Ornn print when the market opens, so it dates to that week&rsquo;s open rather than to now. Implied medians come from the monthly ladder as the 50% crossing of the survival curve P(value &gt; strike), after dropping one-sided books (bid 0 / ask 1) and quotes wider than 15c and forcing survival to be non-increasing in strike; where the crossing falls outside the quoted strikes the panel shows no median rather than an invented one. Kalshi&rsquo;s Dec-31 GPU contracts resolve &ldquo;above $X <em>by</em> Dec 31&rdquo; &ndash; a running maximum, upward-biased vs. a terminal value &ndash; and are excluded on purpose. Only the weekly and monthly are true forward points, so no long-dated compute curve is claimed here.</p>`;
 
+assembleGpuStory();
 applyView(viewFromPath());   // before any fetch, so the right view paints immediately
+// a shared cross-link URL (/…/markets#p-breadth) must land on its panel, not the view top
+if(location.hash){ const t=$(location.hash.slice(1)); if(t) t.scrollIntoView({block:"start"}); }
 
 (async()=>{
   try{
