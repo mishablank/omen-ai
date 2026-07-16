@@ -949,6 +949,13 @@ function renderTiles(){
   const bm=indexNow("bear","mkt"), bg=indexNow("bear","gov");
   if(bm!=null&&bg!=null) $("bearDelta").innerHTML+=`<div class="sub" title="Mkt = the unwind itself (bubble burst, distress sales). Gov = the clampdown (model-access removals, reviews, safety bills, moratoria). Sleeves are unequal (3 vs 6), so the composite is the flat mean of all 9, not the mean of these two.">Mkt ${bm.toFixed(1)} &middot; Gov ${bg.toFixed(1)}</div>`;
   if(bc!=null&&v.bear!=null) $("netVal").parentElement.querySelector(".delta").innerHTML=`Positive = leans toward acceleration<div class="sub" title="Capital-markets bull constituents only vs bear – the cleaner financial-cycle read (tech progress can survive a financial unwind).">Capital-only net ${(bc>=v.bear?"+":"")+(bc-v.bear).toFixed(1)}</div>`;
+  // the landing page prices the pair as complementary shares (bull + bear = 1);
+  // echo that read here so the two pages can be reconciled at a glance
+  if(v.bull!=null&&v.bear!=null&&(v.bull+v.bear)>0){
+    const sb=v.bull/(v.bull+v.bear);
+    $("bullDelta").innerHTML+=`<div class="sub" title="This index's share of the Bull+Bear pair – the normalized price shown on the landing page. Bull share + Bear share = 1 by construction.">Pair share ${sb.toFixed(3)}</div>`;
+    $("bearDelta").innerHTML+=`<div class="sub" title="This index's share of the Bull+Bear pair – the normalized price shown on the landing page. Bull share + Bear share = 1 by construction.">Pair share ${(1-sb).toFixed(3)}</div>`;
+  }
   const last30=ser=>ser?ser.slice(-30):null;
   spark("bullSpark", last30(sig.bull?.series), "var(--bull)");
   spark("bearSpark", last30(sig.bear?.series), "var(--bear)");
