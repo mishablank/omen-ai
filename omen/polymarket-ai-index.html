@@ -138,6 +138,21 @@
   .howto > summary { font-size: 11.5px; color: var(--muted); }
   .howto > summary:hover { color: var(--text-secondary); }
   .howto .cap:first-of-type { margin-top: 2px; }
+  /* ---- panel status (§5.2): a panel that failed its own check must not look healthy ---- */
+  .pstatus { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+  .pstatus.stale { background: var(--warn-wash); color: var(--accT); border: 1px solid rgba(227,166,60,0.35); }
+  .pstatus.unreliable { background: var(--crit-wash); color: var(--crit); border: 1px solid rgba(226,104,90,0.45); }
+  /* grey the body, but never the verdict — the failure reason has to stay readable */
+  .card.is-unreliable { border-color: rgba(226,104,90,0.4); }
+  .card.is-unreliable .statrow, .card.is-unreliable .hbar, .card.is-unreliable table,
+  .card.is-unreliable .chartwrap, .card.is-unreliable .stack, .card.is-unreliable .bar { opacity: 0.5; }
+  .card.is-unreliable .vline { border-left-color: var(--crit); }
+  /* ---- top nav (§5.1) ---- */
+  .topnav { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin: 14px 0 0; border-bottom: 1px solid var(--grid); padding-bottom: 0; }
+  .topnav > a { font-size: 13px; color: var(--text-secondary); text-decoration: none; padding: 7px 11px; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+  .topnav > a:hover { color: var(--text-primary); }
+  .topnav > a[aria-current="page"] { color: var(--accT); border-bottom-color: var(--acc); font-weight: 600; }
+  .topnav .corner { margin-left: auto; display: flex; gap: 8px; }
   footer { margin-top: 22px; font-size: 12px; color: var(--muted); line-height: 1.6; }
   .backlink { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; white-space: nowrap; }
   .backlink:hover { color: var(--accT); border-color: var(--acc); }
@@ -145,11 +160,22 @@
 </head>
 <body>
 
-<header>
-  <a class="backlink" href="index.html">&larr; OMEN</a> <a class="backlink" href="china-ai-monitor.html">China Watch &rarr;</a>
+<header id="top">
   <h1>AI Crash Monitor</h1>
   <p class="sub">A blended crash-pressure gauge over Polymarket odds plus options skew, the volatility complex, credit stress, and equity drawdowns. Four prediction-market indexes underneath: <strong style="color:var(--bull)">Bull</strong> (YES = acceleration), <strong style="color:var(--bear)">Bear</strong> (YES = the unwind, market or regulatory), <strong style="color:var(--acc)">China AI</strong> (YES = Chinese substitution pressure), <strong style="color:var(--aqua)">Macro</strong> (YES = recession/rate risk).</p>
 </header>
+
+<nav class="topnav" id="topnav">
+  <a href="#top" aria-current="page">Today</a>
+  <a href="#p-vol">Market signals</a>
+  <a href="#p-h100">GPU &amp; fundamentals</a>
+  <a href="#p-stack">Prediction markets</a>
+  <a href="#methodology">Methodology</a>
+  <span class="corner">
+    <a class="backlink" href="index.html">&larr; OMEN</a>
+    <a class="backlink" href="china-ai-monitor.html">China Watch &rarr;</a>
+  </span>
+</nav>
 
 <section class="verdict" id="verdict">
   <div class="vhead">
@@ -172,7 +198,7 @@
 
 <div class="fresh" id="freshStrip"></div>
 
-<div class="card" style="margin-top:14px">
+<div class="card" id="p-gauge" style="margin-top:14px">
   <h2>AI Crash-Pressure Gauge <span class="sub" style="font-weight:400">&ndash; blended 0&ndash;100 across six independent signal families</span></h2>
   <div class="vline" id="gaugeVerdict"></div>
   <div class="gauge">
@@ -198,7 +224,7 @@
   <div class="tile"><div class="label">Net sentiment (bull &minus; bear)</div><div class="value" id="netVal">&ndash;</div><div class="delta dim">Positive = leans toward acceleration</div><svg class="spark" id="netSpark"></svg></div>
 </div>
 
-<div class="card">
+<div class="card" id="p-history">
   <h2>Composite index history <span class="sub" id="chainBadge" style="font-weight:400"></span></h2>
   <div class="cap" id="chartCap"></div>
   <div class="chartwrap" id="mainWrap"><svg id="chart" viewBox="0 0 1000 540" role="img" aria-label="AI index history, five panels"></svg><div class="tip" id="mainTip"></div></div>
@@ -333,7 +359,7 @@
   </div>
 </div>
 
-<div class="card">
+<div class="card" id="p-kgpu">
   <h2>GPU generational price ladder <span class="sub" style="font-weight:400">&ndash; Kalshi compute markets, the market-priced decay curve</span></h2>
   <div class="vline" id="kgpuVerdict"></div>
   <div class="statrow" id="kgpuStats"></div>
@@ -388,7 +414,7 @@
   </div>
 </div>
 
-<div class="card">
+<div class="card" id="p-cross">
   <h2>Cross-venue check <span class="sub" style="font-weight:400">&ndash; Kalshi, Metaculus &amp; Manifold</span></h2>
   <div class="vline" id="crossVerdict"></div>
   <div class="tscroll"><table id="kalshiTable"></table></div>
@@ -399,7 +425,7 @@
   </details>
 </div>
 
-<div class="card">
+<div class="card" id="p-equity">
   <h2>Equity check &ndash; NVDA &amp; SOXX vs. the bear index</h2>
   <div class="cap">Closes rebased to 100 at window start. Shown on its own axis &ndash; different units never share one.</div>
   <div class="chartwrap" id="eqWrap"><svg id="eqChart" viewBox="0 0 1000 220" role="img" aria-label="Equity rebased"></svg><div class="tip" id="eqTip"></div></div>
@@ -407,7 +433,7 @@
   <div class="statrow" id="eqStats"></div>
 </div>
 
-<div class="card">
+<div class="card" id="p-leadlag">
   <h2>Does the bear index (MKT sleeve) lead prices?</h2>
   <details id="leadlagDetails">
     <summary id="leadlagSummary">Computing&hellip;</summary>
@@ -417,7 +443,7 @@
   </details>
 </div>
 
-<div class="card">
+<div class="card" id="p-constituents">
   <h2>Constituents <span class="sub" id="coverage" style="font-weight:400"></span></h2>
   <div class="cap">Price = order-book midpoint. Click a column header to sort. &#9888; spread &gt; 6&cent; (thin). &#9889; 24h volume &ge; 2&times; weekly run-rate. &dagger; structural question &ndash; deadline-adjustment not applied (only one-time-event markets are annualized).</div>
   <div id="coverageNote" class="note"></div>
@@ -431,7 +457,7 @@
   <div class="card"><h2 style="font-size:13px">AI-Macro <span class="sub" id="macroMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="macroTable"></table></div></div>
 </div>
 
-<div class="card">
+<div class="card" id="p-snapshots">
   <h2>Durable snapshots</h2>
   <div class="cap" id="snapCap"></div>
   <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
@@ -442,7 +468,7 @@
 
 <p class="err" id="err"></p>
 
-<footer>
+<footer id="methodology">
   <details id="methodDetails"><summary><strong>Methodology &amp; sources</strong></summary><div id="foot"></div></details>
 </footer>
 
@@ -1355,7 +1381,10 @@ function renderKalshiGpu(){
   // ascending by reference price = the generational ladder, oldest silicon first
   const chips=G.chips.filter(c=>c.ref!=null).sort((a,b)=>a.ref-b.ref);
   $("kgpuStats").innerHTML=chips.map(c=>{
-    const imp=c.implied!=null?`$${c.implied.toFixed(2)}`:"&mdash;";
+    // §5.2: a suppressed median is a thin book, not a broken panel — say so explicitly
+    // rather than printing a dash the reader has to guess at
+    const imp=c.implied!=null?`$${c.implied.toFixed(2)}`
+      :`<span title="Book too thin to price: ${c.strikes} usable strike${c.strikes===1?"":"s"}. Publishing a median off a one-sided book would be an artifact." style="cursor:help">&ndash;</span>`;
     // the weekly quote is P(still above the reference) — it dates the reference:
     // well above 50% means the chip has risen since the strike was set.
     const mv=c.ref_above!=null?` · wk ${(c.ref_above*100).toFixed(0)}% above`:"";
@@ -1662,15 +1691,46 @@ function renderCoverage(){
   if(coverage.suggestions.length) notes.push("Possible successor markets: "+coverage.suggestions.map(s=>`<a href="https://polymarket.com/event/${esc(s.slug)}" target="_blank" rel="noopener">${esc(s.title)}</a>`).join("; "));
   $("coverageNote").innerHTML=notes.length?notes.join("<br>"):"All constituents live; none resolved or dropped.";
 }
+const ageTxt=ms=>{ const h=ms/3600000; return h<1?"<1h":h<48?Math.round(h)+"h":Math.round(h/24)+"d"; };
+// §5.2 panel status. ok = no badge; stale = its source is past its cadence; unreliable =
+// the panel failed its own consistency check, so the body is greyed and the verdict carries
+// the reason. Statuses are recomputed every render, so a panel heals itself when data does.
+function setPanelStatus(cardId, status, label){
+  const card=$(cardId); if(!card) return;
+  card.classList.toggle("is-unreliable", status==="unreliable");
+  const h2=card.querySelector("h2"); if(!h2) return;
+  let b=h2.querySelector(".pstatus");
+  if(status==="ok"){ if(b) b.remove(); return; }
+  if(!b){ b=document.createElement("span"); b.className="pstatus"; h2.appendChild(b); }
+  b.className="pstatus "+status;
+  b.textContent=label;
+}
+// The fetcher's own freshness, banded exactly where the header pill stops calling it good
+// (2h — the Action runs every ~30min, so past 2h it has missed cycles). Sharing the constant
+// is the point: a panel and the pill can never disagree about what "stale" means.
+const FRESH_MS = 2*3600000;
+function fetcherStale(){
+  if(!mkt?.updated) return null;
+  const age=Date.now()-Date.parse(mkt.updated);
+  return age>=FRESH_MS ? {age, label:`data ${ageTxt(age)} old`} : null;
+}
+// every panel whose numbers come out of market-data.json rather than the live Polymarket feed
+const FETCHER_PANELS=["p-vol","p-credit","p-breadth","p-insiders","p-leaps","p-fund",
+                      "p-capex","p-dep","p-kgpu","p-aicredit","p-power"];
+function renderStatuses(){
+  const st=fetcherStale();
+  for(const id of FETCHER_PANELS) setPanelStatus(id, st?"stale":"ok", st?st.label:"");
+  // the monotonicity check already fires; this is what makes the panel *look* broken
+  setPanelStatus("p-val", valUnreliable?"unreliable":"ok", valUnreliable?"⚠ unreliable – see note":"");
+}
 function renderFresh(){
   const now=Date.now();
   const dot=(state)=>`<i style="background:var(--${state})"></i>`;
-  const ageTxt=ms=>{ const h=ms/3600000; return h<1?"<1h":h<48?Math.round(h)+"h":Math.round(h/24)+"d"; };
   const items=[];
   items.push(`<span>${dot(lastPolyRefresh&&now-lastPolyRefresh<180000?"good":"crit")}Polymarket ${lastPolyRefresh?"live · "+new Date(lastPolyRefresh).toLocaleTimeString():"—"}</span>`);
   if(mkt?.updated){
     const age=now-Date.parse(mkt.updated);
-    items.push(`<span>${dot(age<2*3600000?"good":age<36*3600000?"warn":"crit")}Fetcher data ${ageTxt(age)} old</span>`);
+    items.push(`<span>${dot(age<FRESH_MS?"good":age<36*3600000?"warn":"crit")}Fetcher data ${ageTxt(age)} old</span>`);
     if(mkt.equity?.NVDA?.length) items.push(`<span>${dot("good")}Equity through ${mkt.equity.NVDA[mkt.equity.NVDA.length-1].d}</span>`);
     if(mkt.fred?.HY_OAS) items.push(`<span>${dot("good")}FRED ${mkt.fred.HY_OAS.last_date}</span>`);
     if(mkt.gpu) items.push(`<span>${dot("good")}GPU spot ${mkt.gpu.date}</span>`);
@@ -1873,7 +1933,7 @@ function renderAll(){
   renderNvda(); renderH100(); renderB200(); renderKalshiGpu(); renderValuations(); renderLeaps(); renderFundamentals(); renderMacro(); renderDepreciation(); renderAiCredit(); renderPower(); renderCrossVenue();
   renderMainChart(); renderEquity(); renderLeadLag();
   for(const s of SIDES) renderTable(s);
-  renderCoverage(); renderFresh(); takeSnapshot();
+  renderCoverage(); renderFresh(); renderStatuses(); takeSnapshot();
 }
 async function refreshPrices(){
   try{ await fetchMarkets(); await fetchBook(); renderAll();
