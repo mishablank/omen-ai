@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-16T19:42:25Z",
+ "updated": "2026-07-16T21:04:39Z",
  "snapshot_date": "2026-07-16",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -21,7 +21,7 @@
  "lmarena": {
   "best_model": "kimi-k3",
   "best_org": "Moonshot",
-  "best_rank": 10,
+  "best_rank": 9,
   "best_score": 1486,
   "us_leader": "claude-fable-5",
   "us_leader_score": 1507,
@@ -95,10 +95,6 @@
  },
  "equity_extra": {
   "BABA": [
-   {
-    "d": "2026-01-16",
-    "c": 165.4
-   },
    {
     "d": "2026-01-20",
     "c": 162.39
@@ -589,14 +585,10 @@
    },
    {
     "d": "2026-07-16",
-    "c": 117.83
+    "c": 117.49
    }
   ],
   "KWEB": [
-   {
-    "d": "2026-01-16",
-    "c": 35.71
-   },
    {
     "d": "2026-01-20",
     "c": 34.97
@@ -1087,15 +1079,15 @@
    },
    {
     "d": "2026-07-16",
-    "c": 27.45
+    "c": 27.48
    }
   ]
  },
  "openrouter_week": {
   "week": "2026-07-13",
-  "cn_share": 0.6029,
+  "cn_share": 0.6024,
   "us_share": 0.3261,
-  "spi": 1.849,
-  "total_tokens": 35479422282333
+  "spi": 1.848,
+  "total_tokens": 36372391515778
  }
 }
