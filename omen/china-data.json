@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-16T18:08:30Z",
+ "updated": "2026-07-16T19:42:25Z",
  "snapshot_date": "2026-07-16",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -19,14 +19,14 @@
   "note": "Qwen app >200M MAU, Doubao >100M DAU, DeepSeek ~82M WAU - overwhelmingly domestic."
  },
  "lmarena": {
-  "best_model": "qwen3.7-max-preview",
-  "best_org": "Alibaba",
-  "best_rank": 17,
-  "best_score": 1475,
+  "best_model": "kimi-k3",
+  "best_org": "Moonshot",
+  "best_rank": 10,
+  "best_score": 1486,
   "us_leader": "claude-fable-5",
   "us_leader_score": 1507,
-  "top10": 0,
-  "top20": 1,
+  "top10": 1,
+  "top20": 2,
   "asof": "2026-07-16"
  },
  "hf": {
@@ -589,7 +589,7 @@
    },
    {
     "d": "2026-07-16",
-    "c": 118.06
+    "c": 117.83
    }
   ],
   "KWEB": [
@@ -1087,15 +1087,15 @@
    },
    {
     "d": "2026-07-16",
-    "c": 27.51
+    "c": 27.45
    }
   ]
  },
  "openrouter_week": {
   "week": "2026-07-13",
   "cn_share": 0.6029,
-  "us_share": 0.3264,
-  "spi": 1.847,
-  "total_tokens": 34992942515533
+  "us_share": 0.3261,
+  "spi": 1.849,
+  "total_tokens": 35479422282333
  }
 }
