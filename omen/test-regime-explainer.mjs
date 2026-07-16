@@ -132,6 +132,19 @@ const CASES = [
     expect: { sayHas: "Regime: Elevated – tripped by the broad gauge itself.", broad: true },
   },
   {
+    // Stressed tripped narrowly (crash markets 45%) while the gauge is only Elevated (40).
+    // "broad" is tier-relative: the Stressed gauge rule needs 55, so the gauge did NOT trip
+    // this — it must read as a single-rule trip with a hollow chip, not "the gauge itself".
+    label: "stressed-narrow-gauge-elevated",
+    inp: { gauge: 40, z: 0, level: 45, stack: stackAt(2) },
+    regime: "stressed",
+    expect: {
+      sayHas: "Regime: Stressed – tripped by a single rule, not broad pressure.",
+      ctxHas: "The blended gauge is 40/100 (Elevated) – broad markets are not confirming.",
+      broad: false,
+    },
+  },
+  {
     // several rules tripped while the blended gauge is still Calm — the "not broad" plural say
     label: "stressed-multi-trip-not-broad",
     inp: { gauge: 24, z: 0, level: 41, stack: stackAt(32) },

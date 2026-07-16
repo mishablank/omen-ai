@@ -998,7 +998,13 @@ function sinceYesterday(r, g){
 // no methodology (§2.2). Every number is interpolated from the live rule set, never baked in.
 function regimeExplainer(reg){
   const R={calm:"Calm",elevated:"Elevated",stressed:"Stressed"}[reg.r];
-  const g=reg.inp.gauge, band=gaugeBand(g), broad=g!=null&&g>=35, n=reg.trips.length;
+  // "broad" = the blended gauge confirms this regime's own tier, so the threshold is
+  // tier-relative: a Stressed regime is only broad once the gauge reaches the Stressed
+  // band (55), not merely Elevated (35). Otherwise a narrow crash-market trip with a
+  // mid-range gauge would falsely read "tripped by the broad gauge itself" and show a
+  // solid chip, which is exactly the case the hollow chip exists to distinguish.
+  const g=reg.inp.gauge, band=gaugeBand(g), n=reg.trips.length;
+  const broad = g!=null && g>=(reg.r==="stressed"?55:35);
   const closest=()=>reg.rules.filter(r=>r.tier==="elevated"&&!r.quiet&&r.valTxt).sort((a,b)=>b.near-a.near)[0];
 
   let say;
@@ -2031,6 +2037,7 @@ function applyRegimeTitle(){
   document.title = prefix + "AI Crash Monitor" + suffix;
 }
 function navigate(v, push=true, anchor=null){
+  if(!VIEWS[v]) v="today";   // never write an unknown view to the URL bar; applyView clamps too
   const path = (v==="today" ? BASE : `${BASE}/${v}`) + (anchor?`#${anchor}`:"");
   if(push) history.pushState({v,anchor}, "", path);
   applyView(v);
@@ -2140,7 +2147,8 @@ $("foot").innerHTML=`<p style="margin-top:8px"><strong>Composite.</strong> 100×
 assembleGpuStory();
 applyView(viewFromPath());   // before any fetch, so the right view paints immediately
 // a shared cross-link URL (/…/markets#p-breadth) must land on its panel, not the view top
-if(location.hash){ const t=$(location.hash.slice(1)); if(t) t.scrollIntoView({block:"start"}); }
+function scrollToHash(){ if(!location.hash) return; const t=$(location.hash.slice(1)); if(t) t.scrollIntoView({block:"start"}); }
+scrollToHash();
 
 (async()=>{
   try{
@@ -2150,6 +2158,8 @@ if(location.hash){ const t=$(location.hash.slice(1)); if(t) t.scrollIntoView({bl
     computeLeadLagCache();
     gaugeHistCache=computeGaugeHistory(90);
     renderAll();
+    // panels above the anchor grew from placeholder to full content, so realign the deep link
+    scrollToHash();
     $("status").textContent="Updated "+new Date().toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
     setInterval(refreshPrices,60_000);
     setInterval(refreshHeavy,600_000);

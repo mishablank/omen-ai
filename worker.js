@@ -10,9 +10,12 @@
 // On an R2 miss (e.g. before the first Action upload) it falls back to the bundled
 // asset via env.ASSETS, so the site never hard-breaks during bootstrap.
 
-// The dashboard's deep-dive views. These are not separate assets — they are the same
-// document, so this set is the only place a route is declared.
+// The dashboard's views. These are not separate assets — they are the same document, so
+// this set is the only place a route is declared. "today" is included so a guessed or
+// bookmarked /polymarket-ai-index/today renders the Today view (the client reads it back
+// from the path) instead of a bare 404; the in-app nav still links Today to the base path.
 const DASHBOARD_VIEWS = new Set([
+  "today",
   "markets",
   "gpu",
   "prediction-markets",
