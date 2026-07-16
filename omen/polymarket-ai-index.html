@@ -606,8 +606,9 @@ const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
 const fmtVol = v => v>=1e6 ? "$"+(v/1e6).toFixed(1)+"M" : v>=1e3 ? "$"+(v/1e3).toFixed(0)+"K" : "$"+Math.round(v);
 const fmtUsd = v => { const a=Math.abs(v), s=v<0?"−$":"$"; return a>=1e9?s+(a/1e9).toFixed(1)+"B":a>=1e6?s+(a/1e6).toFixed(0)+"M":a>=1e3?s+(a/1e3).toFixed(0)+"K":s+Math.round(a); };
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-// toFixed() emits a hyphen-minus; prose uses a real minus sign
-const mnum = (v,d=0) => (v<0?"−":"")+Math.abs(v).toFixed(d);
+// toFixed() emits a hyphen-minus; prose uses a real minus sign. Sign off the *rounded*
+// value, or a small negative renders as "−0" at low precision.
+const mnum = (v,d=0) => { const s=Math.abs(v).toFixed(d); return (v<0 && +s!==0 ? "−" : "")+s; };
 // §4.1 cross-link: a fact lives in exactly one panel; everywhere else points at it.
 const xlink = (label, view, panel) =>
   `<a href="/polymarket-ai-index/${view}#${panel}" data-nav="${view}" data-anchor="${panel}" style="color:var(--text-secondary)">${label} <span style="color:var(--acc)">&#8599;</span></a>`;

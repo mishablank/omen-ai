@@ -29,7 +29,9 @@ function build({ gauge, z, level, stack, snaps = {} }) {
   const sig = {
     gauge: gauge == null ? { score: null } : { score: gauge },
     bearMkt: { z },
-    stack: stack.map((s) => ({ name: s.name, plain: s.plain, v: s.v, isDelta: !!s.isDelta })),
+    // pass rows through verbatim — rebuilding them here once dropped `pl`, which silently
+    // made regimeInputs' stackPl unreachable and left stack-sourced plural grammar untested
+    stack,
   };
   const localStorage = { getItem: () => JSON.stringify(snaps) };
   const factory = new Function(
@@ -113,6 +115,28 @@ const CASES = [
     inp: { gauge: 24, z: 0, level: 41, stack: stackAt(8) },
     regime: "stressed",
     expect: { trigHas: "Trigger: crash-market odds at 41.0%, above the 40% rule threshold.", ctxHas: "This clears if crash-market odds close below 40%" },
+  },
+  {
+    // plural carried by the STACK row rather than a hard-coded rule: regimeInputs must
+    // propagate `pl` off the winning row, or the verb silently reverts to singular
+    label: "stressed-stack-trigger-plural",
+    inp: { gauge: 24, z: 0, level: 3, stack: [{ name: "US recession probability", plain: "US recession odds", pl: true, v: 31 }] },
+    regime: "stressed",
+    expect: { trigHas: "Trigger: US recession odds at 31.0%, above the 25% rule threshold.", ctxHas: "This clears if US recession odds close below 25%" },
+  },
+  {
+    // the gauge rule firing alone — reachable when only the broad gauge crosses its band
+    label: "elevated-gauge-alone",
+    inp: { gauge: 40, z: 0, level: 3, stack: stackAt(2) },
+    regime: "elevated",
+    expect: { sayHas: "Regime: Elevated – tripped by the broad gauge itself.", broad: true },
+  },
+  {
+    // several rules tripped while the blended gauge is still Calm — the "not broad" plural say
+    label: "stressed-multi-trip-not-broad",
+    inp: { gauge: 24, z: 0, level: 41, stack: stackAt(32) },
+    regime: "stressed",
+    expect: { sayHas: "rules have tripped, but the broad gauge is still calm", ctxHas: "This clears when all 2 triggers fall back below their thresholds", broad: false },
   },
   {
     label: "elevated-single-trip",
