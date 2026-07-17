@@ -781,7 +781,11 @@ function applyServerData(mkt){
   // composite here would let regulatory odds trip a crash regime.
   const crashLevel=indexOf("bear","mkt");
   let regime="calm";
-  if(sg.score>=55||crashLevel>=40||bubble>=25) regime="stressed";
+  // Stressed needs a broad or confirmed metric — the blended gauge (mean of all families)
+  // or the crash basket average. A single market (the bubble-burst market included) can
+  // raise Elevated but never trips red on its own; that keeps this headline in step with
+  // the monitor, which caps single-signal trips at Elevated for the same reason.
+  if(sg.score>=55||crashLevel>=40) regime="stressed";
   else if(sg.score>=35||crashLevel>=25||bubble>=15) regime="elevated";
   const R=REGIME_META[regime];
   GAUGE=sg.score;
@@ -814,8 +818,7 @@ function applyServerData(mkt){
   const q=document.querySelector(".driver .q"), meta=document.querySelector(".driver .meta");
   if(q&&meta){
     const trips=[];
-    if(bubble>=25) trips.push(`AI bubble-burst market at ${bubble.toFixed(1)}% – single-market trip (≥25% = Stressed)`);
-    else if(bubble>=15) trips.push(`AI bubble-burst market at ${bubble.toFixed(1)}% – single-market trip (≥15% = Elevated)`);
+    if(bubble>=15) trips.push(`AI bubble-burst market at ${bubble.toFixed(1)}% – single-market signal (≥15% = Elevated; a lone market can't reach Stressed)`);
     if(crashLevel>=25) trips.push(`Crash markets at ${crashLevel.toFixed(1)} (≥25 = Elevated)`);
     if(sg.score>=35) trips.push(`Blended gauge at ${sg.score.toFixed(0)} (≥35 = Elevated)`);
     if(regime!=="calm"&&trips.length){

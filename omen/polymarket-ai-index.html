@@ -780,15 +780,23 @@ function computeRegime(){
   let stackMax=0, stackName="";
   for(const x of sig.stack) if(x.v!=null&&!x.isDelta&&x.v>stackMax){ stackMax=x.v; stackName=x.name; }
   const stressed=[], elevated=[];
-  if(g!=null&&g>=55) stressed.push(`gauge ${g.toFixed(0)} ≥ 55`);
-  if(level>=40) stressed.push(`crash markets ${level.toFixed(1)} ≥ 40`);
-  if(level>=25&&z>=2) stressed.push(`crash ${level.toFixed(1)} ≥ 25 with z ${z.toFixed(1)} ≥ 2`);
-  if(stackMax>=25) stressed.push(`${stackName} at ${stackMax.toFixed(1)}% ≥ 25%`);
+  // STRESSED requires BROAD or CONFIRMED stress — never a single market on its own.
+  // The three triggers below are all multi-signal: the blended gauge is the mean of six
+  // families (broad by construction); the crash basket is a 3-market average; and the
+  // basket + z path demands the level be statistically confirmed by its own momentum.
+  // A lone distress market (China competition, a single bubble print, one euphoria read)
+  // can move ELEVATED but can no longer trip red by itself — that produced false Stressed
+  // regimes when e.g. the China top-3 competition market sat at 35% while the gauge was calm.
+  if(g!=null&&g>=55) stressed.push(`blended gauge ${g.toFixed(0)} ≥ 55 — broad stress across families`);
+  if(level>=40) stressed.push(`crash basket ${level.toFixed(1)} ≥ 40`);
+  if(level>=25&&z>=2) stressed.push(`crash basket ${level.toFixed(1)} ≥ 25 confirmed by z ${z.toFixed(1)} ≥ 2`);
   if(stressed.length) return { r:"stressed", why:stressed };
+  // ELEVATED is the ceiling for any single early-warning signal, including the hottest
+  // individual market in the distress stack (stackMax).
   if(g!=null&&g>=35) elevated.push(`gauge ${g.toFixed(0)} ≥ 35`);
   if(level>=25) elevated.push(`crash markets ${level.toFixed(1)} ≥ 25`);
   if(z>=1.5) elevated.push(`crash z-score ${z.toFixed(1)} ≥ 1.5`);
-  if(stackMax>=15) elevated.push(`${stackName} at ${stackMax.toFixed(1)}% ≥ 15%`);
+  if(stackMax>=15) elevated.push(`${stackName} at ${stackMax.toFixed(1)}% ≥ 15% — single-market signal, capped at Elevated`);
   if(elevated.length) return { r:"elevated", why:elevated };
   return { r:"calm", why:[] };
 }

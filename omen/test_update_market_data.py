@@ -215,10 +215,17 @@ def test_gauge_families_and_regime():
     assert round(fam["equity"]) == 50              # -25%/50 and -20%/40 both 50
     assert 0 < score < 100
     assert umd.compute_regime(score, price) in ("calm", "elevated", "stressed")
-    # bubble >= 25% forces stressed regardless of gauge
-    assert umd.compute_regime(10, {umd.BUBBLE_ID: 0.30}) == "stressed"
-    # bubble >= 15% forces at least elevated
-    assert umd.compute_regime(10, {umd.BUBBLE_ID: 0.16}) == "elevated"
+    # A lone market can raise Elevated but never trips Stressed on its own. Hold the rest
+    # of the crash sleeve cold so these exercise the single-market path, not the sleeve
+    # average (which stays well under 25 here).
+    cold = {i: 0.02 for i in umd.BEAR_SLEEVES["mkt"][1:]}
+    # bubble >= 15% forces at least elevated...
+    assert umd.compute_regime(10, dict(cold, **{umd.BUBBLE_ID: 0.16})) == "elevated"
+    # ...but even a very hot single market is capped at elevated, not stressed
+    assert umd.compute_regime(10, dict(cold, **{umd.BUBBLE_ID: 0.30})) == "elevated"
+    assert umd.compute_regime(10, dict(cold, **{umd.BUBBLE_ID: 0.50})) == "elevated"
+    # a cold single market with a calm gauge and cold sleeve stays calm
+    assert umd.compute_regime(10, dict(cold, **{umd.BUBBLE_ID: 0.10})) == "calm"
 
 
 def test_bear_basket_is_the_union_of_its_sleeves():
