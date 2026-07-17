@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-17T20:28:38Z",
+ "updated": "2026-07-17T21:25:11Z",
  "snapshot_date": "2026-07-17",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -1093,9 +1093,9 @@
  },
  "openrouter_week": {
   "week": "2026-07-13",
-  "cn_share": 0.6016,
-  "us_share": 0.3244,
+  "cn_share": 0.6015,
+  "us_share": 0.3243,
   "spi": 1.855,
-  "total_tokens": 45824463615255
+  "total_tokens": 46145404547096
  }
 }
