@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-17T09:15:32Z",
+ "updated": "2026-07-17T11:26:22Z",
  "snapshot_date": "2026-07-17",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -1088,6 +1088,6 @@
   "cn_share": 0.6015,
   "us_share": 0.326,
   "spi": 1.845,
-  "total_tokens": 40597864586147
+  "total_tokens": 41962294757902
  }
 }
