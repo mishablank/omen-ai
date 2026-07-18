@@ -467,6 +467,16 @@
   </details>
 </div>
 
+<div class="card" id="p-claims" data-view="prediction-markets">
+  <h2>Singularity claims watch <span class="sub" style="font-weight:400">&ndash; the bull narrative vs. the tape</span></h2>
+  <div class="vline" id="claimsVerdict"></div>
+  <div class="tscroll"><table id="claimsTable"></table></div>
+  <details class="howto"><summary>How to read this</summary>
+    <div class="cap">Five falsifiable claims from the economic-singularity thesis, each read against live prediction markets or official data. The interesting motion is convergence: odds repricing <em>up toward</em> the narrative means euphoria is broadening beyond talk &ndash; and a claim failing in the labor data is the backlash channel arming.</div>
+    <div class="note" id="claimsNote"></div>
+  </details>
+</div>
+
 <div class="card" id="p-equity" data-view="markets">
   <h2>Equity check &ndash; NVDA &amp; SOXX vs. the bear index</h2>
   <div class="cap">Closes rebased to 100 at window start. Shown on its own axis &ndash; different units never share one.</div>
@@ -590,6 +600,14 @@ const BUBBLE_ID = "691340";
 const FUNDING_IDS = ["656312","2413330"];
 // Bubble-sentiment markets: existing bull constituents whose extreme probability = euphoria
 const BUBBLE_SENTIMENT_IDS = ["656313","653788","2413330"];
+// Claims-watch markets tracked OUTSIDE the indexes (they price the singularity narrative's
+// falsifiable claims, not the AI cycle itself, so they must move no composite).
+// IDs verified against the Gamma API 2026-07-17.
+const CLAIM_OPTIMUS_ID = "1243588";    // Will Tesla release Optimus by December 31, 2026?
+const CLAIM_ROBOTAXI_ID = "2745579";   // Will Tesla launch robotaxis in California by December 31?
+const CLAIM_IDS = [CLAIM_OPTIMUS_ID, CLAIM_ROBOTAXI_ID];
+const CLAIM_AGI_ID = "653788";         // existing bull constituent: OpenAI announces AGI before 2027
+const CLAIM_ARENA_ID = "1087074";      // existing bull constituent: any model hits 1550 Arena
 const GAMMA = "https://gamma-api.polymarket.com", CLOB = "https://clob.polymarket.com";
 
 let weighting="equal", basis="raw", rangeDays=30;
@@ -625,8 +643,10 @@ function parseMarket(m){
     url:m.events&&m.events[0]?`https://polymarket.com/event/${m.events[0].slug}`:`https://polymarket.com/market/${m.slug}` };
 }
 async function fetchMarkets(){
-  const qs=CONSTITUENTS.map(c=>"id="+c.id).join("&");
-  const res=await fetch(`${GAMMA}/markets?${qs}&limit=${CONSTITUENTS.length+10}`);
+  // claim markets ride the same request; coverage below still counts only CONSTITUENTS
+  const ids=CONSTITUENTS.map(c=>c.id).concat(CLAIM_IDS);
+  const qs=ids.map(i=>"id="+i).join("&");
+  const res=await fetch(`${GAMMA}/markets?${qs}&limit=${ids.length+10}`);
   if(!res.ok) throw new Error("Gamma API "+res.status);
   for(const m of await res.json()) markets.set(String(m.id), parseMarket(m));
   coverage.excluded=[]; coverage.loaded=0;
@@ -737,6 +757,138 @@ async function fetchValuations(){
   }
   valuations = firms.length?{firms}:null;
 }
+
+/* ================= Claims watch: pure helpers ================= */
+// The economic-singularity thesis (Raoul Pal, Real Vision, Jul 2026) made five falsifiable
+// claims. Each is read against capital-at-risk markets or official tape; the dot escalates as
+// the tape moves TOWARD the world the claim describes — euphoria broadening, or the labor
+// backlash channel arming. Pure functions up to the fetch/render marker; the .mjs tests slice this block.
+function yoyPct(series){
+  if(!series||series.length<13) return null;
+  const last=series[series.length-1], t=Date.parse(last.d)-365.25*86400000;
+  let best=null,bd=Infinity;
+  for(const p of series){ const g=Math.abs(Date.parse(p.d)-t); if(g<bd){ bd=g; best=p; } }
+  // a nearest match further than ~1.5 months from "a year ago" is a data hole, not a YoY
+  return (best&&best.c&&bd<=45*86400000)?(last.c/best.c-1)*100:null;
+}
+function ptsChange(series,n){
+  if(!series||series.length<=n) return null;
+  return series[series.length-1].c-series[series.length-1-n].c;
+}
+function probAbove(brackets,lo){
+  if(!brackets) return null;
+  let s=0,found=false;
+  for(const b of brackets){ if(b.lo!=null&&b.lo>=lo&&b.p!=null){ s+=b.p; found=true; } }
+  return found?s:null;
+}
+// signed prose number: house minus (U+2212) for negatives, + for positives, sign off the
+// rounded value so a small negative never prints "−0.0" (same rule as mnum)
+const snum=(v,d=1)=>{ const s=Math.abs(v).toFixed(d); return (v<0&&+s!==0?"−":v>0&&+s!==0?"+":"")+s; };
+function claimReads(inp){
+  const i=inp||{};
+  const euph=p=>p==null?null:p>=50?{cls:"crit",label:"market agrees"}:p>=20?{cls:"warn",label:"market split"}:{cls:"good",label:"narrative ahead of market"};
+  const rows=[];
+  { const p=i.agi!=null?i.agi:null;
+    rows.push({ key:"agi", claim:"“AI models smarter than anyone within the next year” — AGI imminent",
+      metrics:[ {label:"OpenAI announces AGI before 2027 (Polymarket)", v:i.agi, unit:"%"},
+                {label:"Any model hits 1550 Chatbot Arena by Dec 31", v:i.arena, unit:"%"} ],
+      band:euph(p),
+      verdict:p==null?"No live market read."
+        :p>=50?`AGI-by-2027 odds at ${p.toFixed(1)}% — capital now agrees with the narrative.`
+        :p>=20?`AGI-by-2027 odds at ${p.toFixed(1)}% — live, but far from consensus.`
+        :`Markets price AGI-by-2027 at ${p.toFixed(1)}% — the narrative runs far ahead of paid odds.` }); }
+  { const vals=[i.optimus,i.robotaxi].filter(v=>v!=null), p=vals.length?Math.max(...vals):null;
+    rows.push({ key:"robots", claim:"Robots at scale “in the next 12 months” (factories → retail → services)",
+      metrics:[ {label:"Tesla releases Optimus by Dec 31, 2026", v:i.optimus, unit:"%"},
+                {label:"Tesla robotaxis live in California by Dec 31", v:i.robotaxi, unit:"%"} ],
+      band:euph(p),
+      verdict:p==null?"No live market read."
+        :`Best-priced physical-AI milestone trades at ${p.toFixed(1)}% — ${p>=50?"deployment is now the market's base case.":p>=20?"deployment odds are real but contested.":"the market treats 12-month scale deployment as a long shot."}` }); }
+  { const p=i.gdpAbove3;
+    const band=p==null?null:p>=50?{cls:"crit",label:"repricing toward the claim"}:p>=25?{cls:"warn",label:"upside tail fattening"}:{cls:"good",label:"consensus growth"};
+    rows.push({ key:"gdp", claim:"“10–30% GDP growth becomes possible” — the economy moves faster than ever",
+      metrics:[ {label:"Market-implied P(quarterly growth ≥ 3% SAAR)", v:p, unit:"%"},
+                {label:"Latest realized real GDP growth (SAAR)", v:i.gdpLast, unit:"%", dp:1, signed:true} ],
+      band,
+      verdict:p==null?"No live bracket read."
+        :`The GDP bracket ladder tops out at 3.5% — double-digit growth is not even listed. P(≥3%) is ${p.toFixed(1)}%${i.gdpLast!=null?`, realized growth ${snum(i.gdpLast,1)}%`:""}.` }); }
+  { const g=i.goodsYoy;
+    const band=g==null?null:g<=-0.5?{cls:"crit",label:"deflation on the tape"}:g<0.5?{cls:"warn",label:"disinflation"}:{cls:"good",label:"no deflation"};
+    rows.push({ key:"deflation", claim:"“The most deflationary force the world has ever seen”",
+      metrics:[ {label:"Core goods CPI, YoY", v:g, unit:"%", dp:1, signed:true},
+                {label:"Residential electricity CPI, YoY", v:i.elecYoy, unit:"%", dp:1, signed:true},
+                {label:"A100 rent vs B200 (last-gen → current-gen)", v:i.gpuRatio!=null?i.gpuRatio*100:null, unit:"%", dp:0} ],
+      band,
+      verdict:g==null?"No CPI read."
+        :(i.gpuRatio!=null?`Deflation is real in silicon (last-gen GPU rents at ${(i.gpuRatio*100).toFixed(0)}% of current-gen) — but `:"")+
+         (g<=-0.5?`core goods prices are falling (${snum(g,1)}% YoY): the claim is validating on the consumer tape.`
+          :g<0.5?`core goods CPI is only flat (${snum(g,1)}% YoY) — disinflation, not a deflationary bomb.`
+          :`core goods CPI is still rising (${snum(g,1)}% YoY)${i.elecYoy!=null&&i.elecYoy>0?` and electricity ${snum(i.elecYoy,1)}%`:""} — no economy-wide deflation on the tape.`) }); }
+  { const u=i.un6, l=i.lfpr6;
+    const holding=l==null||l>-0.15;
+    const band=u==null?null:(u>=0.3&&holding)?{cls:"crit",label:"displacement signature"}:u>=0.15?{cls:"warn",label:"labor softening"}:{cls:"good",label:"claim holding"};
+    rows.push({ key:"labor", claim:"“AI replaces retiring workers” — no displacement shock, participation falls only on demographics",
+      metrics:[ {label:"Unemployment rate, 6-month change", v:u, unit:" pt", dp:1, signed:true},
+                {label:"Prime-age (25–54) participation, 6-month change", v:l, unit:" pt", dp:1, signed:true} ],
+      band,
+      verdict:u==null?"No labor read."
+        :(u>=0.3&&holding)?`Unemployment ${snum(u,1)} pt in 6 months while prime-age participation holds — the displacement signature the claim says cannot happen.`
+        :u>=0.15?(holding?`Unemployment drifting up (${snum(u,1)} pt / 6mo) — not yet a displacement signature; watch the split.`:`Unemployment and participation falling together — a demographic/recession mix, not AI displacement.`)
+        :`Unemployment flat (${snum(u,1)} pt / 6mo) — consistent with replacement-not-displacement so far.` }); }
+  return rows;
+}
+/* ================= Claims watch: fetch & render ================= */
+let gdpq=null;
+async function fetchGdp(){
+  // quarterly event, rolls over like the NVDA/H100 discoveries; earliest end date = current quarter
+  const ev=await discoverEvent("US GDP growth in Q", /US GDP growth in Q\d 20\d\d\?/i, null);
+  if(!ev){ gdpq=null; return; }
+  const b=[];
+  for(const m of ev.markets||[]){ if(m.closed) continue;
+    const q=m.question||"", p=parseFloat(JSON.parse(m.outcomePrices||'["0"]')[0]); let lo=null,hi=null,mm;
+    if((mm=q.match(/between ([\d.]+)% and ([\d.]+)%/i))){lo=+mm[1];hi=+mm[2];}
+    else if((mm=q.match(/less than ([\d.]+)%/i))){hi=+mm[1];}
+    else if((mm=q.match(/greater than ([\d.]+)%/i))){lo=+mm[1];}
+    else continue;
+    b.push({lo,hi,p}); }
+  b.sort((x,y)=>(x.lo??-1)-(y.lo??-1));
+  gdpq={ title:ev.title, url:`https://polymarket.com/event/${ev.slug}`, brackets:b };
+}
+function claimInputs(){
+  const live=id=>{ const m=markets.get(id); return m&&!m.closed?m.yes*100:null; };
+  const F=mkt?.fred||{};
+  const kg=c=>mkt?.kalshi_gpu?.chips?.find(x=>x.chip===c);
+  const a=kg("A100"), b=kg("B200");
+  const pa=gdpq?probAbove(gdpq.brackets,3.0):null;
+  return {
+    agi:live(CLAIM_AGI_ID), arena:live(CLAIM_ARENA_ID),
+    optimus:live(CLAIM_OPTIMUS_ID), robotaxi:live(CLAIM_ROBOTAXI_ID),
+    gdpAbove3:pa!=null?pa*100:null,
+    gdpLast:F.GDP_GROWTH?.last??null,
+    goodsYoy:yoyPct(F.CORE_GOODS_CPI?.series),
+    elecYoy:yoyPct(F.ELEC_CPI?.series),
+    gpuRatio:(a?.ref&&b?.ref)?a.ref/b.ref:null,
+    un6:ptsChange(F.UNRATE?.series,6),
+    lfpr6:ptsChange(F.LFPR_PRIME?.series,6),
+  };
+}
+function renderClaims(){
+  const rows=claimReads(claimInputs());
+  const dotc={good:"var(--good)",warn:"var(--warn)",crit:"var(--crit)"};
+  const fmt=m=>m.v==null?"&ndash;":((m.signed?snum(m.v,m.dp??1):m.v.toFixed(m.dp??1))+(m.unit||""));
+  $("claimsTable").innerHTML=`<tr><th>Claim (Jul 2026)</th><th>Metric</th><th class="num">Reading</th><th>Tape says</th></tr>`+
+    rows.map(r=>{
+      const n=r.metrics.length;
+      return r.metrics.map((m,k)=>`<tr>${k===0?`<td rowspan="${n}" style="min-width:220px"><strong>${esc(r.claim)}</strong><div class="sub" style="margin-top:4px">${esc(r.verdict)}</div></td>`:""}<td>${esc(m.label)}</td><td class="num">${fmt(m)}</td>${k===0?`<td rowspan="${n}" style="white-space:nowrap"><span style="background:${r.band?dotc[r.band.cls]:"var(--muted)"};display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px"></span>${r.band?esc(r.band.label):"no data"}</td>`:""}</tr>`).join("");
+    }).join("");
+  const hot=rows.filter(r=>r.band&&r.band.cls==="crit"), wm=rows.filter(r=>r.band&&r.band.cls==="warn");
+  $("claimsVerdict").innerHTML = hot.length?`The tape currently <strong>validates ${hot.length} of 5</strong> singularity claims &ndash; euphoria (or its backlash channel) moving past the narrative stage.`
+    : wm.length?`No claim is validated by the tape; <strong>${wm.length}</strong> ${wm.length>1?"are":"is"} moving its way.`
+    : `None of the five claims is validated by capital-at-risk pricing or official data &ndash; the narrative runs ahead of the tape on every count.`;
+  const src=gdpq?` GDP brackets: <a href="${esc(gdpq.url)}" target="_blank" rel="noopener">${esc(gdpq.title)}</a>.`:"";
+  $("claimsNote").innerHTML=`Claims from Raoul Pal&rsquo;s &ldquo;AI Revolution: How to Invest&rdquo; (Real Vision, Jul 9 2026) &ndash; the maximal-bull economic-singularity thesis. Dots escalate as the tape moves <em>toward</em> the world each claim describes: markets converging up toward the narrative is euphoria broadening (itself a crash-monitor signal), and a displacement signature in the labor data is the political-backlash channel going live. AGI/Arena and Optimus/robotaxi odds are live Polymarket mids tracked outside the indexes (they move no composite); CPI, unemployment, participation and GDP growth are FRED series via the fetcher.${src}`;
+}
+
 // Under file:// browsers block fetch() of sibling files; a <script src> tag is not blocked.
 // The fetcher emits market-data.js alongside the JSON/CSV, exposing both as globals; we fall
 // back to it only when fetch() fails (double-clicked file), so http:// still gets fresh data.
@@ -2100,7 +2252,7 @@ function renderAll(){
   computeSignals();
   renderGauge(); renderTiles(); renderRegime(); renderStack(); renderMomentum();
   renderVol(); renderCredit(); renderBreadth(); renderInsiders();
-  renderNvda(); renderH100(); renderB200(); renderKalshiGpu(); renderValuations(); renderLeaps(); renderFundamentals(); renderMacro(); renderDepreciation(); renderAiCredit(); renderPower(); renderCrossVenue();
+  renderNvda(); renderH100(); renderB200(); renderKalshiGpu(); renderValuations(); renderLeaps(); renderFundamentals(); renderMacro(); renderDepreciation(); renderAiCredit(); renderPower(); renderCrossVenue(); renderClaims();
   renderMainChart(); renderEquity(); renderLeadLag();
   for(const s of SIDES) renderTable(s);
   renderWhatChanged(); renderNavCards();
@@ -2142,6 +2294,7 @@ $("foot").innerHTML=`<p style="margin-top:8px"><strong>Composite.</strong> 100×
 <p style="margin-top:8px"><strong>Kedrosky panels.</strong> Four non-price or real-economy signals from Paul Kedrosky&rsquo;s bubble thesis. <em>AI capex vs. the economy</em>: combined filer capex (SEC), annualized, over nominal GDP (FRED GDP, SAAR); &ldquo;share of GDP growth&rdquo; is Δ(annualized capex)/Δ(GDP), noisy but the scale argument. <em>GPU depreciation gap</em>: combined D&amp;A addback vs. cash capex; a falling ratio while capex climbs flags cost recognition lagging the spend (the extended-useful-life earnings flatter). <em>AI &amp; private-credit stress</em>: BIZD (BDC/private-credit proxy) + CCC OAS + drawdown of the levered-AI names (CRWV/ORCL/NBIS/IREN) &ndash; no free issuer-level spread exists for neocloud debt, so equity stands in. <em>Power &amp; electricity</em>: residential electricity CPI (FRED) plus XLU and merchant-power equities (VST/CEG). All are slow-moving or proxied by design; read them as context, not triggers.</p>
 <p style="margin-top:8px"><strong>Lead-lag.</strong> Non-overlapping windows, 2,000-shuffle permutation test, recomputed on history refresh only. The bubble market is reflexive with NVDA/SOXX so the ex-bubble row is the cleaner read – treat all of it as descriptive.</p>
 <p style="margin-top:8px"><strong>Cadence &amp; sources.</strong> Live Polymarket data (Gamma + CLOB, incl. bubble-market order-book depth) refreshes every 60s; histories, market-data.json and cached studies every 10min; NVDA/H100 events re-discovered hourly. market-data.json is produced by <code>update-market-data.py</code> (GitHub Action, ~30min cadence): Yahoo Finance (equity/vol/credit proxies), CBOE delayed quotes (25Δ risk reversals, single-name IV term structure, LEAPS tail), FRED keyless CSV (HY OAS, CCC OAS, NFCI, nominal GDP, electricity CPI), SEC EDGAR Form 4 (open-market S/P only, recent-filings sample), SEC XBRL companyconcept (capex/OCF/depreciation fundamentals), vast.ai public asks (realized H100 $/GPU-hr), Kalshi public API (cross-venue themes <em>and</em> the GPU compute markets: H100/H200/B200/A100 weekly + monthly, quotes unauthenticated, settled on the Ornn index), Metaculus (optional token), Manifold public API (play-money). Constituents curated 2026-07-10; not investment advice.</p>
+<p style="margin-top:8px"><strong>Singularity claims watch.</strong> Five falsifiable claims from Raoul Pal&rsquo;s economic-singularity thesis (&ldquo;AI Revolution: How to Invest&rdquo;, Real Vision, Jul 2026), read against the tape. AGI-by-2027 and Chatbot-Arena odds reuse existing bull constituents; Optimus-release and California-robotaxi odds are pinned Polymarket markets tracked <em>outside</em> the indexes, so they move no composite; the quarterly US-GDP bracket event is re-discovered like the NVDA/H100 events. Core goods CPI (CUSR0000SACL1E), residential electricity CPI, unemployment (UNRATE), prime-age participation (LNS11300060) and realized real GDP growth (A191RL1Q225SBEA) come from FRED via the fetcher. Bands: market odds &ge;50% = the claim is priced, &ge;20% = live; goods CPI &le; &minus;0.5% YoY = deflation validating; unemployment +0.3pt/6mo while prime-age participation holds = displacement signature. The panel feeds no gauge family &ndash; it is context: euphoria broadening toward the narrative, or the labor/backlash channel arming, both of which the crash gauge would only see later.</p>
 <p style="margin-top:8px"><strong>GPU compute, two venues, two indices.</strong> Polymarket and Kalshi both price GPU rents, but they do not settle on the same underlying: Kalshi resolves on the <a href="https://dashboard.ornnai.com/" target="_blank" rel="noopener">Ornn</a> index, while this dashboard&rsquo;s realized tape is vast.ai&rsquo;s public asks &ndash; a decentralized marketplace of interruptible hosts that prints structurally below a curated index. The Ornn reference is read for free from each Kalshi weekly market&rsquo;s &ldquo;price to beat&rdquo; strike, which is set at the Ornn print when the market opens, so it dates to that week&rsquo;s open rather than to now. Implied medians come from the monthly ladder as the 50% crossing of the survival curve P(value &gt; strike), after dropping one-sided books (bid 0 / ask 1) and quotes wider than 15c and forcing survival to be non-increasing in strike; where the crossing falls outside the quoted strikes the panel shows no median rather than an invented one. Kalshi&rsquo;s Dec-31 GPU contracts resolve &ldquo;above $X <em>by</em> Dec 31&rdquo; &ndash; a running maximum, upward-biased vs. a terminal value &ndash; and are excluded on purpose. Only the weekly and monthly are true forward points, so no long-dated compute curve is claimed here.</p>`;
 
 assembleGpuStory();
@@ -2153,7 +2306,7 @@ scrollToHash();
 (async()=>{
   try{
     await fetchMarkets();
-    await Promise.all([fetchHistories(false), fetchNvda(), fetchH100(), fetchB200(), fetchValuations(), fetchMkt(), fetchSnapshots(), fetchBook()]);
+    await Promise.all([fetchHistories(false), fetchNvda(), fetchH100(), fetchB200(), fetchValuations(), fetchGdp(), fetchMkt(), fetchSnapshots(), fetchBook()]);
     if(coverage.excluded.length) await findSuccessors();
     computeLeadLagCache();
     gaugeHistCache=computeGaugeHistory(90);
@@ -2163,7 +2316,7 @@ scrollToHash();
     $("status").textContent="Updated "+new Date().toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
     setInterval(refreshPrices,60_000);
     setInterval(refreshHeavy,600_000);
-    setInterval(()=>{ fetchNvda(); fetchH100(); fetchB200(); fetchValuations(); },3_600_000);
+    setInterval(()=>{ fetchNvda(); fetchH100(); fetchB200(); fetchValuations(); fetchGdp(); },3_600_000);
   }catch(e){ $("err").textContent="Initialization failed: "+e.message; $("err").style.display="block"; }
 })();
 </script>

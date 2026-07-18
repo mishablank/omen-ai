@@ -57,7 +57,11 @@ LEVERED_AI = ["CRWV", "ORCL", "NBIS", "IREN"]
 # breadth basket so it never moves that signal); ELEC_CPI is residents' bills.
 POWER_PROXY = ["XLU"]
 FRED = {"BAMLH0A0HYM2": "HY_OAS", "BAMLH0A3HYC": "CCC_OAS", "NFCI": "NFCI",
-        "GDP": "GDP", "CUSR0000SEHF01": "ELEC_CPI"}
+        "GDP": "GDP", "CUSR0000SEHF01": "ELEC_CPI",
+        # claims-watch tape (singularity claims panel): core goods CPI (deflation claim),
+        # unemployment + prime-age LFPR (displacement claim), realized real GDP growth SAAR
+        "CUSR0000SACL1E": "CORE_GOODS_CPI", "UNRATE": "UNRATE",
+        "LNS11300060": "LFPR_PRIME", "A191RL1Q225SBEA": "GDP_GROWTH"}
 SKEW_SYMS = ["NVDA", "SOXX"]
 # LEAPS tail: drawdown levels per symbol; the last one is the bubble-market trigger level
 TAIL_LEVELS = {"NVDA": [-30, -50], "SOXX": [-25, -40]}

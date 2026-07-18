@@ -39,7 +39,7 @@ const ok = (name, cond, detail) => {
   console.error(`  FAIL ${name}${detail ? " — " + detail : ""}`);
 };
 
-console.log("pure helpers — mnum / xlink / fetcherStale / viewFromPath\n");
+console.log("pure helpers — mnum / xlink / fetcherStale / viewFromPath / claims watch\n");
 
 /* ---------- mnum: prose needs a real minus sign, not toFixed()'s hyphen ---------- */
 {
@@ -122,6 +122,91 @@ console.log("pure helpers — mnum / xlink / fetcherStale / viewFromPath\n");
     eq(`viewFromPath/reaches declared view "${v}"`, mk(`/polymarket-ai-index/${v}`).viewFromPath(), v);
   }
   console.log("  viewFromPath");
+}
+
+/* ---------- claims watch: yoyPct / ptsChange / probAbove / claimReads ---------- */
+{
+  const code = slice("/* ================= Claims watch: pure helpers",
+                     "/* ================= Claims watch: fetch & render");
+  const { yoyPct, ptsChange, probAbove, claimReads, snum } =
+    build(code, ["yoyPct", "ptsChange", "probAbove", "claimReads", "snum"]);
+
+  /* snum: signed prose number — U+2212 for negatives (house style), + for positives */
+  eq("snum/negative uses U+2212", snum(-0.2), "−0.2");
+  eq("snum/positive signed", snum(0.5), "+0.5");
+  eq("snum/rounds to zero unsigned", snum(-0.04), "0.0");
+  eq("snum/zero unsigned", snum(0), "0.0");
+
+  // monthly FRED-style series builder: {d:"YYYY-MM-01", c}
+  const monthly = (y0, m0, vals) => vals.map((c, k) => {
+    const m = m0 + k, y = y0 + Math.floor((m - 1) / 12), mm = ((m - 1) % 12) + 1;
+    return { d: `${y}-${String(mm).padStart(2, "0")}-01`, c };
+  });
+
+  /* yoyPct: last observation vs the one nearest 12 months earlier */
+  const ser = monthly(2025, 1, Array.from({ length: 19 }, (_, i) => 100 + i)); // Jan-25..Jul-26
+  const y = yoyPct(ser); // 118 vs 106 -> +11.32%
+  ok("yoyPct/monthly 19pt", y != null && Math.abs(y - 11.3208) < 0.01, String(y));
+  eq("yoyPct/short series -> null", yoyPct(monthly(2026, 1, Array.from({ length: 12 }, (_, i) => 100 + i))), null);
+  eq("yoyPct/null -> null", yoyPct(null), null);
+  // a series with a years-wide hole must refuse to fake a YoY off a distant point
+  const holed = monthly(2020, 1, Array.from({ length: 13 }, (_, i) => 100 + i)).concat([{ d: "2026-07-01", c: 140 }]);
+  eq("yoyPct/gap > 45d -> null", yoyPct(holed), null);
+
+  /* ptsChange: level change over the trailing n observations */
+  eq("ptsChange/6mo", ptsChange(monthly(2026, 1, [4.0, 4.0, 4.1, 4.1, 4.2, 4.3, 4.5]), 6), 0.5);
+  eq("ptsChange/too short -> null", ptsChange(monthly(2026, 1, [4.0, 4.5]), 6), null);
+  eq("ptsChange/null -> null", ptsChange(null, 6), null);
+
+  /* probAbove: mass in brackets whose floor is at/above the threshold */
+  const gdpBr = [
+    { lo: null, hi: 1.0, p: 0.039 }, { lo: 1.0, hi: 1.5, p: 0.195 }, { lo: 1.5, hi: 2.0, p: 0.215 },
+    { lo: 2.0, hi: 2.5, p: 0.32 }, { lo: 2.5, hi: 3.0, p: 0.185 }, { lo: 3.0, hi: 3.5, p: 0.025 },
+    { lo: 3.5, hi: null, p: 0.053 },
+  ];
+  ok("probAbove/gdp >= 3%", Math.abs(probAbove(gdpBr, 3.0) - 0.078) < 1e-9, String(probAbove(gdpBr, 3.0)));
+  eq("probAbove/no bracket at threshold -> null", probAbove([{ lo: null, hi: 1.0, p: 0.5 }], 3.0), null);
+  eq("probAbove/empty -> null", probAbove([], 3.0), null);
+  eq("probAbove/null -> null", probAbove(null, 3.0), null);
+
+  /* claimReads: the five singularity claims, banded off the tape */
+  const base = { agi: 10.5, arena: 18, optimus: 14.5, robotaxi: 14.5,
+                 gdpAbove3: 7.8, gdpLast: 2.0, goodsYoy: 0.8, elecYoy: 4.8, gpuRatio: 0.15,
+                 un6: 0.0, lfpr6: 0.1 };
+  const rows = claimReads(base);
+  eq("claimReads/five rows in stable order", rows.map(r => r.key).join(","), "agi,robots,gdp,deflation,labor");
+  for (const r of rows) ok(`claimReads/${r.key} has metrics`, Array.isArray(r.metrics) && r.metrics.length >= 2);
+
+  const by = (inp) => Object.fromEntries(claimReads(inp).map(r => [r.key, r]));
+  // calm tape: every claim reads "good" (markets reject the narrative, no displacement, no deflation)
+  for (const [k, r] of Object.entries(by(base))) eq(`claimReads/${k} calm -> good`, r.band.cls, "good");
+  ok("claimReads/agi verdict carries the odds", by(base).agi.verdict.includes("10.5"));
+
+  // euphoria broadening: odds converging up toward the narrative escalate the band
+  eq("claimReads/agi 25% -> warn", by({ ...base, agi: 25 }).agi.band.cls, "warn");
+  eq("claimReads/agi 55% -> crit", by({ ...base, agi: 55 }).agi.band.cls, "crit");
+  eq("claimReads/robots max(optimus,robotaxi) drives band", by({ ...base, robotaxi: 30 }).robots.band.cls, "warn");
+  eq("claimReads/gdp 30% -> warn", by({ ...base, gdpAbove3: 30 }).gdp.band.cls, "warn");
+  eq("claimReads/gdp 60% -> crit", by({ ...base, gdpAbove3: 60 }).gdp.band.cls, "crit");
+
+  // deflation: the claim validating on the consumer tape is the escalation
+  eq("claimReads/goods deflation -> crit", by({ ...base, goodsYoy: -1.0 }).deflation.band.cls, "crit");
+  eq("claimReads/goods disinflation -> warn", by({ ...base, goodsYoy: 0.2 }).deflation.band.cls, "warn");
+
+  // labor: unemployment up while prime-age participation holds = displacement, not replacement
+  const disp = by({ ...base, un6: 0.5, lfpr6: 0.0 }).labor;
+  eq("claimReads/displacement -> crit", disp.band.cls, "crit");
+  ok("claimReads/displacement named", /displacement/i.test(disp.verdict), disp.verdict);
+  // verdict prose must carry the house minus, never toFixed()'s hyphen
+  const negV = by({ ...base, un6: -0.2 }).labor.verdict;
+  ok("claimReads/verdict uses U+2212", negV.includes("−0.2") && !negV.includes("-0.2"), negV);
+  eq("claimReads/mild unemployment drift -> warn", by({ ...base, un6: 0.2 }).labor.band.cls, "warn");
+  // unemployment up with participation falling too is a demographic/recession mix, not displacement
+  eq("claimReads/participation falling too -> warn", by({ ...base, un6: 0.5, lfpr6: -0.5 }).labor.band.cls, "warn");
+
+  // dark inputs: every band null, never a throw
+  for (const r of claimReads({})) eq(`claimReads/${r.key} dark -> null band`, r.band, null);
+  console.log("  claims watch");
 }
 
 console.log(failures ? `\n${failures} assertion(s) FAILED` : "\nall assertions passed");
