@@ -98,14 +98,15 @@ const CASES = [
     expect: { trigHas: "Closest rule: bubble sentiment at 14.0%, below the 15% rule threshold.", ctxHas: "It turns Elevated if bubble sentiment crosses 15%." },
   },
   {
-    // the live case the plan was written against: one rule trips while the gauge stays Calm
-    label: "stressed-single-trip",
+    // a lone early-warning market caps at Elevated — it can no longer trip Stressed on its
+    // own (the false-red fix). The verdict still reads as a singular-subject single trip.
+    label: "elevated-single-market-capped",
     inp: { gauge: 24, z: 0, level: 10, stack: stackAt(32.3) },
-    regime: "stressed",
+    regime: "elevated",
     expect: {
-      sayHas: "Regime: Stressed – tripped by a single rule, not broad pressure.",
-      trigHas: "Trigger: bubble sentiment at 32.3%, above the 25% rule threshold.",
-      ctxHas: "The blended gauge is 24/100 (Calm) – broad markets are not confirming. This clears if bubble sentiment closes below 25%; it escalates if the blended gauge crosses 35.",
+      sayHas: "Regime: Elevated – tripped by a single rule, not broad pressure.",
+      trigHas: "Trigger: bubble sentiment at 32.3%, above the 15% rule threshold.",
+      ctxHas: "The blended gauge is 24/100 (Calm) – broad markets are not confirming. This clears if bubble sentiment closes below 15%; it escalates if the blended gauge crosses 35.",
       broad: false,
     },
   },
@@ -118,11 +119,12 @@ const CASES = [
   },
   {
     // plural carried by the STACK row rather than a hard-coded rule: regimeInputs must
-    // propagate `pl` off the winning row, or the verb silently reverts to singular
-    label: "stressed-stack-trigger-plural",
+    // propagate `pl` off the winning row, or the verb silently reverts to singular. The
+    // stack signal caps at Elevated (15%), so this exercises pl propagation there.
+    label: "elevated-stack-trigger-plural",
     inp: { gauge: 24, z: 0, level: 3, stack: [{ name: "US recession probability", plain: "US recession odds", pl: true, v: 31 }] },
-    regime: "stressed",
-    expect: { trigHas: "Trigger: US recession odds at 31.0%, above the 25% rule threshold.", ctxHas: "This clears if US recession odds close below 25%" },
+    regime: "elevated",
+    expect: { trigHas: "Trigger: US recession odds at 31.0%, above the 15% rule threshold.", ctxHas: "This clears if US recession odds close below 15%" },
   },
   {
     // the gauge rule firing alone — reachable when only the broad gauge crosses its band
@@ -145,9 +147,10 @@ const CASES = [
     },
   },
   {
-    // several rules tripped while the blended gauge is still Calm — the "not broad" plural say
+    // several rules tripped while the blended gauge is still Calm — the "not broad" plural say.
+    // Two crash-basket rules (level≥40 and level≥25 confirmed by z≥2), no single-market trip.
     label: "stressed-multi-trip-not-broad",
-    inp: { gauge: 24, z: 0, level: 41, stack: stackAt(32) },
+    inp: { gauge: 24, z: 2, level: 41, stack: stackAt(2) },
     regime: "stressed",
     expect: { sayHas: "rules have tripped, but the broad gauge is still calm", ctxHas: "This clears when all 2 triggers fall back below their thresholds", broad: false },
   },
@@ -167,7 +170,7 @@ const CASES = [
     label: "stressed-broad",
     inp: { gauge: 60, z: 2.5, level: 45, stack: stackAt(40) },
     regime: "stressed",
-    expect: { sayHas: "4 rules have tripped and the broad gauge agrees", ctxHas: "(Stressed) – broad markets are confirming", broad: true },
+    expect: { sayHas: "3 rules have tripped and the broad gauge agrees", ctxHas: "(Stressed) – broad markets are confirming", broad: true },
   },
   {
     // gauge dark (market-data.json not fetched): must not leak a placeholder value
@@ -199,7 +202,7 @@ for (const c of CASES) {
   const yday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   const { computeRegime, regimeExplainer } = build({
     gauge: 24, z: 0, level: 10, stack: stackAt(32.3),
-    snaps: { [yday]: { gauge: 21, regime: "stressed" } },
+    snaps: { [yday]: { gauge: 21, regime: "elevated" } },
   });
   const ex = regimeExplainer(computeRegime());
   check("since/gauge delta", ex.since.includes("Gauge +3 vs yesterday"), ex.since);
@@ -214,7 +217,8 @@ for (const c of CASES) {
 {
   const yday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   const { computeRegime, regimeExplainer } = build({
-    gauge: 24, z: 0, level: 10, stack: stackAt(32.3),
+    // today is Stressed (crash basket ≥ 40), yesterday was Elevated — a real regime change
+    gauge: 24, z: 0, level: 41, stack: stackAt(2),
     snaps: { [yday]: { gauge: 30, regime: "elevated" } },
   });
   const ex = regimeExplainer(computeRegime());

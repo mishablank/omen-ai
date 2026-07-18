@@ -1,6 +1,6 @@
 {
- "updated": "2026-07-16T06:26:30Z",
- "snapshot_date": "2026-07-16",
+ "updated": "2026-07-18T13:41:53Z",
+ "snapshot_date": "2026-07-18",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
   "cn_score": 51,
@@ -19,86 +19,82 @@
   "note": "Qwen app >200M MAU, Doubao >100M DAU, DeepSeek ~82M WAU - overwhelmingly domestic."
  },
  "lmarena": {
-  "best_model": "qwen3.7-max-preview",
-  "best_org": "Alibaba",
-  "best_rank": 16,
-  "best_score": 1475,
+  "best_model": "kimi-k3",
+  "best_org": "Moonshot",
+  "best_rank": 9,
+  "best_score": 1486,
   "us_leader": "claude-fable-5",
-  "us_leader_score": 1508,
-  "top10": 0,
-  "top20": 1,
-  "asof": "2026-07-16"
+  "us_leader_score": 1507,
+  "top10": 1,
+  "top20": 2,
+  "asof": "2026-07-18"
  },
  "hf": {
   "cnOrgs": [
    {
     "org": "Qwen",
-    "dl": 259995296
+    "dl": 258569547
    },
    {
     "org": "deepseek-ai",
-    "dl": 34691846
+    "dl": 34459702
    },
    {
     "org": "zai-org",
-    "dl": 14932228
+    "dl": 15174142
    },
    {
     "org": "moonshotai",
-    "dl": 5268347
+    "dl": 4712312
    },
    {
     "org": "MiniMaxAI",
-    "dl": 3069780
+    "dl": 2935296
    },
    {
     "org": "tencent",
-    "dl": 1543092
+    "dl": 1523914
    },
    {
     "org": "XiaomiMiMo",
-    "dl": 1332030
+    "dl": 1374512
    },
    {
     "org": "stepfun-ai",
-    "dl": 1291962
+    "dl": 1292066
    }
   ],
   "usOrgs": [
    {
     "org": "google",
-    "dl": 63764963
+    "dl": 63732227
    },
    {
     "org": "meta-llama",
-    "dl": 37443260
+    "dl": 37091724
    },
    {
     "org": "nvidia",
-    "dl": 23762075
+    "dl": 24178134
    },
    {
     "org": "openai",
-    "dl": 11902127
+    "dl": 12212978
    },
    {
     "org": "microsoft",
-    "dl": 7184437
+    "dl": 6851949
    },
    {
     "org": "allenai",
-    "dl": 2857493
+    "dl": 3123470
    }
   ],
-  "cn": 322124581,
-  "us": 146914355
+  "cn": 320041491,
+  "us": 147190482
  },
  "equity_extra": {
   "BABA": [
-   {
-    "d": "2026-01-16",
-    "c": 165.4
-   },
    {
     "d": "2026-01-20",
     "c": 162.39
@@ -586,13 +582,17 @@
    {
     "d": "2026-07-15",
     "c": 117.69
+   },
+   {
+    "d": "2026-07-16",
+    "c": 117.49
+   },
+   {
+    "d": "2026-07-17",
+    "c": 114.97
    }
   ],
   "KWEB": [
-   {
-    "d": "2026-01-16",
-    "c": 35.71
-   },
    {
     "d": "2026-01-20",
     "c": 34.97
@@ -1080,14 +1080,22 @@
    {
     "d": "2026-07-15",
     "c": 27.0
+   },
+   {
+    "d": "2026-07-16",
+    "c": 27.48
+   },
+   {
+    "d": "2026-07-17",
+    "c": 26.81
    }
   ]
  },
  "openrouter_week": {
   "week": "2026-07-13",
-  "cn_share": 0.6025,
-  "us_share": 0.3266,
-  "spi": 1.845,
-  "total_tokens": 29782181160063
+  "cn_share": 0.6032,
+  "us_share": 0.3208,
+  "spi": 1.88,
+  "total_tokens": 51359900538815
  }
 }

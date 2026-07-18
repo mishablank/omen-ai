@@ -50,6 +50,14 @@ jobs:
         # live in-browser; this only regenerates the bundled china-data.json.
         run: python3 omen/update-china-data.py
 
+      - name: Refresh China AI event timeline (optional; needs XAI_API_KEY)
+        # Recent Chinese-model catalysts via Grok Live Search -> china-events.json, which
+        # the China monitor merges on top of its curated timeline. Self-gated to run the
+        # (paid) model call at most once per ~24h; no-ops without the key, so the page
+        # falls back to the curated timeline.
+        if: ${{ env.XAI_API_KEY != '' }}
+        run: python3 omen/update-china-events.py
+
       # Push the fresh data straight to R2 so the Worker serves it live, with no redeploy.
       # Skips cleanly if the Cloudflare secrets aren't set (the site then falls back to
       # the bundled copy, i.e. previous behaviour).
@@ -72,7 +80,7 @@ jobs:
           git config user.name "ai-crash-monitor bot"
           git config user.email "actions@github.com"
           for f in omen/market-data.json omen/snapshots.csv omen/alert-state.json omen/influencers.json \
-                   omen/china-data.json omen/china-history.json omen/china-snapshots.csv; do
+                   omen/china-data.json omen/china-history.json omen/china-snapshots.csv omen/china-events.json; do
             [ -f "$f" ] && git add -f "$f"
           done
           if git diff --cached --quiet; then

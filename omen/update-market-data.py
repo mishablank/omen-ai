@@ -756,7 +756,11 @@ def compute_regime(gauge, price):
     # priced *crash* risk, and MKT is the old crash basket unchanged. Reading the
     # composite here would let regulatory odds trip a crash regime.
     level = sleeve_level(price, "mkt") or 0
-    if (gauge is not None and gauge >= 55) or level >= 40 or bubble >= 25:
+    # Stressed requires a broad or confirmed metric — the blended gauge (mean of all
+    # families) or the crash basket average. A single market (the bubble-burst market
+    # included) can raise Elevated but never trips red on its own, so an escalation alert
+    # can't fire on one market spiking. Matches the two pages' regime rules.
+    if (gauge is not None and gauge >= 55) or level >= 40:
         return "stressed"
     if (gauge is not None and gauge >= 35) or level >= 25 or bubble >= 15:
         return "elevated"
