@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OMEN — AI CapEx</title>
-<meta name="description" content="Five fundamentals theses on the AI buildout – hyperscaler debt saturation, AI-specific credit stress, equity raises, capex vs GDP, and stranded >1 GW projects.">
+<meta name="description" content="Eight fundamentals theses on the AI buildout – debt saturation, AI credit stress, equity raises, capex vs GDP, stranded >1 GW projects, the dark-fiber overcapacity analogy, free-cash-flow erosion, and reflexive treasury vehicles.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="favicon.svg">
 <meta name="theme-color" content="#0b0a08">
@@ -163,7 +163,10 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;background:var(--bg2
     <span class="it"><span class="lab">GOOGL EQUITY RAISE</span><b>$80B</b><span class="down">ATM + BRK</span></span>
     <span class="it"><span class="lab">BIG-5 CAPEX / GDP</span><b>≈1.8%</b><span class="down">RISING</span></span>
     <span class="it"><span class="lab">&gt;1GW FULLY ENERGIZED</span><b>0</b><span style="color:var(--dim)">OF 14 ANNOUNCED</span></span>
-    <span class="it"><span class="lab">SOURCE</span><b style="color:var(--mut)">EDGAR · TRACE · BEA · EIA</b></span>
+    <span class="it"><span class="lab">BIG-5 FCF TTM</span><b>≈$65B</b><span class="down">−80% VS '23</span></span>
+    <span class="it"><span class="lab">H100 RENT</span><b>≈$2/hr</b><span class="down">−40%/YR</span></span>
+    <span class="it"><span class="lab">FLAGSHIP mNAV</span><b>≈1.6×</b><span class="down">PREMIUM</span></span>
+    <span class="it"><span class="lab">SOURCE</span><b style="color:var(--mut)">EDGAR · TRACE · BEA · EIA · CBRE</b></span>
   </div>
 </div>
 
@@ -189,9 +192,9 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;background:var(--bg2
   <div class="wrap">
     <div class="kick">Fundamentals · Financing stress</div>
     <h1>The bill for the buildout arrives <em>before</em> the crash tape does.</h1>
-    <p class="sub">OMEN's indexes and gauge read what markets are <b>pricing</b>. This page reads the <b>plumbing</b>: who is lending, who is quietly switching to equity, how much of the economy the capex has eaten, and how many announced gigawatts actually get energized. Five theses, each with the metric that would confirm or kill it. The structural risk underneath all five is the same one: <b>deflating token prices funding 10–15-year fixed-payment debt</b> – a classic duration mismatch.</p>
+    <p class="sub">OMEN's indexes and gauge read what markets are <b>pricing</b>. This page reads the <b>plumbing</b>: who is lending, who is quietly switching to equity, how much of the economy the capex has eaten, and how many announced gigawatts actually get energized. Eight theses, each with the metric that would confirm or kill it – five from Paul Kedrosky's ROI teardown, three from Jim Chanos's telecom-collapse analogy. The structural risk underneath them is the same one: <b>deflating token prices funding 10–15-year fixed-payment debt</b> – a classic duration mismatch.</p>
     <div class="snapline"><span class="dot"></span>Curated snapshot · 2026-07-18 · refreshed by hand, not live</div>
-    <p class="credit">Framework: Paul Kedrosky on <a href="https://www.youtube.com/watch?v=wGZboZcSGDY" target="_blank" rel="noopener">Better Offline – "Why AI Has No ROI"</a> (Jun 2026), plus the reference series cited under each panel.</p>
+    <p class="credit">Frameworks: Paul Kedrosky on <a href="https://www.youtube.com/watch?v=wGZboZcSGDY" target="_blank" rel="noopener">Better Offline – "Why AI Has No ROI"</a> (Jun 2026) and Jim Chanos, <a href="https://www.youtube.com/watch?v=oM7VevsftrY" target="_blank" rel="noopener">"The AI Bubble Is Much Worse Than Dot-Com"</a> (2026), plus the reference series cited under each panel.</p>
   </div>
 </header>
 
@@ -365,12 +368,112 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;background:var(--bg2
   </div>
 </section>
 
+<!-- ============ vi. dark fiber / overcapacity ============ -->
+<section id="darkfiber">
+  <div class="wrap">
+    <div class="shead rv">
+      <div class="toprow"><span class="rom">vi.</span><span class="kick" style="color:var(--dim)">Thesis six · Chanos</span></div>
+      <h2>The dark-fiber problem, rebuilt in silicon.</h2>
+      <div class="claim">"It has identical mechanics to the 1999–2000 telecom build-out." The fiber got laid; ~95% of it sat dark for a decade; the equity was gone long before the demand arrived.</div>
+      <p class="exp">A buildout can be real <b>and</b> ruinous at once – the internet did need the fiber. What killed the telecom names was <b>timing</b>: capacity energized years before demand could absorb it, funded by debt that came due first. The AI tell is the same – <b>falling unit economics on already-built compute</b>. When rental prices for last-generation GPUs fall faster than the boxes depreciate, the market is telling you supply has outrun paying demand.</p>
+    </div>
+    <div class="tiles rv">
+      <div class="tile"><div class="v">≈95%</div><div class="t">Fiber that sat dark, 2002</div><p>Of the strand-miles laid into the telecom bubble, most was never lit – ≈$5T of market value erased before it found reuse.</p></div>
+      <div class="tile"><div class="v">≈−40<small>%/yr</small></div><div class="t">H100 on-demand rental</div><p>Spot rental for last-gen GPUs has fallen from ≈$8/hr (2023) toward ≈$2/hr – depreciation on a ~2-year asset the hyperscalers still carry over 5–6.</p></div>
+      <div class="tile"><div class="v">≈4×</div><div class="t">Announced vs absorbable load</div><p>≈48 GW announced against a demand curve that plausibly absorbs a fraction on the stated timeline – the overbuild ratio the fiber map warned about.</p></div>
+    </div>
+    <div class="panel rv">
+      <h3>Same movie, new medium</h3>
+      <span class="cap">Telecom 1998–2002 vs AI 2024–2026 · mechanics, not levels</span>
+      <table class="dt">
+        <tr><th>Mechanic</th><th>Telecom, 2000</th><th>AI, 2026</th></tr>
+        <tr><td>Asset built ahead of demand</td><td>Long-haul fiber</td><td>GPU clusters + power</td></tr>
+        <tr><td>Vendor financing</td><td>Lucent / Nortel to CLECs</td><td>Nvidia to neoclouds + labs</td></tr>
+        <tr><td>Depreciation vs reality</td><td>20–25y book life on gear obsoleted in ~5</td><td>5–6y book life on GPUs obsoleted in ~2–3</td></tr>
+        <tr><td>Utilization tell</td><td>% of fiber lit</td><td>GPU rental price · fleet utilization</td></tr>
+        <tr><td>Outcome</td><td>≈$5T erased; capacity reused post-bankruptcy</td><td><span class="chip risk">Open</span></td></tr>
+      </table>
+      <div class="pull">
+        <div class="q">"This has identical mechanics to the telecom build-out that erased five trillion dollars of value."</div>
+        <div class="who">Jim Chanos · <b>"The AI Bubble Is Much Worse Than Dot-Com," 2026</b> · the overbuild is the thesis, the utilization tape is the metric</div>
+      </div>
+      <div class="srcline"><b>METRIC</b> – secondary GPU rental/spot price vs book depreciation curve; fleet utilization; data-center vacancy; announced vs absorbable GW. &nbsp;<b>SOURCE</b> – GPU price trackers (Vast.ai · SF Compute) · <a href="https://www.cbre.com/insights/figures" target="_blank" rel="noopener">CBRE data-center figures</a> · <a href="https://emp.lbl.gov/queues" target="_blank" rel="noopener">LBNL queues</a> · <a href="#stranded">OMEN stranded-GW tracker</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ vii. free cash flow erosion ============ -->
+<section id="fcf">
+  <div class="wrap">
+    <div class="shead rv">
+      <div class="toprow"><span class="rom">vii.</span><span class="kick" style="color:var(--dim)">Thesis seven · Chanos</span></div>
+      <h2>Free cash flow is quietly going to zero.</h2>
+      <div class="claim">Chanos's depreciation point in one number: earnings hold near records while the cash the business actually throws off has collapsed. The gap is the buildout, capitalised and stretched.</div>
+      <p class="exp">Thesis four watched <b>capex ÷ operating cash flow</b> climb toward 1.0. Push one line further down the statement and you get the punchline: <b>operating cash flow minus capex – true free cash flow – has fallen ~80%</b> across the Big-5, and turned negative at Oracle and Amazon. GAAP earnings don't show it for exactly Chanos's reason: <b>a ~2-year chip depreciated over 5–6 years</b> keeps net income high while the cash walks out the door now.</p>
+    </div>
+    <div class="tiles rv">
+      <div class="tile"><div class="v">≈$65B</div><div class="t">Big-5 free cash flow, TTM</div><p>OCF minus capex across MSFT · GOOGL · AMZN · META · ORCL – down from ≈$300B+ before the buildout, on roughly flat-to-higher net income.</p></div>
+      <div class="tile"><div class="v">2 of 5</div><div class="t">Now FCF-negative</div><p>Oracle and Amazon spend more on capex than their operations generate; Meta is near the line. Only MSFT and GOOGL still convert cleanly.</p></div>
+      <div class="tile"><div class="v">≈$400B</div><div class="t">Net-income-to-cash wedge</div><p>The gap between reported Big-5 net income and free cash flow – the non-cash cushion that lengthened depreciation keeps inflating.</p></div>
+    </div>
+    <div class="panel rv">
+      <h3>Free cash flow, by filer</h3>
+      <span class="cap">OCF − capex, trailing 12 months · audited XBRL · negative = the buildout outruns the business in cash, not just accruals</span>
+      <div class="hbars" id="fcfBars">
+        <div class="hb"><span class="k"><b>ORCL</b> FCF TTM</span><span class="track"><i class="hot" data-w="92"></i></span><span class="v">≈−$8B</span></div>
+        <div class="hb"><span class="k"><b>AMZN</b> FCF TTM</span><span class="track"><i class="hot" data-w="74"></i></span><span class="v">≈−$3B</span></div>
+        <div class="hb"><span class="k"><b>META</b> FCF TTM</span><span class="track"><i data-w="58"></i></span><span class="v">≈+$6B</span></div>
+        <div class="hb"><span class="k"><b>MSFT</b> FCF TTM</span><span class="track"><i data-w="42"></i></span><span class="v">≈+$30B</span></div>
+        <div class="hb"><span class="k"><b>GOOGL</b> FCF TTM</span><span class="track"><i data-w="34"></i></span><span class="v">≈+$40B</span></div>
+      </div>
+      <div class="pull">
+        <div class="q">"A chip that's obsolete in two years is being depreciated over five, six, seven. It's a huge boost to reported earnings during the build-out."</div>
+        <div class="who">Jim Chanos · <b>2026</b> · the wider the useful-life assumption, the wider the net-income-to-FCF wedge above</div>
+      </div>
+      <div class="srcline"><b>METRIC</b> – OCF − capex per filer and aggregate, TTM; net-income-to-FCF conversion; disclosed server/GPU useful-life assumption. &nbsp;<b>SOURCE</b> – <a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany" target="_blank" rel="noopener">SEC EDGAR 10-Q cash-flow statements</a> · XBRL PP&E useful-life notes · <a href="#gdp">OMEN capex/OCF panel</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ viii. reflexive treasury vehicles ============ -->
+<section id="treasuries">
+  <div class="wrap">
+    <div class="shead rv">
+      <div class="toprow"><span class="rom">viii.</span><span class="kick" style="color:var(--dim)">Thesis eight · Chanos</span></div>
+      <h2>The reflexive treasury vehicle.</h2>
+      <div class="claim">"Absurd." A company issues stock at a premium to the assets it holds, uses the cash to buy more of that same asset, and books the rising price as validation. The loop only runs while the premium holds.</div>
+      <p class="exp">This is the froth tell that sits <b>next to</b> the buildout, not inside it. A treasury vehicle trading at <b>1.6× the value of what it owns</b> is priced as a perpetual-motion machine: premium funds purchases, purchases lift the asset, the higher asset "justifies" the premium. Chanos's point is that the mechanism is <b>reflexive</b> – it runs in reverse just as fast. The pattern started in crypto; watch it migrate to AI-compute and token treasuries.</p>
+    </div>
+    <div class="tiles rv">
+      <div class="tile"><div class="v">≈1.6×</div><div class="t">Flagship mNAV premium</div><p>Market cap ÷ net asset value of the largest crypto-treasury vehicle – you pay ≈$1.60 for $1.00 of the underlying it holds.</p></div>
+      <div class="tile"><div class="v">≈70+</div><div class="t">Treasury-strategy vehicles</div><p>Public companies whose primary "operation" is holding a financial asset bought with issued equity – a category that barely existed three years ago.</p></div>
+      <div class="tile"><div class="v">ATM→buy</div><div class="t">The reflexive loop</div><p>At-the-market issuance funds asset purchases; purchases lift the mark; the mark justifies the next raise – until the premium inverts.</p></div>
+    </div>
+    <div class="panel rv">
+      <h3>Treasury-vehicle watchlist</h3>
+      <span class="cap">Premium/discount to holdings · curated · a discount (mNAV &lt;1) is where the loop breaks</span>
+      <table class="dt">
+        <tr><th>Vehicle type</th><th>Underlying</th><th class="num">mNAV</th><th>State</th></tr>
+        <tr><td>Flagship BTC treasury</td><td>Bitcoin</td><td class="num">≈1.6×</td><td><span class="chip risk">Premium</span></td></tr>
+        <tr><td>Second-wave BTC treasuries</td><td>Bitcoin</td><td class="num">≈1.0–1.2×</td><td><span class="chip uc">Compressing</span></td></tr>
+        <tr><td>ETH / SOL treasuries</td><td>Ether · Solana</td><td class="num">≈0.9–1.1×</td><td><span class="chip ann">At/near NAV</span></td></tr>
+        <tr><td>Emerging AI-compute treasuries</td><td>GPUs · token credits</td><td class="num">–</td><td><span class="chip part">Watch</span></td></tr>
+      </table>
+      <div class="pull">
+        <div class="q">"These bitcoin treasury companies are absurd."</div>
+        <div class="who">Jim Chanos · <b>2026</b> · the reflexive vehicle is the late-cycle signature, whatever the underlying asset</div>
+      </div>
+      <div class="srcline"><b>METRIC</b> – market cap ÷ NAV (mNAV) premium per vehicle; ATM issuance volume; count of new treasury vehicles; first AI-compute treasury at a premium. &nbsp;<b>SOURCE</b> – <a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany" target="_blank" rel="noopener">SEC EDGAR 8-K / 424B5</a> · company NAV disclosures · mNAV trackers</div>
+    </div>
+  </div>
+</section>
+
 <!-- ============ honesty ============ -->
 <section id="honesty" style="padding-top:0">
   <div class="wrap">
     <div class="honesty rv">
       <h3>Honesty.</h3>
-      <p>Everything on this page is a <b>curated snapshot, refreshed by hand</b> – not a live feed. Levels marked ≈ are approximations assembled from filings, TRACE prints, and press, and can be stale or wrong; treat them as a reading list with numbers, not data. Unlike the indexes and the gauge, these are <b>fundamentals, not market prices</b> – they can't tell you when, only how much has been borrowed against the answer. The five theses come from one worldview (Kedrosky's); the bull rebuttal – that inference demand outruns the depreciation schedule – is exactly what the <a href="index.html#indexes" style="color:var(--accT)">Bull index</a> prices on the other side of the pair.</p>
+      <p>Everything on this page is a <b>curated snapshot, refreshed by hand</b> – not a live feed. Levels marked ≈ are approximations assembled from filings, TRACE prints, and press, and can be stale or wrong; treat them as a reading list with numbers, not data. Unlike the indexes and the gauge, these are <b>fundamentals, not market prices</b> – they can't tell you when, only how much has been borrowed against the answer. The eight theses come from two aligned bearish worldviews – Kedrosky's ROI teardown and Chanos's telecom analogy; the bull rebuttal – that inference demand outruns the depreciation schedule – is exactly what the <a href="index.html#indexes" style="color:var(--accT)">Bull index</a> prices on the other side of the pair.</p>
     </div>
   </div>
 </section>
@@ -392,6 +495,9 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;background:var(--bg2
         <a href="#equity">iii. Equity raises</a>
         <a href="#gdp">iv. Capex vs GDP</a>
         <a href="#stranded">v. Stranded gigawatts</a>
+        <a href="#darkfiber">vi. Dark fiber / overcapacity</a>
+        <a href="#fcf">vii. Free cash flow erosion</a>
+        <a href="#treasuries">viii. Reflexive treasuries</a>
       </div>
       <div>
         <h4>Data</h4>
@@ -400,18 +506,19 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;background:var(--bg2
         <a href="https://www.bea.gov/data/gdp/gross-domestic-product" target="_blank" rel="noopener">BEA NIPA</a>
         <a href="https://www.eia.gov/electricity/data/eia860m/" target="_blank" rel="noopener">EIA 860M</a>
         <a href="https://emp.lbl.gov/queues" target="_blank" rel="noopener">LBNL queues</a>
+        <a href="https://www.cbre.com/insights/figures" target="_blank" rel="noopener">CBRE data centers</a>
         <a href="https://fred.stlouisfed.org" target="_blank" rel="noopener">FRED</a>
       </div>
       <div>
         <h4>Fine print</h4>
         <span>Curated snapshot, not live</span>
         <span>Not investment advice</span>
-        <span>One worldview – the Bull side is priced next door</span>
+        <span>Two bear worldviews – the Bull side is priced next door</span>
       </div>
     </div>
     <div class="fbase">
       <span>© 2026 – OMEN</span>
-      <span>AI CapEx · EDGAR + TRACE + BEA + EIA · framework: Better Offline (Jun 2026)</span>
+      <span>AI CapEx · EDGAR + TRACE + BEA + EIA + CBRE · frameworks: Better Offline (Jun 2026) + Chanos (2026)</span>
     </div>
   </div>
 </footer>
