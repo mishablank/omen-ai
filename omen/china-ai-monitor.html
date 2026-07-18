@@ -252,7 +252,7 @@
 
 <footer id="foot">
   <h3>Methodology</h3>
-  <b>Chinese AI Adoption Index</b> = &Sigma;(w<sub>i</sub>&middot;s<sub>i</sub>)/&Sigma;w<sub>i</sub> over available signal families, each normalized 0&ndash;100 against fixed reference ranges: OpenRouter Chinese token share 0&rarr;70% (w=30), Hugging Face Chinese share of open-weight downloads 0&rarr;70% (w=20), GitHub star velocity across the flagship basket 0&rarr;2,000/day (w=15), Western search/consumer interest share 0&rarr;50% (w=10), consumer app adoption 0&rarr;100 judgmental (w=10), LMArena proximity 100&minus;Elo-gap, floored at 0 (w=5), community mentions (Reddit/X) &ndash; not tracked, no public API (w=10, excluded). Weights follow the source note's suggested scheme; excluded families renormalize.
+  <b>Chinese AI Adoption Index</b> = &Sigma;(w<sub>i</sub>&middot;s<sub>i</sub>)/&Sigma;w<sub>i</sub> over available signal families, each normalized 0&ndash;100 against fixed reference ranges: OpenRouter Chinese token share 0&rarr;70% (w=30), Hugging Face Chinese share of open-weight downloads 0&rarr;70% (w=20), GitHub star velocity across the flagship basket 0&rarr;2,000/day (w=15), Western search/consumer interest share 0&rarr;50% (w=10), consumer app adoption 0&rarr;100 judgmental (w=10), LMArena proximity 100&minus;Elo-gap, floored at 0 (w=5). Weights follow the source note's suggested scheme; excluded families renormalize.
   <b>SPI</b> = Chinese-lab &divide; US-lab routed tokens (named authors) on OpenRouter, trailing week.
   <b>Frontier price gap</b> = median output $/M of US flagships (GPT-5.6 family, Claude Opus/Sonnet, Gemini Pro/Flash) &divide; median of Chinese flagships (DeepSeek V4, GLM-5.x, Kimi K2.x, Qwen Max, MiniMax M3).
   <h3>Caveats</h3>
@@ -589,7 +589,6 @@ function renderSnapshotPanels(){
   IDX.arena = { w:5, val: clamp01(1 - gap/100)*100, detail: "Elo gap "+gap+" (as of "+lb.asof+")" };
   IDX.search = { w:10, val: clamp01((snap.search_consumer.western_share_pct/100)/0.50)*100, detail: "~"+snap.search_consumer.western_share_pct+"% of Western AI referral traffic ("+snap.search_consumer.asof+")" };
   IDX.apps = { w:10, val: snap.apps.score, detail: "domestic-heavy; no Western top-chart presence ("+snap.apps.asof+")" };
-  IDX.social = { w:10, val: null, detail: "Reddit/X mentions - no public API, not tracked" };
 }
 // merge the curated base (TIMELINE, trusted markup) with recent auto events from
 // china-events.json. Auto events are only kept if strictly newer than the newest
@@ -625,7 +624,7 @@ function renderTimeline(){
       : `Curated timeline &middot; recent catalysts auto-append daily via Grok Live Search when detected.`;
   }
 }
-const FAMILY_LABEL = { openrouter:"OpenRouter token share", hf:"HF download share", github:"GitHub star velocity", search:"Western search/consumer", apps:"Consumer apps", arena:"LMArena proximity", social:"Community mentions" };
+const FAMILY_LABEL = { openrouter:"OpenRouter token share", hf:"HF download share", github:"GitHub star velocity", search:"Western search/consumer", apps:"Consumer apps", arena:"LMArena proximity" };
 function renderGauge(){
   const fams = Object.entries(IDX);
   const live = fams.filter(([,f])=>f.val!=null);
@@ -644,7 +643,8 @@ function renderGauge(){
   }
   $("cats").innerHTML = fams.map(([k,f]) =>
     `<div class="cat"><span>${FAMILY_LABEL[k]} <span class="sub">${esc(f.detail||"")}</span></span><span class="track"><i style="width:${f.val??0}%; ${f.val==null?"background:var(--grid)":""}"></i></span><span class="cv">${f.val!=null? f.val.toFixed(0) : "–"}</span><span class="cw">w${f.w}</span></div>`).join("");
-  $("gaugeNote").textContent = wsum<100 ? "Computed over "+wsum+" of 100 weight - excluded families shown greyed." : "";
+  const totw = fams.reduce((s,[,f])=>s+f.w,0);
+  $("gaugeNote").textContent = wsum<totw ? "Computed over "+wsum+" of "+totw+" weight - excluded families shown greyed." : "";
 }
 /* ---------------- boot ---------------- */
 async function boot(){
