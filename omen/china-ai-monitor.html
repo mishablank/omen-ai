@@ -100,6 +100,9 @@
   .tl .t { line-height: 1.5; }
   .tl .rx { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
   .tl .rx b.dn { color: var(--delta-down); } .tl .rx b.up { color: var(--delta-up); }
+  .tl .evauto { font-size: 9px; letter-spacing: .09em; text-transform: uppercase; color: var(--warn); border: 1px solid var(--warn); border-radius: 4px; padding: 0 4px; margin-left: 7px; vertical-align: 1px; opacity: .85; }
+  .tl .evsrc { font-size: 11px; color: var(--muted); margin-left: 8px; text-decoration: none; border-bottom: 1px dotted var(--muted); white-space: nowrap; }
+  .tl .evsrc:hover { color: var(--text-secondary); border-bottom-color: var(--text-secondary); }
   .banner { font-size: 12.5px; padding: 9px 12px; border-radius: 8px; margin-top: 12px; display: none; background: var(--warn-wash); }
   .banner.show { display: block; }
   .up { color: var(--delta-up); } .down { color: var(--delta-down); }
@@ -233,6 +236,7 @@
 <!-- ============ TIMELINE ============ -->
 <div class="card">
   <h2>Event timeline &ndash; Chinese model catalysts vs US stock reactions</h2>
+  <div class="note" id="tlNote" style="font-size:11.5px; margin:2px 0 10px"></div>
   <div class="tl" id="timeline"></div>
 </div>
 
@@ -458,6 +462,11 @@ async function loadSnap(){
   const parts=[]; if(snap.lmarena?.asof) parts.push("arena "+snap.lmarena.asof); if(snap.search_consumer?.asof) parts.push("consumer "+snap.search_consumer.asof);
   dot("sn", "warn", parts.join(" · ") || "embedded snapshot");
 }
+/* ---------------- china-events.json: recent auto timeline (Grok Live Search) ---------------- */
+let AUTO_EVENTS = { events: [], asof: null, source: null };
+async function loadEvents(){
+  try{ const d = await jget("china-events.json", {cache:"no-store"}); if(d && Array.isArray(d.events)) AUTO_EVENTS = d; }catch(e){ /* no file -> curated timeline only */ }
+}
 /* ---------------- renderers ---------------- */
 function renderTrend(){
   const el = $("trendChart"); if(!S.orShare || S.orShare.length<4){ el.outerHTML='<div class="note">OpenRouter share series unavailable.</div>'; return; }
@@ -582,8 +591,39 @@ function renderSnapshotPanels(){
   IDX.apps = { w:10, val: snap.apps.score, detail: "domestic-heavy; no Western top-chart presence ("+snap.apps.asof+")" };
   IDX.social = { w:10, val: null, detail: "Reddit/X mentions - no public API, not tracked" };
 }
+// merge the curated base (TIMELINE, trusted markup) with recent auto events from
+// china-events.json. Auto events are only kept if strictly newer than the newest
+// curated event, and are ESCAPED on render — they come from a model/live search, so
+// their text is untrusted and must never be injected as HTML.
+function mergedTimeline(){
+  const base = TIMELINE.map(e => ({ ...e, auto:false }));
+  const lastCurated = base.reduce((m,e) => e.d > m ? e.d : m, "");
+  const seen = new Set(base.map(e => e.d + "|" + String(e.t||"").slice(0,40).toLowerCase()));
+  const autos = (AUTO_EVENTS.events || [])
+    .filter(e => e && typeof e.d === "string" && typeof e.t === "string" && e.d > lastCurated)
+    .filter(e => { const k = e.d + "|" + e.t.slice(0,40).toLowerCase(); if(seen.has(k)) return false; seen.add(k); return true; })
+    .map(e => ({ ...e, auto:true }));
+  return base.concat(autos).sort((a,b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
+}
 function renderTimeline(){
-  $("timeline").innerHTML = TIMELINE.map(e => `<div class="ev"><span class="d">${e.d}</span><div><div class="t">${e.t}</div><div class="rx">${e.rx}</div></div></div>`).join("");
+  const evs = mergedTimeline();
+  $("timeline").innerHTML = evs.map(e => {
+    if(!e.auto)   // curated: trusted, keep its <b class='up/dn'> markup as-is
+      return `<div class="ev"><span class="d">${e.d}</span><div><div class="t">${e.t}</div><div class="rx">${e.rx}</div></div></div>`;
+    // auto: untrusted — escape every field; only allow an http(s) source link
+    const srcOk = typeof e.src === "string" && /^https?:\/\//.test(e.src);
+    const src = srcOk ? ` <a class="evsrc" href="${esc(e.src)}" target="_blank" rel="noopener">source &#8599;</a>` : "";
+    const tag = ` <span class="evauto" title="Auto-added from Grok Live Search — verify via source">live</span>`;
+    return `<div class="ev"><span class="d">${esc(e.d)}</span><div><div class="t">${esc(e.t)}${tag}</div><div class="rx">${esc(e.rx||"")}${src}</div></div></div>`;
+  }).join("");
+  const note = $("tlNote");
+  if(note){
+    const lastCurated = TIMELINE.reduce((m,e) => e.d > m ? e.d : m, "");
+    const n = evs.filter(e => e.auto && e.d > lastCurated).length;
+    note.innerHTML = n > 0
+      ? `${n} recent ${n===1?"entry":"entries"} auto-updated daily via Grok Live Search (asof ${esc(AUTO_EVENTS.asof||"?")}) &middot; older entries curated. <span class="evauto">live</span> entries are machine-added &ndash; verify via source.`
+      : `Curated timeline &middot; recent catalysts auto-append daily via Grok Live Search when detected.`;
+  }
 }
 const FAMILY_LABEL = { openrouter:"OpenRouter token share", hf:"HF download share", github:"GitHub star velocity", search:"Western search/consumer", apps:"Consumer apps", arena:"LMArena proximity", social:"Community mentions" };
 function renderGauge(){
@@ -608,7 +648,7 @@ function renderGauge(){
 }
 /* ---------------- boot ---------------- */
 async function boot(){
-  await loadSnap();
+  await Promise.all([ loadSnap(), loadEvents() ]);
   renderSnapshotPanels(); renderTimeline();
   await Promise.all([ loadOpenRouter().then(()=>{renderOR();renderTopModels();renderTrend();}), loadPrices().then(renderPrices), loadHF().then(renderHF), loadGH().then(renderGH), loadPM().then(renderPM), loadEQ().then(renderEQ) ]);
   renderGauge();
