@@ -63,8 +63,8 @@
   .meter .mk { position: absolute; top: -4px; width: 3px; height: 20px; background: var(--text-primary); border-radius: 2px; transform: translateX(-50%); }
   .meterlab { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 5px; }
   .cats { display: flex; flex-direction: column; }
-  .cat { display: grid; grid-template-columns: 210px 1fr 44px 44px; gap: 10px; align-items: center; font-size: 12.5px; padding: 5px 0; }
-  @media (max-width: 700px) { .cat { grid-template-columns: 130px 1fr 40px 40px; } }
+  .cat { display: grid; grid-template-columns: 210px 1fr 44px 76px; gap: 10px; align-items: center; font-size: 12.5px; padding: 5px 0; }
+  @media (max-width: 700px) { .cat { grid-template-columns: 130px 1fr 40px 72px; } }
   .cat .track { height: 8px; background: var(--grid); border-radius: 4px; overflow: hidden; }
   .cat .track i { display: block; height: 100%; border-radius: 4px; background: var(--cn); }
   .cat .cv, .cat .cw { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
@@ -642,7 +642,7 @@ function renderGauge(){
     else { hist[hist.length-1].v = +idx.toFixed(1); store.set("hist", hist); }
   }
   $("cats").innerHTML = fams.map(([k,f]) =>
-    `<div class="cat"><span>${FAMILY_LABEL[k]} <span class="sub">${esc(f.detail||"")}</span></span><span class="track"><i style="width:${f.val??0}%; ${f.val==null?"background:var(--grid)":""}"></i></span><span class="cv">${f.val!=null? f.val.toFixed(0) : "–"}</span><span class="cw">w${f.w}</span></div>`).join("");
+    `<div class="cat"><span>${FAMILY_LABEL[k]} <span class="sub">${esc(f.detail||"")}</span></span><span class="track"><i style="width:${f.val??0}%; ${f.val==null?"background:var(--grid)":""}"></i></span><span class="cv">${f.val!=null? f.val.toFixed(0) : "–"}</span><span class="cw">weight: ${f.w}%</span></div>`).join("");
   const totw = fams.reduce((s,[,f])=>s+f.w,0);
   $("gaugeNote").textContent = wsum<totw ? "Computed over "+wsum+" of "+totw+" weight - excluded families shown greyed." : "";
 }

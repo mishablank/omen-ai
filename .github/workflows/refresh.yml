@@ -74,6 +74,7 @@ jobs:
           put market-data.json "application/json"
           put snapshots.csv    "text/csv"
           put influencers.json "application/json"
+          put china-events.json "application/json"
 
       - name: Commit refreshed data
         run: |
