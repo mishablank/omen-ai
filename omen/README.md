@@ -1,8 +1,11 @@
 # AI Crash Monitor
 
-A single-page dashboard blending Polymarket prediction-market odds with the options,
+A dashboard blending Polymarket prediction-market odds with the options,
 volatility, credit, equity, GPU-rent and insider-activity signals that historically
-precede capex-bubble unwinds — into one 0–100 crash-pressure gauge with a stated regime.
+precede capex-bubble unwinds, into one 0–100 crash-pressure gauge with a stated regime.
+The landing "Today" page summarizes the read in one viewport; four deep-dive views
+(Market signals, GPU & fundamentals, Prediction markets, Methodology) hold the detail,
+served from the same document at `/polymarket-ai-index/<view>`.
 
 Open `polymarket-ai-index.html`. Polymarket data is fetched live in the browser; everything
 else comes from `market-data.json`, produced by `update-market-data.py`.

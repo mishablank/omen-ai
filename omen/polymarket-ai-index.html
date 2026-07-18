@@ -19,6 +19,9 @@
     --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* the view switcher hides with [hidden]; author display rules (.grid2, .tiles, .seg …)
+     out-specify the UA [hidden] rule, so state it once here and win */
+  [hidden] { display: none !important; }
   body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--page); color: var(--text-primary); padding: 22px 20px 48px; max-width: 1160px; margin: 0 auto;
     background-image: radial-gradient(900px 380px at 78% -120px, rgba(227,166,60,.06), transparent 70%); }
   a { color: inherit; }
@@ -30,8 +33,19 @@
   .chip.calm { background: rgba(12,163,12,0.12); } .chip.calm i { background: var(--good); }
   .chip.elevated { background: rgba(250,178,25,0.16); } .chip.elevated i { background: var(--warn); }
   .chip.stressed { background: rgba(208,59,59,0.14); } .chip.stressed i { background: var(--crit); }
-  #regimeWhy { font-size: 12px; color: var(--text-secondary); }
+  /* hollow badge = a rule tripped while the blended gauge is still calm. Solid = the gauge
+     agrees. The distinction is the whole point: "rule tripped" is not "everything is on fire". */
+  .chip.hollow { background: transparent; border: 1px solid currentColor; }
+  .chip.hollow.elevated { color: var(--warn); }
+  .chip.hollow.stressed { color: var(--crit); }
   header p.sub { color: var(--text-secondary); font-size: 13.5px; margin-top: 4px; flex-basis: 100%; line-height: 1.5; }
+  /* verdict block: the first thing a reader sees, three plain-English lines */
+  .verdict { background: var(--surface-1); border: 1px solid var(--grid); border-radius: 12px; padding: 15px 17px; margin-top: 14px; }
+  .verdict .vhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .verdict .vsay { font-size: 15px; font-weight: 600; }
+  .verdict .vtrigger { font-size: 13.5px; margin-top: 8px; line-height: 1.5; }
+  .verdict .vctx { font-size: 13px; color: var(--text-secondary); margin-top: 5px; line-height: 1.55; }
+  .verdict .vsince { color: var(--muted); }
   .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 16px 0 10px; }
   .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface-1); }
   .seg button { font: inherit; font-size: 12.5px; padding: 6px 11px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; }
@@ -44,7 +58,9 @@
   .fresh { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; font-size: 11.5px; color: var(--text-secondary); background: var(--surface-1); border: 1px solid var(--border); border-radius: 9px; padding: 7px 12px; margin-bottom: 14px; }
   .fresh span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
   .fresh i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; }
-  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  /* 200px floors to one column at 375px and stacks five tiles into a wall; 148px keeps two up */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 12px; }
+  @media (min-width: 700px) { .tiles { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); } }
   .tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 15px 17px 12px; }
   .tile .label { font-size: 12.5px; color: var(--text-secondary); display: flex; align-items: center; gap: 7px; }
   .tile .key { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
@@ -109,7 +125,7 @@
   .meterlab { position: relative; height: 14px; font-size: 11px; color: var(--muted); margin-top: 5px; }
   .meterlab span { position: absolute; transform: translateX(-50%); }
   .cats { display: flex; flex-direction: column; gap: 0; }
-  .cat { display: grid; grid-template-columns: 150px 1fr 40px; gap: 10px; align-items: center; font-size: 12.5px; padding: 5px 0; }
+  .cat { display: grid; grid-template-columns: 150px 1fr 40px; gap: 10px; align-items: center; font-size: 12.5px; padding: 2px 0; }
   .cat .track { height: 8px; background: var(--grid); border-radius: 4px; overflow: hidden; }
   .cat .track i { display: block; height: 100%; border-radius: 4px; }
   .cat .cv { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
@@ -119,6 +135,42 @@
   details summary { cursor: pointer; font-size: 12.5px; color: var(--text-secondary); }
   details summary:hover { color: var(--text-primary); }
   details[open] summary { margin-bottom: 6px; }
+  /* ---- standard panel anatomy (§3) ---- */
+  /* the takeaway, always visible. Everything methodological is one click away, never deleted. */
+  .vline { font-size: 13.5px; line-height: 1.5; margin-top: 9px; padding-left: 11px; border-left: 2px solid var(--acc); }
+  .vline:empty { display: none; }
+  .howto { margin-top: 13px; }
+  .howto > summary { font-size: 11.5px; color: var(--muted); }
+  .howto > summary:hover { color: var(--text-secondary); }
+  .howto .cap:first-of-type { margin-top: 2px; }
+  /* ---- panel status (§5.2): a panel that failed its own check must not look healthy ---- */
+  .pstatus { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+  .pstatus.stale { background: var(--warn-wash); color: var(--accT); border: 1px solid rgba(227,166,60,0.35); }
+  .pstatus.unreliable { background: var(--crit-wash); color: var(--crit); border: 1px solid rgba(226,104,90,0.45); }
+  /* grey the body, but never the verdict — the failure reason has to stay readable */
+  .card.is-unreliable { border-color: rgba(226,104,90,0.4); }
+  .card.is-unreliable .statrow, .card.is-unreliable .hbar, .card.is-unreliable table,
+  .card.is-unreliable .chartwrap, .card.is-unreliable .stack, .card.is-unreliable .bar { opacity: 0.5; }
+  .card.is-unreliable .vline { border-left-color: var(--crit); }
+  /* ---- top nav (§5.1) ---- */
+  .topnav { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin: 14px 0 0; border-bottom: 1px solid var(--grid); padding-bottom: 0; }
+  .topnav > a { font-size: 13px; color: var(--text-secondary); text-decoration: none; padding: 7px 11px; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+  .topnav > a:hover { color: var(--text-primary); }
+  .topnav > a[aria-current="page"] { color: var(--accT); border-bottom-color: var(--acc); font-weight: 600; }
+  .topnav .corner { margin-left: auto; display: flex; gap: 8px; }
+  /* ---- Today: what-changed + nav cards (§1.2) ---- */
+  .chg { display: flex; align-items: baseline; gap: 9px; padding: 6px 0; border-bottom: 1px solid var(--grid); font-size: 13px; }
+  .chg:last-child { border-bottom: none; }
+  .chg .m { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+  .chg .n { flex: 1; color: var(--text-secondary); }
+  .chg .w { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+  .navcards { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 12px; margin-top: 16px; }
+  @media (min-width: 700px) { .navcards { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); } }
+  .navcard { background: var(--surface-1); border: 1px solid var(--grid); border-radius: 12px; padding: 14px 16px; text-decoration: none; display: block; }
+  .navcard:hover { border-color: var(--acc); }
+  .navcard .t { font-size: 13.5px; font-weight: 600; color: var(--text-primary); }
+  .navcard .v { font-size: 22px; font-weight: 600; margin-top: 6px; font-variant-numeric: tabular-nums; color: var(--accT); }
+  .navcard .l { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
   footer { margin-top: 22px; font-size: 12px; color: var(--muted); line-height: 1.6; }
   .backlink { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; white-space: nowrap; }
   .backlink:hover { color: var(--accT); border-color: var(--acc); }
@@ -126,18 +178,39 @@
 </head>
 <body>
 
-<header>
-  <a class="backlink" href="index.html">&larr; OMEN</a> <a class="backlink" href="china-ai-monitor.html">China Watch &rarr;</a>
+<header id="top">
   <h1>AI Crash Monitor</h1>
-  <span class="chip calm" id="regime"><i></i>Loading</span>
-  <span id="regimeWhy"></span>
-  <p class="sub">A blended crash-pressure gauge over Polymarket odds plus options skew, the volatility complex, credit stress, and equity drawdowns. Four prediction-market indexes underneath: <strong style="color:var(--bull)">Bull</strong> (YES = acceleration), <strong style="color:var(--bear)">Bear</strong> (YES = the unwind, market or regulatory), <strong style="color:var(--acc)">China AI</strong> (YES = Chinese substitution pressure), <strong style="color:var(--aqua)">Macro</strong> (YES = recession/rate risk).</p>
+  <p class="sub" data-view="methodology">A blended crash-pressure gauge over Polymarket odds plus options skew, the volatility complex, credit stress, and equity drawdowns. Four prediction-market indexes underneath: <strong style="color:var(--bull)">Bull</strong> (YES = acceleration), <strong style="color:var(--bear)">Bear</strong> (YES = the unwind, market or regulatory), <strong style="color:var(--acc)">China AI</strong> (YES = Chinese substitution pressure), <strong style="color:var(--aqua)">Macro</strong> (YES = recession/rate risk).</p>
 </header>
 
+<nav class="topnav" id="topnav">
+  <a href="/polymarket-ai-index" data-nav="today" aria-current="page">Today</a>
+  <a href="/polymarket-ai-index/markets" data-nav="markets">Market signals</a>
+  <a href="/polymarket-ai-index/gpu" data-nav="gpu">GPU &amp; fundamentals</a>
+  <a href="/polymarket-ai-index/prediction-markets" data-nav="prediction-markets">Prediction markets</a>
+  <a href="/polymarket-ai-index/methodology" data-nav="methodology">Methodology</a>
+  <span class="corner">
+    <a class="backlink" href="index.html">&larr; OMEN</a>
+    <a class="backlink" href="china-ai-monitor.html">China Watch &rarr;</a>
+  </span>
+</nav>
+
+<section class="verdict" id="verdict">
+  <div class="vhead">
+    <span class="chip calm" id="regime"><i></i>Loading</span>
+    <span class="vsay" id="regimeSay">Reading the rule set&hellip;</span>
+  </div>
+  <div class="vtrigger" id="regimeTrigger"></div>
+  <div class="vctx" id="regimeContext"></div>
+</section>
+
 <div class="toolbar">
-  <div class="seg" id="weightSeg" title="Constituent weighting"><button data-v="equal" class="active">Equal weight</button><button data-v="volume">Volume weight</button><button data-v="thesis">Thesis weight</button></div>
-  <div class="seg" id="basisSeg" title="Probability basis"><button data-v="raw" class="active">Raw odds</button><button data-v="hazard">Deadline-adjusted</button></div>
-  <div class="seg" id="rangeSeg"><button data-v="7">7d</button><button data-v="30" class="active">30d</button><button data-v="90">90d</button></div>
+  <!-- §5.3: the weighting/basis/range controls only drive the gauge, tiles, history and
+       constituent tables, so they ride with those views instead of looking global. Alerts
+       and the freshness strip stay global. -->
+  <div class="seg" id="weightSeg" title="Constituent weighting" data-view="today prediction-markets"><button data-v="equal" class="active">Equal weight</button><button data-v="volume">Volume weight</button><button data-v="thesis">Thesis weight</button></div>
+  <div class="seg" id="basisSeg" title="Probability basis" data-view="today prediction-markets"><button data-v="raw" class="active">Raw odds</button><button data-v="hazard">Deadline-adjusted</button></div>
+  <div class="seg" id="rangeSeg" data-view="today prediction-markets"><button data-v="7">7d</button><button data-v="30" class="active">30d</button><button data-v="90">90d</button></div>
   <div class="grow">
     <button class="btn" id="alertBtn" title="Browser notification when the regime escalates">Enable alerts</button>
     <span class="status" id="status">Loading&hellip;</span>
@@ -146,8 +219,10 @@
 
 <div class="fresh" id="freshStrip"></div>
 
-<div class="card" style="margin-top:14px">
-  <h2>AI Crash-Pressure Gauge <span class="sub" style="font-weight:400">&ndash; blended 0&ndash;100 across six independent signal families</span></h2>
+<div class="card" id="p-gauge" data-view="today" style="margin-top:14px">
+  <h2>AI Crash-Pressure Gauge <span class="sub" style="font-weight:400">&ndash; blended 0&ndash;100 across six independent signal families</span>
+    <a href="/polymarket-ai-index/prediction-markets" data-nav="prediction-markets" class="sub" style="font-weight:600;color:var(--accT);margin-left:auto">History &rarr;</a></h2>
+  <div class="vline" id="gaugeVerdict"></div>
   <div class="gauge">
     <div>
       <div class="gaugeNum"><span id="gaugeVal">&ndash;</span><small>/100</small></div>
@@ -157,11 +232,20 @@
     </div>
     <div class="cats" id="cats"></div>
   </div>
-  <div class="chartwrap" id="gaugeWrap"><svg id="gaugeChart" viewBox="0 0 1000 190" role="img" aria-label="Gauge history"></svg><div class="tip" id="gaugeTip"></div></div>
-  <div class="note" id="gaugeNote"></div>
+  <details class="howto"><summary>How to read this</summary>
+    <div class="note" id="gaugeNote"></div>
+  </details>
 </div>
 
-<div class="tiles" style="margin-top:16px">
+<div class="card" id="p-gauge-history" data-view="prediction-markets">
+  <h2>Crash-pressure gauge &ndash; 90-day history</h2>
+  <div class="chartwrap" id="gaugeWrap"><svg id="gaugeChart" viewBox="0 0 1000 190" role="img" aria-label="Gauge history"></svg><div class="tip" id="gaugeTip"></div></div>
+  <details class="howto"><summary>How to read this</summary>
+    <div class="note">Reconstructed from stored daily series. Its prediction-market family uses the bubble market only &ndash; the NVDA-tail and H100 events are rediscovered monthly and have no persistent history &ndash; so the line can sit slightly below the live gauge. Bands match the regime thresholds (35 / 55).</div>
+  </details>
+</div>
+
+<div class="tiles" id="indexTiles" data-view="today" style="margin-top:16px">
   <div class="tile"><div class="label"><span class="key" style="background:var(--bull)"></span>AI-Bull Index</div><div class="value" id="bullVal">&ndash;</div><div class="delta" id="bullDelta"></div><svg class="spark" id="bullSpark"></svg></div>
   <div class="tile"><div class="label"><span class="key" style="background:var(--bear)"></span>AI-Bear Index</div><div class="value" id="bearVal">&ndash;</div><div class="delta" id="bearDelta"></div><svg class="spark" id="bearSpark"></svg></div>
   <div class="tile"><div class="label"><span class="key" style="background:var(--acc)"></span>AI-China Index</div><div class="value" id="chinaVal">&ndash;</div><div class="delta" id="chinaDelta"></div><svg class="spark" id="chinaSpark"></svg></div>
@@ -169,156 +253,231 @@
   <div class="tile"><div class="label">Net sentiment (bull &minus; bear)</div><div class="value" id="netVal">&ndash;</div><div class="delta dim">Positive = leans toward acceleration</div><svg class="spark" id="netSpark"></svg></div>
 </div>
 
-<div class="card">
+<div class="card" id="whatChanged" data-view="today">
+  <h2>What changed</h2>
+  <div id="changedList"></div>
+</div>
+
+<div class="navcards" id="navCards" data-view="today"></div>
+
+<div class="card" id="p-history" data-view="prediction-markets">
   <h2>Composite index history <span class="sub" id="chainBadge" style="font-weight:400"></span></h2>
   <div class="cap" id="chartCap"></div>
   <div class="chartwrap" id="mainWrap"><svg id="chart" viewBox="0 0 1000 540" role="img" aria-label="AI index history, five panels"></svg><div class="tip" id="mainTip"></div></div>
 </div>
 
 <div class="grid2">
-  <div class="card">
+  <div class="card" id="p-stack" data-view="prediction-markets">
     <h2>Crash signal stack</h2>
-    <div class="cap">Independent early-warning probabilities from prediction markets. These feed the gauge&rsquo;s prediction-market family.</div>
+    <div class="vline" id="stackVerdict"></div>
     <div class="stack" id="stack"></div>
-    <div class="note" id="bookNote"></div>
+    <details class="howto"><summary>How to read this</summary>
+      <div class="cap">Independent early-warning probabilities from prediction markets. These feed the gauge&rsquo;s prediction-market family.</div>
+      <div class="note" id="bookNote"></div>
+    </details>
   </div>
-  <div class="card">
+  <div class="card" id="p-momentum" data-view="prediction-markets">
     <h2>Momentum &amp; divergence</h2>
-    <div class="cap">Crashes come from acceleration, not a high static level. Z-scores are vs. the trailing 90-day chain-linked distribution (fixed equal-weight/raw basis, so toggles don&rsquo;t move them).</div>
+    <div class="vline" id="divNote"></div>
     <div class="statrow" id="momStats"></div>
-    <div class="note" id="divNote"></div>
     <div class="note" id="spikeNote"></div>
+    <details class="howto"><summary>How to read this</summary>
+      <div class="cap">Crashes come from acceleration, not a high static level. Z-scores are vs. the trailing 90-day chain-linked distribution (fixed equal-weight/raw basis, so toggles don&rsquo;t move them).</div>
+    </details>
   </div>
 </div>
 
 <div class="grid2">
-  <div class="card">
+  <div class="card" id="p-vol" data-view="markets">
     <h2>Volatility complex</h2>
-    <div class="cap">Options-market crash pricing. Term structure &gt; 1 (backwardation) and rising put skew are the classic pre-drawdown tells.</div>
+    <div class="vline" id="volVerdict"></div>
     <div class="statrow" id="volStats"></div>
-    <div class="note" id="volNote"></div>
+    <details class="howto"><summary>How to read this</summary>
+      <div class="cap">Options-market crash pricing. Term structure &gt; 1 (backwardation) and rising put skew are the classic pre-drawdown tells.</div>
+    </details>
   </div>
-  <div class="card">
+  <div class="card" id="p-credit" data-view="markets">
     <h2>Credit stress</h2>
-    <div class="cap">High-yield credit often cracks before equity in capex-heavy bubbles. HY OAS and CCC OAS are true option-adjusted spreads (FRED); HY/IG is the HYG&divide;LQD price proxy.</div>
+    <div class="vline" id="creditVerdict"></div>
     <div class="statrow" id="creditStats"></div>
-    <div class="note" id="creditNote"></div>
+    <details class="howto"><summary>How to read this</summary>
+      <div class="cap">High-yield credit often cracks before equity in capex-heavy bubbles. HY OAS and CCC OAS are true option-adjusted spreads (FRED); HY/IG is the HYG&divide;LQD price proxy.</div>
+    </details>
   </div>
 </div>
 
 <div class="grid2">
-  <div class="card">
+  <div class="card" id="p-breadth" data-view="markets">
     <h2>AI-complex breadth <span class="sub" id="breadthCount" style="font-weight:400"></span></h2>
-    <div class="cap">Equal-weight basket of AI-capex names (hyperscalers, semis, power, neoclouds). Narrowing breadth while the index holds is the classic late-cycle tell.</div>
+    <div class="vline" id="breadthVerdict"></div>
     <div class="statrow" id="breadthStats"></div>
     <div id="breadthBars"></div>
+    <details class="howto"><summary>How to read this</summary>
+      <div class="cap">Equal-weight basket of AI-capex names (hyperscalers, semis, power, neoclouds). Narrowing breadth while the index holds is the classic late-cycle tell.</div>
+    </details>
   </div>
-  <div class="card">
+  <div class="card" id="p-insiders" data-view="markets">
     <h2>Insider activity &ndash; Form 4 <span class="sub" style="font-weight:400">last 90 days</span></h2>
-    <div class="cap">Open-market sells (code S) minus buys (code P) from SEC EDGAR, most recent filings per name. Option exercises, tax withholding and gifts are excluded.</div>
+    <div class="vline" id="insiderVerdict"></div>
     <div class="statrow" id="insiderStats"></div>
     <div id="insiderBars"></div>
-    <div class="note" id="insiderNote"></div>
+    <details class="howto"><summary>How to read this</summary>
+      <div class="cap">Open-market sells (code S) minus buys (code P) from SEC EDGAR, most recent filings per name. Option exercises, tax withholding and gifts are excluded.</div>
+      <div class="note" id="insiderNote"></div>
+    </details>
   </div>
 </div>
 
+<!-- §4.2: the four GPU panels tell one story; assembleGpuStory() moves them in here at boot
+     so the narrative runs ladder -> current gen -> last gen -> the accounting mirror. -->
+<section id="gpuStory" data-view="gpu">
+  <p class="note" style="margin:16px 0 0">Four reads on the same question: how fast does AI silicon lose value?</p>
+</section>
+
 <div class="grid2">
-  <div class="card">
+  <div class="card" id="p-nvda" data-view="markets">
     <h2 id="nvdaTitle">NVDA market-implied tail</h2>
-    <div class="cap">Probability NVDA touches each level this month, from Polymarket bracket markets. A fattening downside tail is the leading signal.</div>
+    <div class="vline" id="nvdaVerdict"></div>
     <div id="nvdaLadder"></div>
+    <details class="howto"><summary>How to read this</summary>
+      <div class="cap">Probability NVDA touches each level this month, from Polymarket bracket markets. A fattening downside tail is the leading signal.</div>
+    </details>
   </div>
-  <div class="card">
+  <div class="card" id="p-h100" data-view="gpu">
     <h2 id="h100Title">H100 GPU rent &ndash; implied vs realized</h2>
-    <div class="cap">Polymarket&rsquo;s implied month-end distribution vs two independent reads of the same rent: Kalshi&rsquo;s month-end ladder (settled on the <a href="https://dashboard.ornnai.com/" target="_blank" rel="noopener">Ornn</a> index) and the realized ask tape on vast.ai. <strong>The two spot sources are different indices, not the same number</strong> &ndash; the gap between them is basis, and it is most of any implied-vs-realized divergence. A sustained H100 rent &le; $1.00 is one of the bubble market&rsquo;s crash triggers.</div>
+    <div class="vline" id="h100Verdict"></div>
     <div class="statrow" id="h100Stats"></div>
     <div id="h100Dist"></div>
+    <details class="howto"><summary>How to read this</summary>
+      <div class="cap">Polymarket&rsquo;s implied month-end distribution vs two independent reads of the same rent: Kalshi&rsquo;s month-end ladder (settled on the <a href="https://dashboard.ornnai.com/" target="_blank" rel="noopener">Ornn</a> index) and the realized ask tape on vast.ai. <strong>The two spot sources are different indices, not the same number</strong> &ndash; the gap between them is basis, and it is most of any implied-vs-realized divergence. A sustained H100 rent &le; $1.00 is one of the bubble market&rsquo;s crash triggers.</div>
+      <div class="note" id="h100Note"></div>
+    </details>
   </div>
 </div>
 
 <div class="grid2">
-  <div class="card">
+  <div class="card" id="p-leaps" data-view="markets">
     <h2>Options-implied 1-year tail <span class="sub" style="font-weight:400">&ndash; LEAPS, the deepest crash market</span></h2>
-    <div class="cap">Risk-neutral P(finish below level) from long-dated CBOE puts, N(&minus;d2) at the listed strike&rsquo;s IV. NVDA options carry orders of magnitude more capital than the Polymarket bubble market &ndash; this is the hardest-to-push crash price available. Risk-neutral odds overstate real-world odds (risk premium), so read them as a ceiling.</div>
+    <div class="vline" id="leapsVerdict"></div>
     <div class="statrow" id="leapsStats"></div>
     <div id="leapsBars"></div>
-    <div class="note" id="leapsNote"></div>
+    <details class="howto"><summary>How to read this</summary>
+      <div class="cap">Risk-neutral P(finish below level) from long-dated CBOE puts, N(&minus;d2) at the listed strike&rsquo;s IV. NVDA options carry orders of magnitude more capital than the Polymarket bubble market &ndash; this is the hardest-to-push crash price available. Risk-neutral odds overstate real-world odds (risk premium), so read them as a ceiling.</div>
+      <div class="note" id="leapsNote"></div>
+    </details>
   </div>
-  <div class="card">
+  <div class="card" id="p-fund" data-view="gpu">
     <h2>Fundamentals check <span class="sub" style="font-weight:400">&ndash; AI-capex filers, SEC XBRL</span></h2>
-    <div class="cap">The one panel that isn&rsquo;t a market price. Combined quarterly capex and operating cash flow for MSFT, GOOGL, AMZN, META, ORCL from audited filings. Capex/OCF is the classic capex-bubble fundamental &ndash; dot-com telecoms crossed 100% before the unwind. A bubble is priced <em>vs. fundamentals</em>; this is the denominator.</div>
+    <div class="vline" id="fundVerdict"></div>
     <div class="statrow" id="fundStats"></div>
     <div id="fundBars"></div>
-    <div class="note" id="fundNote"></div>
+    <details class="howto"><summary>How to read this</summary>
+      <div class="cap">The one panel that isn&rsquo;t a market price. Combined quarterly capex and operating cash flow for MSFT, GOOGL, AMZN, META, ORCL from audited filings. Capex/OCF is the classic capex-bubble fundamental &ndash; dot-com telecoms crossed 100% before the unwind. A bubble is priced <em>vs. fundamentals</em>; this is the denominator.</div>
+      <div class="note" id="fundNote"></div>
+    </details>
   </div>
 </div>
 
 <div class="grid2">
-  <div class="card">
+  <div class="card" id="p-capex" data-view="gpu">
     <h2>AI capex vs. the economy <span class="sub" style="font-weight:400">&ndash; scale check, BEA + SEC</span></h2>
-    <div class="cap">Kedrosky&rsquo;s scale argument: combined hyperscaler capex against nominal GDP. Annualized AI-capex as a share of the whole economy, and of its <em>growth</em> &ndash; the number that makes this a bubble rather than an ordinary capex cycle. Not a market price.</div>
+    <div class="vline" id="macroVerdict"></div>
     <div class="statrow" id="macroStats"></div>
     <div id="macroBars"></div>
-    <div class="note" id="macroNote"></div>
+    <details class="howto"><summary>How to read this</summary>
+      <div class="cap">Kedrosky&rsquo;s scale argument: combined hyperscaler capex against nominal GDP. Annualized AI-capex as a share of the whole economy, and of its <em>growth</em> &ndash; the number that makes this a bubble rather than an ordinary capex cycle. Not a market price.</div>
+      <div class="note" id="macroNote"></div>
+    </details>
   </div>
-  <div class="card">
+  <div class="card" id="p-dep" data-view="gpu">
     <h2>GPU depreciation gap <span class="sub" style="font-weight:400">&ndash; the fast-obsolescence tell</span></h2>
-    <div class="cap">Buildings last decades; GPUs are written off in a few years, and training wears them faster than inference. Depreciation recognized vs. cash capex spent: when the ratio falls while capex soars, cost recognition is lagging the spend &ndash; the accounting mechanism (extending useful-life assumptions) that flatters earnings, exactly as dot-com telecom did.</div>
+    <div class="vline" id="depVerdict"></div>
     <div class="statrow" id="depStats"></div>
     <div id="depBars"></div>
-    <div class="note" id="depNote"></div>
+    <details class="howto"><summary>How to read this</summary>
+      <div class="cap">Buildings last decades; GPUs are written off in a few years, and training wears them faster than inference. Depreciation recognized vs. cash capex spent: when the ratio falls while capex soars, cost recognition is lagging the spend &ndash; the accounting mechanism (extending useful-life assumptions) that flatters earnings, exactly as dot-com telecom did.</div>
+      <div class="note" id="depNote"></div>
+    </details>
   </div>
 </div>
 
-<div class="card">
+<div class="card" id="p-kgpu" data-view="gpu">
   <h2>GPU generational price ladder <span class="sub" style="font-weight:400">&ndash; Kalshi compute markets, the market-priced decay curve</span></h2>
-  <div class="cap">The market&rsquo;s live estimate of how fast silicon decays &ndash; the counterpart to the depreciation panel above, which argues the same case from accounting alone. Each chip&rsquo;s reference is the Ornn print that Kalshi&rsquo;s weekly &ldquo;price to beat&rdquo; strike is set at; the month-end figure is the implied median of the Kalshi ladder, shown <strong>only where the book supports one</strong>. Last-gen silicon walking toward the bubble market&rsquo;s $1.00 H100 trigger is the obsolescence thesis priced, not asserted.</div>
+  <div class="vline" id="kgpuVerdict"></div>
   <div class="statrow" id="kgpuStats"></div>
   <div id="kgpuBars"></div>
-  <div class="note" id="kgpuNote"></div>
+  <details class="howto"><summary>How to read this</summary>
+    <div class="cap">The market&rsquo;s live estimate of how fast silicon decays &ndash; the counterpart to the depreciation panel above, which argues the same case from accounting alone. Each chip&rsquo;s reference is the Ornn print that Kalshi&rsquo;s weekly &ldquo;price to beat&rdquo; strike is set at; the month-end figure is the implied median of the Kalshi ladder, shown <strong>only where the book supports one</strong>. Last-gen silicon walking toward the bubble market&rsquo;s $1.00 H100 trigger is the obsolescence thesis priced, not asserted.</div>
+    <div class="note" id="kgpuNote"></div>
+  </details>
 </div>
 
 <div class="grid2">
-  <div class="card">
+  <div class="card" id="p-aicredit" data-view="gpu">
     <h2>AI &amp; private-credit stress <span class="sub" style="font-weight:400">&ndash; the contagion channel</span></h2>
-    <div class="cap">Kedrosky&rsquo;s 2008 analogy: AI-infra debt sits in neoclouds, private credit, and direct-lending funds held by pensions and insurers &ndash; not the broad HY index. BDC prices (BIZD) proxy private credit; CCC OAS is the junk tier where neocloud paper lives; the levered-AI equity basket is the market&rsquo;s early read on financing risk.</div>
+    <div class="vline" id="aicreditVerdict"></div>
     <div class="statrow" id="aicreditStats"></div>
     <div id="aicreditBars"></div>
-    <div class="note" id="aicreditNote"></div>
+    <details class="howto"><summary>How to read this</summary>
+      <div class="cap">Kedrosky&rsquo;s 2008 analogy: AI-infra debt sits in neoclouds, private credit, and direct-lending funds held by pensions and insurers &ndash; not the broad HY index. BDC prices (BIZD) proxy private credit; CCC OAS is the junk tier where neocloud paper lives; the levered-AI equity basket is the market&rsquo;s early read on financing risk.</div>
+      <div class="note" id="aicreditNote"></div>
+    </details>
   </div>
-  <div class="card">
+  <div class="card" id="p-power" data-view="gpu">
     <h2>Power &amp; electricity <span class="sub" style="font-weight:400">&ndash; the real-economy externality</span></h2>
-    <div class="cap">The buildout&rsquo;s physical constraint and its political trigger. Residential electricity prices (CPI) are what turns residents against data centers; utility equities (XLU) plus the power-gen names price the demand pull. Rising bills <em>and</em> soaring power stocks means the buildout is bidding up electricity.</div>
+    <div class="vline" id="powerVerdict"></div>
     <div class="statrow" id="powerStats"></div>
     <div id="powerBars"></div>
-    <div class="note" id="powerNote"></div>
+    <details class="howto"><summary>How to read this</summary>
+      <div class="cap">The buildout&rsquo;s physical constraint and its political trigger. Residential electricity prices (CPI) are what turns residents against data centers; utility equities (XLU) plus the power-gen names price the demand pull. Rising bills <em>and</em> soaring power stocks means the buildout is bidding up electricity.</div>
+      <div class="note" id="powerNote"></div>
+    </details>
   </div>
 </div>
 
 <div class="grid2">
-  <div class="card">
+  <div class="card" id="p-b200" data-view="gpu">
     <h2 id="b200Title">B200 GPU rent <span class="sub" style="font-weight:400">&ndash; Blackwell next-gen demand proxy</span></h2>
-    <div class="cap">Polymarket's B200 (Blackwell) rental brackets — the current-generation GPU. B200 rent below a threshold signals demand destruction for NVDA's flagship product.</div>
+    <div class="vline" id="b200Verdict"></div>
     <div class="statrow" id="b200Stats"></div>
     <div id="b200Dist"></div>
+    <details class="howto"><summary>How to read this</summary>
+      <div class="cap">Polymarket's B200 (Blackwell) rental brackets — the current-generation GPU. B200 rent below a threshold signals demand destruction for NVDA's flagship product.</div>
+    </details>
   </div>
-  <div class="card">
+  <div class="card" id="p-val" data-view="prediction-markets">
     <h2>AI valuation brackets <span class="sub" style="font-weight:400">&ndash; OpenAI &amp; Anthropic euphoria gauge</span></h2>
-    <div class="cap">Polymarket valuation bracket markets. When extreme valuations (> $500B for OpenAI) carry high probability, that's euphoric sentiment. Declining probabilities signal the funding window tightening.</div>
+    <div class="vline" id="valVerdict"></div>
     <div id="valDist"></div>
-    <div class="note" id="valNote"></div>
+    <details class="howto"><summary>How to read this</summary>
+      <div class="cap">Polymarket valuation bracket markets. When extreme valuations (> $500B for OpenAI) carry high probability, that's euphoric sentiment. Declining probabilities signal the funding window tightening.</div>
+      <div class="note" id="valNote"></div>
+    </details>
   </div>
 </div>
 
-<div class="card">
+<div class="card" id="p-cross" data-view="prediction-markets">
   <h2>Cross-venue check <span class="sub" style="font-weight:400">&ndash; Kalshi, Metaculus &amp; Manifold</span></h2>
-  <div class="cap" id="kalshiCap">Where the same theme trades on several venues, disagreement is a confidence signal.</div>
+  <div class="vline" id="crossVerdict"></div>
   <div class="tscroll"><table id="kalshiTable"></table></div>
   <div class="tscroll"><table id="metaculusTable"></table></div>
   <div class="tscroll"><table id="manifoldTable"></table></div>
+  <details class="howto"><summary>How to read this</summary>
+    <div class="cap" id="kalshiCap">Where the same theme trades on several venues, disagreement is a confidence signal.</div>
+  </details>
 </div>
 
-<div class="card">
+<div class="card" id="p-claims" data-view="prediction-markets">
+  <h2>Singularity claims watch <span class="sub" style="font-weight:400">&ndash; the bull narrative vs. the tape</span></h2>
+  <div class="vline" id="claimsVerdict"></div>
+  <div class="tscroll"><table id="claimsTable"></table></div>
+  <details class="howto"><summary>How to read this</summary>
+    <div class="cap">Five falsifiable claims from the economic-singularity thesis, each read against live prediction markets or official data. The interesting motion is convergence: odds repricing <em>up toward</em> the narrative means euphoria is broadening beyond talk &ndash; and a claim failing in the labor data is the backlash channel arming.</div>
+    <div class="note" id="claimsNote"></div>
+  </details>
+</div>
+
+<div class="card" id="p-equity" data-view="markets">
   <h2>Equity check &ndash; NVDA &amp; SOXX vs. the bear index</h2>
   <div class="cap">Closes rebased to 100 at window start. Shown on its own axis &ndash; different units never share one.</div>
   <div class="chartwrap" id="eqWrap"><svg id="eqChart" viewBox="0 0 1000 220" role="img" aria-label="Equity rebased"></svg><div class="tip" id="eqTip"></div></div>
@@ -326,7 +485,7 @@
   <div class="statrow" id="eqStats"></div>
 </div>
 
-<div class="card">
+<div class="card" id="p-leadlag" data-view="markets">
   <h2>Does the bear index (MKT sleeve) lead prices?</h2>
   <details id="leadlagDetails">
     <summary id="leadlagSummary">Computing&hellip;</summary>
@@ -336,21 +495,21 @@
   </details>
 </div>
 
-<div class="card">
+<div class="card" id="p-constituents" data-view="prediction-markets">
   <h2>Constituents <span class="sub" id="coverage" style="font-weight:400"></span></h2>
   <div class="cap">Price = order-book midpoint. Click a column header to sort. &#9888; spread &gt; 6&cent; (thin). &#9889; 24h volume &ge; 2&times; weekly run-rate. &dagger; structural question &ndash; deadline-adjustment not applied (only one-time-event markets are annualized).</div>
   <div id="coverageNote" class="note"></div>
 </div>
-<div class="grid2" style="margin-top:0">
+<div class="grid2" data-view="prediction-markets" style="margin-top:0">
   <div class="card"><h2 style="font-size:13px">AI-Bull <span class="sub" id="bullMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="bullTable"></table></div></div>
   <div class="card"><h2 style="font-size:13px">AI-Bear <span class="sub" id="bearMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="bearTable"></table></div></div>
 </div>
-<div class="grid2" style="margin-top:0">
+<div class="grid2" data-view="prediction-markets" style="margin-top:0">
   <div class="card"><h2 style="font-size:13px">AI-China <span class="sub" id="chinaMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="chinaTable"></table></div></div>
   <div class="card"><h2 style="font-size:13px">AI-Macro <span class="sub" id="macroMeta" style="font-weight:400"></span></h2><div class="tscroll"><table id="macroTable"></table></div></div>
 </div>
 
-<div class="card">
+<div class="card" id="p-snapshots" data-view="methodology">
   <h2>Durable snapshots</h2>
   <div class="cap" id="snapCap"></div>
   <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
@@ -361,8 +520,8 @@
 
 <p class="err" id="err"></p>
 
-<footer>
-  <details id="methodDetails"><summary><strong>Methodology &amp; sources</strong></summary><div id="foot"></div></details>
+<footer id="methodology" data-view="methodology">
+  <details id="methodDetails" open><summary><strong>Methodology &amp; sources</strong></summary><div id="foot"></div></details>
 </footer>
 
 <script>
@@ -441,6 +600,14 @@ const BUBBLE_ID = "691340";
 const FUNDING_IDS = ["656312","2413330"];
 // Bubble-sentiment markets: existing bull constituents whose extreme probability = euphoria
 const BUBBLE_SENTIMENT_IDS = ["656313","653788","2413330"];
+// Claims-watch markets tracked OUTSIDE the indexes (they price the singularity narrative's
+// falsifiable claims, not the AI cycle itself, so they must move no composite).
+// IDs verified against the Gamma API 2026-07-17.
+const CLAIM_OPTIMUS_ID = "1243588";    // Will Tesla release Optimus by December 31, 2026?
+const CLAIM_ROBOTAXI_ID = "2745579";   // Will Tesla launch robotaxis in California by December 31?
+const CLAIM_IDS = [CLAIM_OPTIMUS_ID, CLAIM_ROBOTAXI_ID];
+const CLAIM_AGI_ID = "653788";         // existing bull constituent: OpenAI announces AGI before 2027
+const CLAIM_ARENA_ID = "1087074";      // existing bull constituent: any model hits 1550 Arena
 const GAMMA = "https://gamma-api.polymarket.com", CLOB = "https://clob.polymarket.com";
 
 let weighting="equal", basis="raw", rangeDays=30;
@@ -457,6 +624,12 @@ const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
 const fmtVol = v => v>=1e6 ? "$"+(v/1e6).toFixed(1)+"M" : v>=1e3 ? "$"+(v/1e3).toFixed(0)+"K" : "$"+Math.round(v);
 const fmtUsd = v => { const a=Math.abs(v), s=v<0?"−$":"$"; return a>=1e9?s+(a/1e9).toFixed(1)+"B":a>=1e6?s+(a/1e6).toFixed(0)+"M":a>=1e3?s+(a/1e3).toFixed(0)+"K":s+Math.round(a); };
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// toFixed() emits a hyphen-minus; prose uses a real minus sign. Sign off the *rounded*
+// value, or a small negative renders as "−0" at low precision.
+const mnum = (v,d=0) => { const s=Math.abs(v).toFixed(d); return (v<0 && +s!==0 ? "−" : "")+s; };
+// §4.1 cross-link: a fact lives in exactly one panel; everywhere else points at it.
+const xlink = (label, view, panel) =>
+  `<a href="/polymarket-ai-index/${view}#${panel}" data-nav="${view}" data-anchor="${panel}" style="color:var(--text-secondary)">${label} <span style="color:var(--acc)">&#8599;</span></a>`;
 
 /* ================= Fetching ================= */
 function parseMarket(m){
@@ -470,8 +643,10 @@ function parseMarket(m){
     url:m.events&&m.events[0]?`https://polymarket.com/event/${m.events[0].slug}`:`https://polymarket.com/market/${m.slug}` };
 }
 async function fetchMarkets(){
-  const qs=CONSTITUENTS.map(c=>"id="+c.id).join("&");
-  const res=await fetch(`${GAMMA}/markets?${qs}&limit=${CONSTITUENTS.length+10}`);
+  // claim markets ride the same request; coverage below still counts only CONSTITUENTS
+  const ids=CONSTITUENTS.map(c=>c.id).concat(CLAIM_IDS);
+  const qs=ids.map(i=>"id="+i).join("&");
+  const res=await fetch(`${GAMMA}/markets?${qs}&limit=${ids.length+10}`);
   if(!res.ok) throw new Error("Gamma API "+res.status);
   for(const m of await res.json()) markets.set(String(m.id), parseMarket(m));
   coverage.excluded=[]; coverage.loaded=0;
@@ -557,6 +732,7 @@ async function fetchB200(){
   b200={ title:ev.title, url:`https://polymarket.com/event/${ev.slug}`, brackets:b };
 }
 let valuations=null;
+let valUnreliable=false;   // set by renderValuations when the bracket ladder fails its monotonicity check
 async function fetchValuations(){
   const events=[];
   for(const q of ["Will OpenAI's valuation hit __ by December 31","Will Anthropic's valuation hit __ by June 30"]){
@@ -581,6 +757,138 @@ async function fetchValuations(){
   }
   valuations = firms.length?{firms}:null;
 }
+
+/* ================= Claims watch: pure helpers ================= */
+// The economic-singularity thesis (Raoul Pal, Real Vision, Jul 2026) made five falsifiable
+// claims. Each is read against capital-at-risk markets or official tape; the dot escalates as
+// the tape moves TOWARD the world the claim describes — euphoria broadening, or the labor
+// backlash channel arming. Pure functions up to the fetch/render marker; the .mjs tests slice this block.
+function yoyPct(series){
+  if(!series||series.length<13) return null;
+  const last=series[series.length-1], t=Date.parse(last.d)-365.25*86400000;
+  let best=null,bd=Infinity;
+  for(const p of series){ const g=Math.abs(Date.parse(p.d)-t); if(g<bd){ bd=g; best=p; } }
+  // a nearest match further than ~1.5 months from "a year ago" is a data hole, not a YoY
+  return (best&&best.c&&bd<=45*86400000)?(last.c/best.c-1)*100:null;
+}
+function ptsChange(series,n){
+  if(!series||series.length<=n) return null;
+  return series[series.length-1].c-series[series.length-1-n].c;
+}
+function probAbove(brackets,lo){
+  if(!brackets) return null;
+  let s=0,found=false;
+  for(const b of brackets){ if(b.lo!=null&&b.lo>=lo&&b.p!=null){ s+=b.p; found=true; } }
+  return found?s:null;
+}
+// signed prose number: house minus (U+2212) for negatives, + for positives, sign off the
+// rounded value so a small negative never prints "−0.0" (same rule as mnum)
+const snum=(v,d=1)=>{ const s=Math.abs(v).toFixed(d); return (v<0&&+s!==0?"−":v>0&&+s!==0?"+":"")+s; };
+function claimReads(inp){
+  const i=inp||{};
+  const euph=p=>p==null?null:p>=50?{cls:"crit",label:"market agrees"}:p>=20?{cls:"warn",label:"market split"}:{cls:"good",label:"narrative ahead of market"};
+  const rows=[];
+  { const p=i.agi!=null?i.agi:null;
+    rows.push({ key:"agi", claim:"“AI models smarter than anyone within the next year” — AGI imminent",
+      metrics:[ {label:"OpenAI announces AGI before 2027 (Polymarket)", v:i.agi, unit:"%"},
+                {label:"Any model hits 1550 Chatbot Arena by Dec 31", v:i.arena, unit:"%"} ],
+      band:euph(p),
+      verdict:p==null?"No live market read."
+        :p>=50?`AGI-by-2027 odds at ${p.toFixed(1)}% — capital now agrees with the narrative.`
+        :p>=20?`AGI-by-2027 odds at ${p.toFixed(1)}% — live, but far from consensus.`
+        :`Markets price AGI-by-2027 at ${p.toFixed(1)}% — the narrative runs far ahead of paid odds.` }); }
+  { const vals=[i.optimus,i.robotaxi].filter(v=>v!=null), p=vals.length?Math.max(...vals):null;
+    rows.push({ key:"robots", claim:"Robots at scale “in the next 12 months” (factories → retail → services)",
+      metrics:[ {label:"Tesla releases Optimus by Dec 31, 2026", v:i.optimus, unit:"%"},
+                {label:"Tesla robotaxis live in California by Dec 31", v:i.robotaxi, unit:"%"} ],
+      band:euph(p),
+      verdict:p==null?"No live market read."
+        :`Best-priced physical-AI milestone trades at ${p.toFixed(1)}% — ${p>=50?"deployment is now the market's base case.":p>=20?"deployment odds are real but contested.":"the market treats 12-month scale deployment as a long shot."}` }); }
+  { const p=i.gdpAbove3;
+    const band=p==null?null:p>=50?{cls:"crit",label:"repricing toward the claim"}:p>=25?{cls:"warn",label:"upside tail fattening"}:{cls:"good",label:"consensus growth"};
+    rows.push({ key:"gdp", claim:"“10–30% GDP growth becomes possible” — the economy moves faster than ever",
+      metrics:[ {label:"Market-implied P(quarterly growth ≥ 3% SAAR)", v:p, unit:"%"},
+                {label:"Latest realized real GDP growth (SAAR)", v:i.gdpLast, unit:"%", dp:1, signed:true} ],
+      band,
+      verdict:p==null?"No live bracket read."
+        :`The GDP bracket ladder tops out at 3.5% — double-digit growth is not even listed. P(≥3%) is ${p.toFixed(1)}%${i.gdpLast!=null?`, realized growth ${snum(i.gdpLast,1)}%`:""}.` }); }
+  { const g=i.goodsYoy;
+    const band=g==null?null:g<=-0.5?{cls:"crit",label:"deflation on the tape"}:g<0.5?{cls:"warn",label:"disinflation"}:{cls:"good",label:"no deflation"};
+    rows.push({ key:"deflation", claim:"“The most deflationary force the world has ever seen”",
+      metrics:[ {label:"Core goods CPI, YoY", v:g, unit:"%", dp:1, signed:true},
+                {label:"Residential electricity CPI, YoY", v:i.elecYoy, unit:"%", dp:1, signed:true},
+                {label:"A100 rent vs B200 (last-gen → current-gen)", v:i.gpuRatio!=null?i.gpuRatio*100:null, unit:"%", dp:0} ],
+      band,
+      verdict:g==null?"No CPI read."
+        :(i.gpuRatio!=null?`Deflation is real in silicon (last-gen GPU rents at ${(i.gpuRatio*100).toFixed(0)}% of current-gen) — but `:"")+
+         (g<=-0.5?`core goods prices are falling (${snum(g,1)}% YoY): the claim is validating on the consumer tape.`
+          :g<0.5?`core goods CPI is only flat (${snum(g,1)}% YoY) — disinflation, not a deflationary bomb.`
+          :`core goods CPI is still rising (${snum(g,1)}% YoY)${i.elecYoy!=null&&i.elecYoy>0?` and electricity ${snum(i.elecYoy,1)}%`:""} — no economy-wide deflation on the tape.`) }); }
+  { const u=i.un6, l=i.lfpr6;
+    const holding=l==null||l>-0.15;
+    const band=u==null?null:(u>=0.3&&holding)?{cls:"crit",label:"displacement signature"}:u>=0.15?{cls:"warn",label:"labor softening"}:{cls:"good",label:"claim holding"};
+    rows.push({ key:"labor", claim:"“AI replaces retiring workers” — no displacement shock, participation falls only on demographics",
+      metrics:[ {label:"Unemployment rate, 6-month change", v:u, unit:" pt", dp:1, signed:true},
+                {label:"Prime-age (25–54) participation, 6-month change", v:l, unit:" pt", dp:1, signed:true} ],
+      band,
+      verdict:u==null?"No labor read."
+        :(u>=0.3&&holding)?`Unemployment ${snum(u,1)} pt in 6 months while prime-age participation holds — the displacement signature the claim says cannot happen.`
+        :u>=0.15?(holding?`Unemployment drifting up (${snum(u,1)} pt / 6mo) — not yet a displacement signature; watch the split.`:`Unemployment and participation falling together — a demographic/recession mix, not AI displacement.`)
+        :`Unemployment flat (${snum(u,1)} pt / 6mo) — consistent with replacement-not-displacement so far.` }); }
+  return rows;
+}
+/* ================= Claims watch: fetch & render ================= */
+let gdpq=null;
+async function fetchGdp(){
+  // quarterly event, rolls over like the NVDA/H100 discoveries; earliest end date = current quarter
+  const ev=await discoverEvent("US GDP growth in Q", /US GDP growth in Q\d 20\d\d\?/i, null);
+  if(!ev){ gdpq=null; return; }
+  const b=[];
+  for(const m of ev.markets||[]){ if(m.closed) continue;
+    const q=m.question||"", p=parseFloat(JSON.parse(m.outcomePrices||'["0"]')[0]); let lo=null,hi=null,mm;
+    if((mm=q.match(/between ([\d.]+)% and ([\d.]+)%/i))){lo=+mm[1];hi=+mm[2];}
+    else if((mm=q.match(/less than ([\d.]+)%/i))){hi=+mm[1];}
+    else if((mm=q.match(/greater than ([\d.]+)%/i))){lo=+mm[1];}
+    else continue;
+    b.push({lo,hi,p}); }
+  b.sort((x,y)=>(x.lo??-1)-(y.lo??-1));
+  gdpq={ title:ev.title, url:`https://polymarket.com/event/${ev.slug}`, brackets:b };
+}
+function claimInputs(){
+  const live=id=>{ const m=markets.get(id); return m&&!m.closed?m.yes*100:null; };
+  const F=mkt?.fred||{};
+  const kg=c=>mkt?.kalshi_gpu?.chips?.find(x=>x.chip===c);
+  const a=kg("A100"), b=kg("B200");
+  const pa=gdpq?probAbove(gdpq.brackets,3.0):null;
+  return {
+    agi:live(CLAIM_AGI_ID), arena:live(CLAIM_ARENA_ID),
+    optimus:live(CLAIM_OPTIMUS_ID), robotaxi:live(CLAIM_ROBOTAXI_ID),
+    gdpAbove3:pa!=null?pa*100:null,
+    gdpLast:F.GDP_GROWTH?.last??null,
+    goodsYoy:yoyPct(F.CORE_GOODS_CPI?.series),
+    elecYoy:yoyPct(F.ELEC_CPI?.series),
+    gpuRatio:(a?.ref&&b?.ref)?a.ref/b.ref:null,
+    un6:ptsChange(F.UNRATE?.series,6),
+    lfpr6:ptsChange(F.LFPR_PRIME?.series,6),
+  };
+}
+function renderClaims(){
+  const rows=claimReads(claimInputs());
+  const dotc={good:"var(--good)",warn:"var(--warn)",crit:"var(--crit)"};
+  const fmt=m=>m.v==null?"&ndash;":((m.signed?snum(m.v,m.dp??1):m.v.toFixed(m.dp??1))+(m.unit||""));
+  $("claimsTable").innerHTML=`<tr><th>Claim (Jul 2026)</th><th>Metric</th><th class="num">Reading</th><th>Tape says</th></tr>`+
+    rows.map(r=>{
+      const n=r.metrics.length;
+      return r.metrics.map((m,k)=>`<tr>${k===0?`<td rowspan="${n}" style="min-width:220px"><strong>${esc(r.claim)}</strong><div class="sub" style="margin-top:4px">${esc(r.verdict)}</div></td>`:""}<td>${esc(m.label)}</td><td class="num">${fmt(m)}</td>${k===0?`<td rowspan="${n}" style="white-space:nowrap"><span style="background:${r.band?dotc[r.band.cls]:"var(--muted)"};display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px"></span>${r.band?esc(r.band.label):"no data"}</td>`:""}</tr>`).join("");
+    }).join("");
+  const hot=rows.filter(r=>r.band&&r.band.cls==="crit"), wm=rows.filter(r=>r.band&&r.band.cls==="warn");
+  $("claimsVerdict").innerHTML = hot.length?`The tape currently <strong>validates ${hot.length} of 5</strong> singularity claims &ndash; euphoria (or its backlash channel) moving past the narrative stage.`
+    : wm.length?`No claim is validated by the tape; <strong>${wm.length}</strong> ${wm.length>1?"are":"is"} moving its way.`
+    : `None of the five claims is validated by capital-at-risk pricing or official data &ndash; the narrative runs ahead of the tape on every count.`;
+  const src=gdpq?` GDP brackets: <a href="${esc(gdpq.url)}" target="_blank" rel="noopener">${esc(gdpq.title)}</a>.`:"";
+  $("claimsNote").innerHTML=`Claims from Raoul Pal&rsquo;s &ldquo;AI Revolution: How to Invest&rdquo; (Real Vision, Jul 9 2026) &ndash; the maximal-bull economic-singularity thesis. Dots escalate as the tape moves <em>toward</em> the world each claim describes: markets converging up toward the narrative is euphoria broadening (itself a crash-monitor signal), and a displacement signature in the labor data is the political-backlash channel going live. AGI/Arena and Optimus/robotaxi odds are live Polymarket mids tracked outside the indexes (they move no composite); CPI, unemployment, participation and GDP growth are FRED series via the fetcher.${src}`;
+}
+
 // Under file:// browsers block fetch() of sibling files; a <script src> tag is not blocked.
 // The fetcher emits market-data.js alongside the JSON/CSV, exposing both as globals; we fall
 // back to it only when fetch() fails (double-clicked file), so http:// still gets fresh data.
@@ -589,15 +897,19 @@ function loadLocalBundle(){
   if("__MARKET_DATA__" in window || "__SNAPSHOTS_CSV__" in window) return Promise.resolve();
   if(_bundleP) return _bundleP;
   _bundleP=new Promise(res=>{ const s=document.createElement("script");
-    s.src="market-data.js"; s.onload=()=>res(); s.onerror=()=>res(); document.head.appendChild(s); });
+    s.src=DATA_BASE+"market-data.js"; s.onload=()=>res(); s.onerror=()=>res(); document.head.appendChild(s); });
   return _bundleP;
 }
+// The data files live at the site root, but the page also serves from /polymarket-ai-index/<view>,
+// where a relative fetch would look for them under the route and 404. Absolute paths fix that
+// over http; file:// has no routing, so it keeps the sibling lookup that makes the bundle work.
+const DATA_BASE = location.protocol==="file:" ? "" : "/";
 async function fetchMkt(){
-  try{ const r=await fetch("market-data.json",{cache:"no-store"}); if(r.ok){ mkt=await r.json(); return; } }catch(e){}
+  try{ const r=await fetch(DATA_BASE+"market-data.json",{cache:"no-store"}); if(r.ok){ mkt=await r.json(); return; } }catch(e){}
   await loadLocalBundle(); if(window.__MARKET_DATA__) mkt=window.__MARKET_DATA__;
 }
 async function fetchSnapshots(){
-  try{ const r=await fetch("snapshots.csv",{cache:"no-store"}); if(r.ok){ snapshotsCsv=await r.text(); return; } }catch(e){}
+  try{ const r=await fetch(DATA_BASE+"snapshots.csv",{cache:"no-store"}); if(r.ok){ snapshotsCsv=await r.text(); return; } }catch(e){}
   await loadLocalBundle(); if(typeof window.__SNAPSHOTS_CSV__==="string") snapshotsCsv=window.__SNAPSHOTS_CSV__;
 }
 // best-effort successor discovery for excluded core constituents
@@ -711,15 +1023,17 @@ function computeSignals(){
   s.spikes=CONSTITUENTS.map(c=>{ const m=markets.get(c.id); if(!m||m.closed||m.vol24<1000||!m.vol1wk) return null;
     const r=m.vol24/(m.vol1wk/7); return r>=2?{c,m,ratio:r}:null; }).filter(Boolean).sort((a,b)=>b.ratio-a.ratio);
   const bubble=markets.get(BUBBLE_ID);
+  // `plain` is the jargon-free name the verdict block uses when this row is the regime trigger;
+  // `pl` marks a plural subject so the verdict block's verbs agree
   s.stack=[
-    {name:"AI bubble burst in 2026 (Polymarket)", v:bubble&&!bubble.closed?bubble.yes*100:null, sub:"3+ triggers: NVDA −50% ATH, SOXX −40%, lab bankruptcy/acquisition, H100 ≤ $1, supplier collapse"},
-    {name:"NVDA deep-downside touch this month", v:nvdaTailProb(), sub:"lowest listed strike, monthly bracket markets"},
-    {name:"H100 rent below $2.00 at month end", v:h100Sub2(), sub:"GPU rental bracket markets"},
-    {name:"B200 rent below $3.00 at month end", v:b200Sub3(), sub:"B200 (Blackwell) GPU rental bracket markets — next-gen demand proxy"},
-    {name:"Funding window: IPO odds 7d change", v:fundingDelta(), sub:"max of OpenAI / Anthropic 2026 IPO; sharp drop = funding window closing", isDelta:true},
-    {name:"Bubble sentiment (extreme euphoria)", v:bubbleSentiment(), sub:"avg of OpenAI $1T IPO + AGI + Anthropic IPO odds; >70% = euphoric"},
-    {name:"US recession probability", v:macroRecession(), sub:"Polymarket: US recession by end of 2026"},
-    {name:"China AI: top-3 model odds", v:chinaTop3(), sub:"Polymarket: Chinese company has a top-3 AI model by Dec 31"},
+    {name:"AI bubble burst in 2026 (Polymarket)", plain:"bubble-burst odds", pl:true, v:bubble&&!bubble.closed?bubble.yes*100:null, sub:"3+ triggers: NVDA −50% ATH, SOXX −40%, lab bankruptcy/acquisition, H100 ≤ $1, supplier collapse"},
+    {name:"NVDA deep-downside touch this month", plain:"the odds NVDA touches its deep-downside level this month", pl:true, v:nvdaTailProb(), sub:"lowest listed strike, monthly bracket markets", link:["markets","p-nvda"]},
+    {name:"H100 rent below $2.00 at month end", plain:"the odds H100 rent ends the month below $2.00", pl:true, v:h100Sub2(), sub:"GPU rental bracket markets", link:["gpu","p-h100"]},
+    {name:"B200 rent below $3.00 at month end", plain:"the odds B200 rent ends the month below $3.00", pl:true, v:b200Sub3(), sub:"B200 (Blackwell) GPU rental bracket markets — next-gen demand proxy", link:["gpu","p-b200"]},
+    {name:"Funding window: IPO odds 7d change", plain:"the AI funding window", v:fundingDelta(), sub:"max of OpenAI / Anthropic 2026 IPO; sharp drop = funding window closing", isDelta:true},
+    {name:"Bubble sentiment (extreme euphoria)", plain:"bubble sentiment", v:bubbleSentiment(), sub:"avg of OpenAI $1T IPO + AGI + Anthropic IPO odds; >70% = euphoric", link:["prediction-markets","p-constituents"]},
+    {name:"US recession probability", plain:"US recession odds", pl:true, v:macroRecession(), sub:"Polymarket: US recession by end of 2026"},
+    {name:"China AI: top-3 model odds", plain:"the odds a Chinese lab has a top-3 model", pl:true, v:chinaTop3(), sub:"Polymarket: Chinese company has a top-3 AI model by Dec 31"},
   ];
   s.gauge=computeGauge();
   sig=s; return s;
@@ -771,34 +1085,114 @@ function computeGauge(){
   const lead=mean(["pred","opt","credit","macro"]), conf=mean(["vol","equity"]);
   return { score, fam, n:avail.length, total:Object.keys(fam).length, lead, conf };
 }
-// returns { r, why: [human-readable triggered conditions] }
+const GAUGE_BANDS=[{max:35,name:"Calm"},{max:55,name:"Elevated"},{max:Infinity,name:"Stressed"}];
+const gaugeBand = g => g==null ? null : GAUGE_BANDS.find(b=>g<b.max).name;
+
+// The rule inputs, read once. The level and z are deliberately the MKT sleeve, not the Bear
+// composite: these bands are calibrated to priced crash risk, and MKT is the old crash basket
+// unchanged. Reading the composite here would let regulatory odds trip a crash regime.
+function regimeInputs(){
+  let stackMax=0, stackName="", stackPlain="", stackPl=false;
+  for(const x of sig.stack||[]) if(x.v!=null&&!x.isDelta&&x.v>stackMax){ stackMax=x.v; stackName=x.name; stackPlain=x.plain||x.name; stackPl=!!x.pl; }
+  return { gauge:sig.gauge?.score ?? null, z:sig.bearMkt?sig.bearMkt.z:0,
+           level:indexNowFixed("bear","mkt"), stackMax, stackName, stackPlain, stackPl };
+}
+// The same thresholds, firing order and outcome as before — the rules are just data now, so
+// the verdict block can compose its own sentences instead of reading a pre-baked string.
+// `quiet` marks a rule whose value is a z-score: it has no lay unit, so its sentences state
+// the condition without the number rather than leaking a z into the verdict block (§2.2).
+// `near` is value/threshold, used only to name the closest rule while calm.
+function regimeRules(i){
+  // gTxt stays null when the gauge is dark, so the "closest rule" line can't name a rule
+  // whose value it doesn't know
+  const g=i.gauge, pct=v=>v.toFixed(1)+"%", gTxt=g!=null?`${g.toFixed(0)}/100`:null;
+  return [
+    { id:"gauge55", tier:"stressed", fired:g!=null&&g>=55, why:`gauge ${g?.toFixed(0)} ≥ 55`,
+      plain:"the blended gauge", valTxt:gTxt, thrTxt:"55/100", near:g!=null?g/55:0 },
+    { id:"level40", tier:"stressed", fired:i.level>=40, why:`crash markets ${i.level.toFixed(1)} ≥ 40`,
+      plain:"crash-market odds", pl:true, valTxt:pct(i.level), thrTxt:"40%", near:i.level/40 },
+    { id:"level25z2", tier:"stressed", fired:i.level>=25&&i.z>=2, why:`crash ${i.level.toFixed(1)} ≥ 25 with z ${i.z.toFixed(1)} ≥ 2`,
+      plain:`crash-market odds at ${pct(i.level)} and climbing unusually fast`, pl:true, quiet:true, near:0 },
+    // No single-market stressed trip: a lone distress market (China competition, one bubble
+    // print, one euphoria read) caps at Elevated via stack15 below. Letting it trip Stressed
+    // produced false red regimes (e.g. China top-3 at 35% while the blended gauge was calm).
+    { id:"gauge35", tier:"elevated", fired:g!=null&&g>=35, why:`gauge ${g?.toFixed(0)} ≥ 35`,
+      plain:"the blended gauge", valTxt:gTxt, thrTxt:"35/100", near:g!=null?g/35:0 },
+    { id:"level25", tier:"elevated", fired:i.level>=25, why:`crash markets ${i.level.toFixed(1)} ≥ 25`,
+      plain:"crash-market odds", pl:true, valTxt:pct(i.level), thrTxt:"25%", near:i.level/25 },
+    { id:"z15", tier:"elevated", fired:i.z>=1.5, why:`crash z-score ${i.z.toFixed(1)} ≥ 1.5`,
+      plain:"crash-market odds are climbing unusually fast", pl:true, quiet:true, near:i.z/1.5 },
+    { id:"stack15", tier:"elevated", fired:i.stackMax>=15, why:`${i.stackName} at ${i.stackMax.toFixed(1)}% ≥ 15%`,
+      plain:i.stackPlain, pl:i.stackPl, valTxt:pct(i.stackMax), thrTxt:"15%", near:i.stackMax/15 },
+  ];
+}
+// returns { r, trips, why: [human-readable triggered conditions], inp, rules }
 function computeRegime(){
-  // deliberately the MKT sleeve, not the Bear composite: these bands are calibrated to
-  // priced crash risk, and MKT is the old crash basket unchanged. Reading the composite
-  // here would let regulatory odds trip a crash regime.
-  const g=sig.gauge?.score, z=sig.bearMkt?sig.bearMkt.z:0, level=indexNowFixed("bear","mkt");
-  let stackMax=0, stackName="";
-  for(const x of sig.stack) if(x.v!=null&&!x.isDelta&&x.v>stackMax){ stackMax=x.v; stackName=x.name; }
-  const stressed=[], elevated=[];
-  // STRESSED requires BROAD or CONFIRMED stress — never a single market on its own.
-  // The three triggers below are all multi-signal: the blended gauge is the mean of six
-  // families (broad by construction); the crash basket is a 3-market average; and the
-  // basket + z path demands the level be statistically confirmed by its own momentum.
-  // A lone distress market (China competition, a single bubble print, one euphoria read)
-  // can move ELEVATED but can no longer trip red by itself — that produced false Stressed
-  // regimes when e.g. the China top-3 competition market sat at 35% while the gauge was calm.
-  if(g!=null&&g>=55) stressed.push(`blended gauge ${g.toFixed(0)} ≥ 55 — broad stress across families`);
-  if(level>=40) stressed.push(`crash basket ${level.toFixed(1)} ≥ 40`);
-  if(level>=25&&z>=2) stressed.push(`crash basket ${level.toFixed(1)} ≥ 25 confirmed by z ${z.toFixed(1)} ≥ 2`);
-  if(stressed.length) return { r:"stressed", why:stressed };
-  // ELEVATED is the ceiling for any single early-warning signal, including the hottest
-  // individual market in the distress stack (stackMax).
-  if(g!=null&&g>=35) elevated.push(`gauge ${g.toFixed(0)} ≥ 35`);
-  if(level>=25) elevated.push(`crash markets ${level.toFixed(1)} ≥ 25`);
-  if(z>=1.5) elevated.push(`crash z-score ${z.toFixed(1)} ≥ 1.5`);
-  if(stackMax>=15) elevated.push(`${stackName} at ${stackMax.toFixed(1)}% ≥ 15% — single-market signal, capped at Elevated`);
-  if(elevated.length) return { r:"elevated", why:elevated };
-  return { r:"calm", why:[] };
+  const inp=regimeInputs(), rules=regimeRules(inp);
+  for(const tier of ["stressed","elevated"]){
+    const trips=rules.filter(r=>r.tier===tier&&r.fired);
+    if(trips.length) return { r:tier, trips, why:trips.map(r=>r.why), inp, rules };
+  }
+  return { r:"calm", trips:[], why:[], inp, rules };
+}
+// "Gauge +3 vs yesterday; regime unchanged." Omitted silently when there is no prior day.
+function sinceYesterday(r, g){
+  let store={}; try{ store=migrateSnaps(JSON.parse(localStorage.getItem(SNAP_KEY)||"{}")); }catch(e){ return ""; }
+  const today=new Date().toISOString().slice(0,10);
+  const prior=Object.keys(store).filter(d=>d<today).sort().pop();
+  if(!prior) return "";
+  const p=store[prior], bits=[];
+  if(p.gauge!=null&&g!=null){ const d=g-p.gauge;
+    bits.push(`Gauge ${d>=0?"+":"−"}${Math.abs(d).toFixed(0)} vs yesterday`); }
+  if(p.regime) bits.push(p.regime===r?"regime unchanged":`regime was ${p.regime}`);
+  return bits.length?bits.join("; ")+".":"";
+}
+// The three lines. Plain English only: no "single-signal trip", no z-scores, no family names,
+// no methodology (§2.2). Every number is interpolated from the live rule set, never baked in.
+function regimeExplainer(reg){
+  const R={calm:"Calm",elevated:"Elevated",stressed:"Stressed"}[reg.r];
+  // "broad" = the blended gauge confirms this regime's own tier, so the threshold is
+  // tier-relative: a Stressed regime is only broad once the gauge reaches the Stressed
+  // band (55), not merely Elevated (35). Otherwise a narrow crash-market trip with a
+  // mid-range gauge would falsely read "tripped by the broad gauge itself" and show a
+  // solid chip, which is exactly the case the hollow chip exists to distinguish.
+  const g=reg.inp.gauge, band=gaugeBand(g), n=reg.trips.length;
+  const broad = g!=null && g>=(reg.r==="stressed"?55:35);
+  const closest=()=>reg.rules.filter(r=>r.tier==="elevated"&&!r.quiet&&r.valTxt).sort((a,b)=>b.near-a.near)[0];
+
+  let say;
+  if(reg.r==="calm") say="Regime: Calm – no rule has tripped.";
+  else if(n===1&&!broad) say=`Regime: ${R} – tripped by a single rule, not broad pressure.`;
+  else if(!broad) say=`Regime: ${R} – ${n} rules have tripped, but the broad gauge is still calm.`;
+  else if(n===1) say=`Regime: ${R} – tripped by the broad gauge itself.`;
+  else say=`Regime: ${R} – ${n} rules have tripped and the broad gauge agrees.`;
+
+  let trig;
+  if(reg.r==="calm"){
+    const c=closest();
+    trig = c ? `Closest rule: ${c.plain} at ${c.valTxt}, below the ${c.thrTxt} rule threshold.`
+             : "No rule is close to its threshold.";
+  } else {
+    const shown=reg.trips.slice(0,2).map(r=>r.quiet?r.plain:`${r.plain} at ${r.valTxt}, above the ${r.thrTxt} rule threshold`);
+    trig=`Trigger: ${shown.join("; and ")}.${n>2?` +${n-2} more.`:""}`;
+  }
+
+  let ctx = g==null ? "The blended gauge has not loaded yet."
+    : `The blended gauge is ${g.toFixed(0)}/100 (${band}) – broad markets are ${reg.r==="calm"?"quiet too":broad?"confirming":"not confirming"}.`;
+  const parts=[];
+  if(reg.r!=="calm"){
+    if(n===1){ const t=reg.trips[0];
+      parts.push(t.quiet?"This clears if that climb slows back to normal":`This clears if ${t.plain} ${t.pl?"close":"closes"} below ${t.thrTxt}`); }
+    else parts.push(`This clears when all ${n} triggers fall back below their thresholds`);
+    if(g!=null&&g<35) parts.push("it escalates if the blended gauge crosses 35");
+    else if(g!=null&&g<55) parts.push("it escalates if the blended gauge crosses 55");
+  } else {
+    const c=closest();
+    if(c) parts.push(`It turns Elevated if ${c.plain} ${c.pl?"cross":"crosses"} ${c.thrTxt}`);
+  }
+  if(parts.length) ctx+=" "+parts.join("; ")+".";
+  const since=sinceYesterday(reg.r,g);
+  return { say, trig, ctx, since, broad };
 }
 
 /* ================= Historical gauge reconstruction =================
@@ -906,7 +1300,7 @@ function spark(svgId, vals, color){
 }
 
 function renderGauge(){
-  const g=sig.gauge; if(!g||g.score==null){ $("gaugeVal").textContent="–"; return; }
+  const g=sig.gauge; if(!g||g.score==null){ $("gaugeVal").textContent="–"; $("gaugeVerdict").innerHTML=""; return; }
   $("gaugeVal").textContent=g.score.toFixed(0);
   $("gaugeMk").style.left=clamp(g.score,0,100)+"%";
   const n=g.n??5, tot=g.total??5;
@@ -925,6 +1319,15 @@ function renderGauge(){
     ["vol","equity"].map(catRow).join("");
   const order=["pred","opt","vol","credit","equity","macro"];
   const top=order.map(k=>g.fam[k]).filter(f=>f.v!=null).sort((a,b)=>b.v-a.v)[0];
+  // leading vs confirming is the panel's best idea: which side is hot decides what it means
+  const band=gaugeBand(g.score);
+  let lead="";
+  if(g.lead!=null&&g.conf!=null){
+    lead = g.conf-g.lead>=10 ? " The confirming side is running ahead of the leading side &ndash; the damage is already on the tape rather than being priced ahead."
+         : g.lead-g.conf>=10 ? " The leading side is running ahead of the confirming side &ndash; this is being priced before it shows up in prices."
+         : " Leading and confirming sides agree.";
+  }
+  $("gaugeVerdict").innerHTML=`<strong>${g.score.toFixed(0)}/100 (${band})</strong>${top?`, with <strong>${top.label.toLowerCase()}</strong> the highest-pressure family at ${top.v.toFixed(0)}`:""}.${lead}`;
   $("gaugeNote").innerHTML=`Highest-pressure family right now: <strong>${top?top.label+" ("+top.v.toFixed(0)+")":"–"}</strong>. Bands on the meter and chart match the regime thresholds (35 / 55). Each family is normalized 0&ndash;100 against calm/stress reference levels (see methodology); the headline gauge is the equal-weighted mean of all five. The <strong>leading</strong> sub-score (prediction markets, options skew, credit) is the early-warning read; the <strong>confirming</strong> sub-score (vol complex, equity drawdown) rises <em>while</em> a crash happens, not before &ndash; a high confirming score with a low leading score means the damage is already on the tape. The history line is reconstructed from stored daily series &ndash; its prediction-market family uses the bubble market only, so it can sit slightly below the live number.`;
   renderGaugeChart();
 }
@@ -976,32 +1379,39 @@ function renderTiles(){
   }
 }
 function renderRegime(){
-  const {r,why}=computeRegime(), el=$("regime");
-  el.className="chip "+r;
-  el.innerHTML=`<i></i>${r==="calm"?"Calm":r==="elevated"?"Elevated":"Stressed"} crash regime`;
-  const gs=sig.gauge?.score;
-  let whyTxt=why.length?"— driven by: "+why.join("; "):"";
-  if(r!=="calm" && gs!=null && gs<35) whyTxt+=`  ·  single-signal trip: blended gauge (${gs.toFixed(0)}) is still in the Calm band, not broad stress`;
-  $("regimeWhy").textContent=whyTxt;
+  const reg=computeRegime(), {r,why}=reg, ex=regimeExplainer(reg), el=$("regime");
+  // hollow while a rule has tripped but the blended gauge is still calm
+  el.className="chip "+r+(r!=="calm"&&!ex.broad?" hollow":"");
+  el.innerHTML=`<i></i>${r.toUpperCase()}`;
+  $("regimeSay").textContent=ex.say;
+  $("regimeTrigger").textContent=ex.trig;
+  $("regimeContext").innerHTML=esc(ex.ctx)+(ex.since?` <span class="vsince">${esc(ex.since)}</span>`:"");
   el.title=why.join("\n");
-  document.title=(r==="stressed"?"🔴 STRESSED – ":r==="elevated"?"⚠ Elevated – ":"")+"AI Crash Monitor";
   const rank={calm:0,elevated:1,stressed:2};
   if(alertsOn && lastRegime!=null && rank[r]>rank[lastRegime] && "Notification" in window && Notification.permission==="granted"){
     new Notification("AI Crash Monitor: regime escalated to "+r.toUpperCase(), { body:(why[0]||"")+` · gauge ${sig.gauge?.score?.toFixed(0)??"?"}/100.` });
   }
   lastRegime=r;
+  applyRegimeTitle();   // view-aware: keeps the regime emoji on every route
 }
 function renderStack(){
   $("stack").innerHTML=sig.stack.map(s=>{ let dot="var(--good)";
     if(s.v!=null){ if(s.isDelta) dot=s.v<=-5?"var(--crit)":s.v<=-2?"var(--warn)":"var(--good)"; else dot=s.v>=25?"var(--crit)":s.v>=15?"var(--warn)":"var(--good)"; }
     const val=s.v==null?"&ndash;":(s.isDelta?(s.v>0?"+":"")+s.v.toFixed(1)+" pts":s.v.toFixed(1)+"%");
-    return `<div class="row"><span class="dot" style="background:${dot}"></span><span class="name">${s.name}<div class="sub">${s.sub}</div></span><span class="val">${val}</span></div>`;
+    // §4.1: the row keeps the probability; the panel that owns the underlying fact is one hop away
+    const name=s.link?xlink(esc(s.name),s.link[0],s.link[1]):esc(s.name);
+    return `<div class="row"><span class="dot" style="background:${dot}"></span><span class="name">${name}<div class="sub">${s.sub}</div></span><span class="val">${val}</span></div>`;
   }).join("");
   if(book&&(book.bid||book.ask)){
     const tot=book.bid+book.ask, pctBid=tot?book.bid/tot*100:50;
     const lean=pctBid>=55?"leaning <strong>YES</strong> (crash)":pctBid<=45?"leaning <strong>NO</strong>":"balanced";
     $("bookNote").innerHTML=`Bubble-market order book (&plusmn;5&cent; of mid): ${fmtUsd(book.bid)} bid vs ${fmtUsd(book.ask)} ask &ndash; ${pctBid.toFixed(0)}% of near-mid depth on the bid, ${lean}. Thin books make the headline probability easy to push.`;
   } else $("bookNote").innerHTML="";
+  // the stack's job is early warning, so the verdict names the hottest row and its band
+  let top=null;
+  for(const x of sig.stack) if(x.v!=null&&!x.isDelta&&(!top||x.v>top.v)) top=x;
+  $("stackVerdict").innerHTML = !top ? ""
+    : `Hottest signal: <strong>${esc(top.plain||top.name)}</strong> at <strong>${top.v.toFixed(1)}%</strong> &ndash; ${top.v>=25?"past the level that trips a stressed regime on its own.":top.v>=15?"past the level that trips an elevated regime on its own.":"nothing in the stack is near a regime threshold."}`;
 }
 function renderMomentum(){
   $("momStats").innerHTML=SIDES.map(s=>{ const g=sig[s];
@@ -1017,7 +1427,7 @@ function renderMomentum(){
   $("spikeNote").innerHTML=sig.spikes.length?"&#9889; Unusual 24h volume: "+sig.spikes.slice(0,4).map(s=>`${esc(s.c.label)} (${s.ratio.toFixed(1)}× run-rate, ${fmtVol(s.m.vol24)})`).join("; "):"No unusual 24h volume across constituents.";
 }
 function renderVol(){
-  if(!mkt?.vol){ $("volStats").innerHTML='<div class="sub">market-data.json not loaded &ndash; run the fetcher.</div>'; $("volNote").innerHTML=""; return; }
+  if(!mkt?.vol){ $("volStats").innerHTML='<div class="sub">market-data.json not loaded &ndash; run the fetcher.</div>'; $("volVerdict").innerHTML=""; return; }
   const V=mkt.vol, ts=(V.VIX&&V.VIX3M)?V.VIX.last/V.VIX3M.last:null;
   const nrr=mkt.skew?.NVDA?.rr, srr=mkt.skew?.SOXX?.rr;
   const skewChg=(sym)=>{ const h=mkt.skew?.[sym]?.history; if(!h||h.length<2) return null; return (h[h.length-1].rr-h[0].rr)*100; };
@@ -1033,14 +1443,15 @@ function renderVol(){
     cell("NVDA IV term", tN?tN.ratio.toFixed(2):"–", tN?` <small>${tN.front_dte}d/${tN.back_dte}d ${tN.ratio>=1?"backwardated":"contango"}</small>`:""),
     cell("SOXX IV term", tS?tS.ratio.toFixed(2):"–", tS?` <small>${tS.front_dte}d/${tS.back_dte}d ${tS.ratio>=1?"backwardated":"contango"}</small>`:""),
   ].join("");
+  // the interpretation was already computed here – it is the verdict, so it leads the panel now
   let msg=[];
   if(ts!=null) msg.push(ts>=1?"VIX term structure is <strong>backwardated</strong> (near-term fear elevated).":"VIX term structure in contango (calm).");
   if(nrr!=null) msg.push(`NVDA puts are ${nrr>0?"richer":"cheaper"} than calls by ${Math.abs(nrr*100).toFixed(1)} vol pts.`);
   if(tN&&tN.ratio>=1) msg.push("NVDA single-name IV term is <strong>backwardated</strong> — near-dated crash pricing.");
-  $("volNote").innerHTML=msg.join(" ");
+  $("volVerdict").innerHTML=msg.join(" ");
 }
 function renderCredit(){
-  if(!mkt?.credit){ $("creditStats").innerHTML='<div class="sub">market-data.json not loaded.</div>'; $("creditNote").innerHTML=""; return; }
+  if(!mkt?.credit){ $("creditStats").innerHTML='<div class="sub">market-data.json not loaded.</div>'; $("creditVerdict").innerHTML=""; return; }
   const C=mkt.credit, E=mkt.equity||{}, F=mkt.fred||{};
   const hygDD=drawdown(C.HYG); let hyig=null;
   if(C.HYG&&C.LQD){ const r=C.HYG.map((p,i)=>C.LQD[i]?p.c/C.LQD[i].c:null).filter(x=>x!=null); if(r.length){ const hi=Math.max(...r); hyig=(r[r.length-1]/hi-1)*100; } }
@@ -1052,18 +1463,18 @@ function renderCredit(){
     cell("NFCI (Chicago Fed)", F.NFCI?F.NFCI.last.toFixed(2):"–", F.NFCI?` <small>${F.NFCI.last<0?"loose":"tight"}</small>`:""),
     cell("HYG drawdown (6mo)", hygDD!=null?hygDD.toFixed(1)+"%":"–"),
     cell("HY/IG ratio drawdown", hyig!=null?hyig.toFixed(1)+"%":"–"),
-    cell("CRWV drawdown", E.CRWV?drawdown(E.CRWV).toFixed(1)+"%":"–"),
-    cell("ORCL drawdown", E.ORCL?drawdown(E.ORCL).toFixed(1)+"%":"–"),
-  ].join("");
+    // §4.1: the levered-AI drawdowns are Breadth's number — this panel points at them
+    // rather than printing a third copy
+  ].join("")+`<div class="stat"><div class="l">${xlink("Levered-AI drawdowns","markets","p-breadth")}</div><div class="v"><small>see breadth</small></div></div>`;
   const oas=F.HY_OAS?.last;
-  $("creditNote").innerHTML = oas!=null
+  $("creditVerdict").innerHTML = oas!=null
     ? (oas<3.2 ? `HY OAS at ${oas.toFixed(2)}% is historically tight &ndash; credit is pricing no AI stress. A move through ~4% would be the early warning.`
                : oas<5 ? `HY OAS at ${oas.toFixed(2)}% is off the tights &ndash; credit is starting to charge for risk.`
                : `HY OAS at ${oas.toFixed(2)}% &ndash; credit stress is live.`)
     : (hygDD!=null&&hygDD>-2 ? "High-yield credit is holding up &ndash; no early credit-stress signal." : "High-yield credit softening &ndash; watch for confirmation in equity.");
 }
 function renderBreadth(){
-  if(!mkt?.equity||!mkt.basket){ $("breadthStats").innerHTML='<div class="sub">Run the fetcher to enable breadth.</div>'; $("breadthBars").innerHTML=""; return; }
+  if(!mkt?.equity||!mkt.basket){ $("breadthStats").innerHTML='<div class="sub">Run the fetcher to enable breadth.</div>'; $("breadthBars").innerHTML=""; $("breadthVerdict").innerHTML=""; return; }
   const rows=[];
   for(const sym of mkt.basket){
     const s=mkt.equity[sym]; if(!s||s.length<50) continue;
@@ -1071,7 +1482,7 @@ function renderBreadth(){
     const ma50=closes.slice(-50).reduce((a,b)=>a+b,0)/50;
     rows.push({sym, above:last>=ma50, dd:drawdown(s)});
   }
-  if(!rows.length){ $("breadthStats").innerHTML='<div class="sub">No basket data.</div>'; return; }
+  if(!rows.length){ $("breadthStats").innerHTML='<div class="sub">No basket data.</div>'; $("breadthVerdict").innerHTML=""; return; }
   const nAbove=rows.filter(r=>r.above).length, pct=nAbove/rows.length*100;
   // equal-weight basket vs SPY over ~30 trading sessions
   let rs=null;
@@ -1094,10 +1505,18 @@ function renderBreadth(){
   $("breadthBars").innerHTML='<div class="note" style="margin-top:10px"><strong>Deepest drawdowns from 6-month high</strong> (✕ = below 50dma)</div>'+
     worst.map(r=>hbar(r.sym+(r.above?"":" ✕"), Math.min(-r.dd,100), "var(--crash)")).join("");
   $("breadthCount").innerHTML=`&ndash; ${rows.length} names`;
+  // banded off the same 50dma count the panel already shows; narrow breadth while the basket
+  // still tracks the market is the tell, so the two are read together
+  const band=pct>=60?"broad":pct>=40?"mixed":"narrow";
+  let v=`<strong>${nAbove}/${rows.length}</strong> names above their 50-day &ndash; breadth is <strong>${band}</strong>`;
+  v += rs==null ? "." : rs<-2 ? ` while the basket lags SPY by ${Math.abs(rs).toFixed(1)} pts over 30 sessions.`
+     : rs>2 ? ` while the basket still leads SPY by ${rs.toFixed(1)} pts &ndash; the index is holding on fewer names.`
+     : " while the basket tracks SPY.";
+  $("breadthVerdict").innerHTML=v;
 }
 function renderInsiders(){
   const I=mkt?.insiders;
-  if(!I||!Object.keys(I).length){ $("insiderStats").innerHTML='<div class="sub">Run the fetcher to enable insider data.</div>'; $("insiderBars").innerHTML=""; $("insiderNote").innerHTML=""; return; }
+  if(!I||!Object.keys(I).length){ $("insiderStats").innerHTML='<div class="sub">Run the fetcher to enable insider data.</div>'; $("insiderBars").innerHTML=""; $("insiderVerdict").innerHTML=""; return; }
   const syms=Object.keys(I);
   const totNet=syms.reduce((s,k)=>s+I[k].net_usd,0);
   const cell=(l,v)=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}</div></div>`;
@@ -1111,9 +1530,12 @@ function renderInsiders(){
     return `<div class="hbar"><span class="k">${k} <span class="sub">(${I[k].n_filings} filings)</span></span><span class="track"><i style="width:${w.toFixed(0)}%;background:${v<0?"var(--crash)":"var(--good)"}"></i></span><span class="v">${fmtUsd(v)}</span></div>`;
   }).join("");
   $("insiderNote").innerHTML="Persistent one-sided selling is normal for these names (comp plans); what matters is <em>acceleration</em> vs. their own baseline and any disappearance of buys. Counts only the most recent filings per name, so treat as a sample, not a census.";
+  // the level is not the signal – one-sided selling is the baseline here, so the verdict says so
+  const dir=totNet<0?"selling":"buying";
+  $("insiderVerdict").innerHTML=`Net <strong>${dir} ${fmtUsd(Math.abs(totNet))}</strong> across ${syms.length} names over 90d &ndash; ${totNet<0?"normal for these names; watch for acceleration, not the level.":"a net buy, which is unusual for this group."}`;
 }
 function renderNvda(){
-  if(!nvda){ $("nvdaLadder").innerHTML='<div class="note">Monthly NVDA bracket event not found right now.</div>'; return; }
+  if(!nvda){ $("nvdaLadder").innerHTML='<div class="note">Monthly NVDA bracket event not found right now.</div>'; $("nvdaVerdict").innerHTML=""; return; }
   $("nvdaTitle").innerHTML=`NVDA market-implied tail <span class="sub" style="font-weight:400">&ndash; <a href="${nvda.url}" target="_blank" rel="noopener">${esc(nvda.title)}</a></span>`;
   const spot=mkt?.equity?.NVDA?.length?mkt.equity.NVDA[mkt.equity.NVDA.length-1].c:null;
   let h='<div class="note" style="margin-top:8px"><strong>Downside touches</strong>'+(spot?` (last $${spot.toFixed(2)})`:"")+"</div>";
@@ -1121,10 +1543,16 @@ function renderNvda(){
   h+='<div class="note" style="margin-top:12px"><strong>Upside touches</strong></div>';
   for(const l of nvda.highs) h+=hbar(`&ge; $${l.strike}${spot?` (+${((l.strike/spot-1)*100).toFixed(0)}%)`:""}`, l.p*100, "var(--bull)");
   $("nvdaLadder").innerHTML=h;
+  // the deepest listed downside strike is the tail; band it against the upside mirror
+  const deep=nvda.lows[nvda.lows.length-1];
+  if(deep&&spot){
+    const pct=(deep.strike/spot-1)*100, p=deep.p*100;
+    $("nvdaVerdict").innerHTML=`Market prices <strong>${p.toFixed(1)}%</strong> odds of a ${mnum(pct)}% touch this month &ndash; the tail is <strong>${p>=25?"fat":p>=12?"live but not fat":"thin"}</strong>.`;
+  } else $("nvdaVerdict").innerHTML="";
 }
 function renderH100(){
   const spot=mkt?.gpu;
-  if(!h100&&!spot){ $("h100Dist").innerHTML='<div class="note">H100 bracket event not found and no realized spot data.</div>'; $("h100Stats").innerHTML=""; return; }
+  if(!h100&&!spot){ $("h100Dist").innerHTML='<div class="note">H100 bracket event not found and no realized spot data.</div>'; $("h100Stats").innerHTML=""; $("h100Verdict").innerHTML=""; $("h100Note").innerHTML=""; return; }
   if(h100) $("h100Title").innerHTML=`H100 GPU rent &ndash; implied vs realized <span class="sub" style="font-weight:400">&ndash; <a href="${h100.url}" target="_blank" rel="noopener">${esc(h100.title)}</a></span>`;
   const exp=h100Expected(), sub2=h100Sub2();
   const kg=kalshiChip("H100");
@@ -1137,14 +1565,18 @@ function renderH100(){
   if(sub2!=null) cells.push(`<div class="stat"><div class="l">P(below $2.00) <small>(Polymarket)</small></div><div class="v">${sub2.toFixed(1)}%</div></div>`);
   cells.push(`<div class="stat"><div class="l">Bubble trigger</div><div class="v">&le; $1.00</div></div>`);
   $("h100Stats").innerHTML=cells.join("");
-  let h="";
   // Read the implied-vs-realized gap against the index the other market actually
   // settles on. vast.ai is a decentralized ask tape (interruptible hosts, spot
   // capacity) and prints structurally below Ornn; charging that basis to
-  // "the market prices firmer rents" was the old bug.
+  // "the market prices firmer rents" was the old bug. That warning is the panel's
+  // takeaway, so it leads rather than sitting under the chart.
+  let h="", v="";
   if(kg&&kg.ref!=null&&spot){
     const basis=(kg.ref/spot.median_dph-1)*100;
-    h+=`<div class="note"><strong>Index basis:</strong> Ornn $${kg.ref.toFixed(2)} vs vast.ai $${spot.median_dph.toFixed(2)} &ndash; <strong>${basis>0?"+":""}${basis.toFixed(0)}%</strong> for the same chip on the same day. Read any implied-vs-realized gap smaller than this as basis, not signal.</div>`;
+    v=`Ornn and vast.ai are <strong>${basis>0?"+":""}${basis.toFixed(0)}%</strong> apart for the same chip on the same day &ndash; read any implied-vs-realized gap smaller than that as basis, not signal.`;
+    h+=`<div class="note"><strong>Index basis:</strong> Ornn $${kg.ref.toFixed(2)} vs vast.ai $${spot.median_dph.toFixed(2)}. The two spot sources are different indices, so the gap between them is basis before it is anything else.</div>`;
+  } else if(exp!=null){
+    v=`Polymarket implies <strong>$${exp.toFixed(2)}</strong> at month end${sub2!=null?`, with ${sub2.toFixed(1)}% odds of ending below $2.00`:""} &ndash; no Ornn reference this cycle, so there is no basis to net out.`;
   }
   if(exp!=null&&kg&&kg.implied!=null){
     const d=(exp/kg.implied-1)*100;
@@ -1154,19 +1586,23 @@ function renderH100(){
     const dir=kg.implied<kg.ref?"below":"above";
     h+=`<div class="note">On its own index, Kalshi prices month-end <strong>${dir}</strong> the Ornn reference ($${kg.implied.toFixed(2)} vs $${kg.ref.toFixed(2)}) &ndash; ${kg.implied<kg.ref?"mild backwardation, i.e. the market expects rents to soften, not firm":"mild contango"}.</div>`;
   }
-  if(h100) h+=h100.brackets.map(b=>{ const label=b.lo==null?`&lt; $${b.hi.toFixed(2)}`:b.hi==null?`&ge; $${b.lo.toFixed(2)}`:`$${b.lo.toFixed(2)}&ndash;${b.hi.toFixed(2)}`;
-    return hbar(label, b.p*100, b.hi!=null&&b.hi<=2.0?"var(--crash)":"var(--bull)"); }).join("");
-  $("h100Dist").innerHTML=h;
+  $("h100Verdict").innerHTML=v;
+  $("h100Note").innerHTML=h;
+  $("h100Dist").innerHTML = h100 ? h100.brackets.map(b=>{ const label=b.lo==null?`&lt; $${b.hi.toFixed(2)}`:b.hi==null?`&ge; $${b.lo.toFixed(2)}`:`$${b.lo.toFixed(2)}&ndash;${b.hi.toFixed(2)}`;
+    return hbar(label, b.p*100, b.hi!=null&&b.hi<=2.0?"var(--crash)":"var(--bull)"); }).join("") : "";
 }
 function renderKalshiGpu(){
   const G=mkt?.kalshi_gpu;
   if(!G||!G.chips||!G.chips.length){
     $("kgpuStats").innerHTML='<div class="sub">Kalshi GPU compute markets unavailable this cycle.</div>';
-    $("kgpuBars").innerHTML=""; $("kgpuNote").innerHTML=""; return; }
+    $("kgpuBars").innerHTML=""; $("kgpuNote").innerHTML=""; $("kgpuVerdict").innerHTML=""; return; }
   // ascending by reference price = the generational ladder, oldest silicon first
   const chips=G.chips.filter(c=>c.ref!=null).sort((a,b)=>a.ref-b.ref);
   $("kgpuStats").innerHTML=chips.map(c=>{
-    const imp=c.implied!=null?`$${c.implied.toFixed(2)}`:"&mdash;";
+    // §5.2: a suppressed median is a thin book, not a broken panel — say so explicitly
+    // rather than printing a dash the reader has to guess at
+    const imp=c.implied!=null?`$${c.implied.toFixed(2)}`
+      :`<span title="Book too thin to price: ${c.strikes} usable strike${c.strikes===1?"":"s"}. Publishing a median off a one-sided book would be an artifact." style="cursor:help">&ndash;</span>`;
     // the weekly quote is P(still above the reference) — it dates the reference:
     // well above 50% means the chip has risen since the strike was set.
     const mv=c.ref_above!=null?` · wk ${(c.ref_above*100).toFixed(0)}% above`:"";
@@ -1183,15 +1619,19 @@ function renderKalshiGpu(){
     }).join("");
   const thin=G.chips.filter(c=>c.implied==null);
   const a100=chips.find(c=>c.chip==="A100"), b200=chips.find(c=>c.chip==="B200");
+  // the cross-generation spread IS the decay curve – it leads; the caveats stay in the details
+  $("kgpuVerdict").innerHTML = (a100&&b200)
+    ? `Last-gen ${esc(a100.label)} rents at <strong>${(a100.ref/b200.ref*100).toFixed(0)}%</strong> of current-gen ${esc(b200.label)} ($${a100.ref.toFixed(2)} vs $${b200.ref.toFixed(2)}) &ndash; the decay curve, priced.`
+    : "";
   let n="";
-  if(a100&&b200) n+=`Last-gen ${esc(a100.label)} rents at <strong>$${a100.ref.toFixed(2)}</strong> &ndash; <strong>${(a100.ref/b200.ref*100).toFixed(0)}%</strong> of current-gen ${esc(b200.label)} ($${b200.ref.toFixed(2)}), and already inside touching distance of the bubble market&rsquo;s $1.00 H100 trigger. That spread is the decay curve the depreciation panel argues about from filings. `;
+  if(a100&&b200) n+=`Last-gen ${esc(a100.label)} at $${a100.ref.toFixed(2)} is already inside touching distance of the bubble market&rsquo;s $1.00 H100 trigger. That spread is the decay curve the depreciation panel argues about from filings. `;
   n+=`References are the Ornn print at each weekly market&rsquo;s open, not a live tape &ndash; they date to the week open shown, and Kalshi&rsquo;s weekly quote tells you which way the chip has moved since. `;
   if(thin.length) n+=`<strong>No month-end median for ${thin.map(c=>esc(c.label)).join(", ")}</strong>: ${thin.length===1?"its":"their"} ladder is one-sided or too wide to price (${thin.map(c=>`${esc(c.chip)} ${c.strikes} usable strike${c.strikes===1?"":"s"}`).join(", ")}). Publishing a median off a bid-0/ask-99 book would be an artifact, so the panel shows none. `;
   n+=`Kalshi&rsquo;s Dec-31 GPU contracts are deliberately excluded: they resolve on &ldquo;above $X <em>by</em> Dec 31&rdquo; &ndash; a running maximum, upward-biased, and not comparable to these month-end terminal points. There is no long-dated compute forward yet, only the weekly and the monthly.`;
   $("kgpuNote").innerHTML=n;
 }
 function renderB200(){
-  if(!b200){ $("b200Stats").innerHTML='<div class="sub">B200 bracket event not found right now.</div>'; $("b200Dist").innerHTML=""; return; }
+  if(!b200){ $("b200Stats").innerHTML='<div class="sub">B200 bracket event not found right now.</div>'; $("b200Dist").innerHTML=""; $("b200Verdict").innerHTML=""; return; }
   $("b200Title").innerHTML=`B200 GPU rent <span class="sub" style="font-weight:400">&ndash; <a href="${b200.url}" target="_blank" rel="noopener">${esc(b200.title)}</a></span>`;
   const exp=b200Expected(), sub3=b200Sub3();
   const cells=[];
@@ -1202,9 +1642,12 @@ function renderB200(){
   $("b200Dist").innerHTML='<div class="note" style="margin-top:10px"><strong>B200 rental brackets</strong></div>'+
     b200.brackets.map(b=>{ const label=b.lo==null?`&lt; $${b.hi.toFixed(2)}`:b.hi==null?`&ge; $${b.lo.toFixed(2)}`:`$${b.lo.toFixed(2)}&ndash;${b.hi.toFixed(2)}`;
       return hbar(label, b.p*100, b.hi!=null&&b.hi<=3.0?"var(--crash)":"var(--bull)"); }).join("");
+  // current-gen rent is the demand read on NVDA's flagship; $2.00 is the destruction watch
+  $("b200Verdict").innerHTML = exp==null ? ""
+    : `Current-gen B200 implies <strong>$${exp.toFixed(2)}</strong> at month end${sub3!=null?`, with <strong>${sub3.toFixed(1)}%</strong> odds of ending below $3.00`:""} &ndash; ${exp<=2?"below the demand-destruction watch level.":sub3!=null&&sub3>=30?"the book is taking the soft case seriously.":"flagship demand is holding."}`;
 }
 function renderValuations(){
-  if(!valuations||!valuations.firms.length){ $("valDist").innerHTML='<div class="sub">Valuation bracket markets not found.</div>'; $("valNote").innerHTML=""; return; }
+  if(!valuations||!valuations.firms.length){ $("valDist").innerHTML='<div class="sub">Valuation bracket markets not found.</div>'; $("valNote").innerHTML=""; $("valVerdict").innerHTML=""; return; }
   let h="";
   for(const f of valuations.firms){
     h+=`<div class="note" style="margin-top:10px"><strong>${esc(f.name)}</strong> &ndash; <a href="${f.url}" target="_blank" rel="noopener">${esc(f.title)}</a></div>`;
@@ -1224,14 +1667,18 @@ function renderValuations(){
   // is mis-parsed or stale and no single number off it is trustworthy.
   const monotonic=openaiHigh.every((b,i)=>i===0||b.p<=openaiHigh[i-1].p+1e-9);
   const zone=euphoric>70?' — <strong>euphoric zone</strong>':euphoric>40?' — elevated':'';
-  $("valNote").innerHTML=euphoric!=null
-    ?`P(OpenAI ≥ $${lo}B valuation): <strong>${euphoric.toFixed(1)}%</strong>${zone}.`
-      +(monotonic?"":' <strong>⚠ Ladder is not monotonic</strong> — these nested “hit $X” markets should fall as the threshold rises, and they do not. The bracket parse or the feed is off; treat this panel as unreliable until it is reconciled.')
-    :"";
+  // a failed consistency check outranks the reading: if the ladder is incoherent, no number
+  // off it is worth stating, so the failure becomes the verdict rather than a footnote
+  $("valVerdict").innerHTML = euphoric==null ? ""
+    : monotonic ? `P(OpenAI ≥ $${lo}B valuation): <strong>${euphoric.toFixed(1)}%</strong>${zone}.`
+    : '<strong>⚠ Unreliable &ndash; the ladder is not monotonic.</strong> These nested “hit $X” markets must fall as the threshold rises, and they do not, so no reading off this panel is trustworthy until the feed reconciles.';
+  $("valNote").innerHTML = monotonic ? "" :
+    'These nested “hit $X” markets should fall as the threshold rises, and they do not. The bracket parse or the feed is off; treat this panel as unreliable until it is reconciled.';
+  valUnreliable = euphoric!=null && !monotonic;
 }
 function renderLeaps(){
   const T=mkt?.tail;
-  if(!T||!Object.keys(T).length){ $("leapsStats").innerHTML='<div class="sub">Run the fetcher (with the updated script) to enable LEAPS tail probabilities.</div>'; $("leapsBars").innerHTML=""; $("leapsNote").innerHTML=""; return; }
+  if(!T||!Object.keys(T).length){ $("leapsStats").innerHTML='<div class="sub">Run the fetcher (with the updated script) to enable LEAPS tail probabilities.</div>'; $("leapsBars").innerHTML=""; $("leapsNote").innerHTML=""; $("leapsVerdict").innerHTML=""; return; }
   const cell=(l,v,extra="")=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}${extra}</div></div>`;
   const cells=[], bars=[];
   for(const sym of ["NVDA","SOXX"]){
@@ -1246,16 +1693,18 @@ function renderLeaps(){
   $("leapsStats").innerHTML=cells.join("");
   $("leapsBars").innerHTML='<div class="note" style="margin-top:10px"><strong>P(below level at expiry)</strong> – nearest listed strike, risk-neutral</div>'+bars.join("");
   const nv=T.NVDA, bubble=markets.get(BUBBLE_ID);
-  let note="";
+  // the comparison sentence is the takeaway; the vintage and the model belong in the details
+  let v="";
   if(nv&&nv.levels[nv.levels.length-1].p!=null&&bubble&&!bubble.closed){
     const pL=nv.levels[nv.levels.length-1].p*100, pB=bubble.yes*100;
-    note=`Cross-check: LEAPS price a ${pL.toFixed(1)}% chance of NVDA finishing ${nv.trigger_pct}% lower in ~${Math.round(nv.dte/30)} months; the Polymarket bubble market (which needs 3+ triggers, NVDA −50% among them) trades at ${pB.toFixed(1)}%. ${pB>pL?"The bubble market is pricing <strong>more</strong> stress than the far deeper options market – thin-book premium or information, take your pick.":"The deeper options market prices the tail at least as fat as the bubble market – the crash bid is not just a thin-book artifact."}`;
+    v=`LEAPS price a ${pL.toFixed(1)}% chance of NVDA finishing ${Math.abs(nv.trigger_pct)}% lower in ~${Math.round(nv.dte/30)} months; the bubble market trades at ${pB.toFixed(1)}%. ${pB>pL?"The bubble market prices <strong>more</strong> stress than the far deeper options market – thin-book premium or information, take your pick.":"The deeper options market prices the tail at least as fat as the bubble market – the crash bid is not just a thin-book artifact."}`;
   }
-  $("leapsNote").innerHTML=note+` As of ${esc(nv?.date||"")}, expiry ~${nv?nv.dte:"?"}d. Delayed CBOE quotes; N(&minus;d2) at r=4%.`;
+  $("leapsVerdict").innerHTML=v;
+  $("leapsNote").innerHTML=`The bubble market needs 3+ triggers, NVDA &minus;50% among them, so it is not the same claim as the LEAPS level &ndash; read the two as a sanity check on each other, not as one arbitrage. As of ${esc(nv?.date||"")}, expiry ~${nv?nv.dte:"?"}d. Delayed CBOE quotes; N(&minus;d2) at r=4%.`;
 }
 function renderFundamentals(){
   const F=mkt?.fundamentals;
-  if(!F||!F.quarters?.length){ $("fundStats").innerHTML='<div class="sub">Run the fetcher (with the updated script) to enable the fundamentals panel.</div>'; $("fundBars").innerHTML=""; $("fundNote").innerHTML=""; return; }
+  if(!F||!F.quarters?.length){ $("fundStats").innerHTML='<div class="sub">Run the fetcher (with the updated script) to enable the fundamentals panel.</div>'; $("fundBars").innerHTML=""; $("fundNote").innerHTML=""; $("fundVerdict").innerHTML=""; return; }
   const n=F.quarters.length, lastC=F.capex_b[n-1], lastO=F.ocf_b[n-1];
   const yoyIdx=F.quarters.indexOf(F.quarters[n-1].replace(/^(\d{4})/,(m,y)=>String(+y-1)));
   const yoy=yoyIdx>=0?(lastC/F.capex_b[yoyIdx]-1)*100:null;
@@ -1270,11 +1719,14 @@ function renderFundamentals(){
   $("fundBars").innerHTML='<div class="note" style="margin-top:10px"><strong>Quarterly capex ($B)</strong> with capex/OCF</div>'+
     F.quarters.map((q,i)=>{ const r=F.ocf_b[i]?Math.round(F.capex_b[i]/F.ocf_b[i]*100):null;
       return `<div class="hbar"><span class="k">${q}${F.n_firms[i]<F.names.length?' <span class="sub">('+F.n_firms[i]+'/'+F.names.length+')</span>':''}</span><span class="track"><i style="width:${(F.capex_b[i]/maxC*100).toFixed(0)}%;background:${r!=null&&r>=90?"var(--crit)":r!=null&&r>=70?"var(--warn)":"var(--bull)"}"></i></span><span class="v">$${F.capex_b[i].toFixed(0)}B${r!=null?" · "+r+"%":""}</span></div>`; }).join("");
+  // the ratio was only a stat label; it is the whole point of the panel, so it leads
+  $("fundVerdict").innerHTML = ratio==null ? `Combined capex <strong>$${lastC.toFixed(0)}B</strong> in ${esc(F.quarters[n-1])}.`
+    : `Capex/OCF at <strong>${ratio.toFixed(0)}%</strong> &ndash; ${ratio>=90?"near the dot-com line, where the buildout starts needing outside money":ratio>=70?"heavy, but still funded from operations":"comfortably funded from operations"}${yoy!=null?`, with capex ${yoy>0?"up":"down"} ${Math.abs(yoy).toFixed(0)}% year over year`:""}.`;
   $("fundNote").innerHTML=`${esc(F.names.join(", "))}; calendar-quarter aggregation of 10-K/10-Q cash-flow lines (fiscal quarters mapped by period end). Capex/OCF above ~100% means the buildout runs on external financing &ndash; the regime where credit, not sentiment, ends the party. Filings lag the quarter by 4&ndash;8 weeks, so this panel is slow-moving by design: it tells you how far fundamentals must grow into the spend, not when the repricing starts. As of ${esc(F.asof)}.`;
 }
 function renderMacro(){
   const M=mkt?.macro, cell=(l,v,x="")=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}${x}</div></div>`;
-  if(!M||!M.quarters?.length){ $("macroStats").innerHTML='<div class="sub">Run the fetcher (needs FRED GDP + SEC capex) to enable this panel.</div>'; $("macroBars").innerHTML=""; $("macroNote").innerHTML=""; return; }
+  if(!M||!M.quarters?.length){ $("macroStats").innerHTML='<div class="sub">Run the fetcher (needs FRED GDP + SEC capex) to enable this panel.</div>'; $("macroBars").innerHTML=""; $("macroNote").innerHTML=""; $("macroVerdict").innerHTML=""; return; }
   const n=M.quarters.length, pct=M.pct_gdp[n-1], gs=M.growth_share[n-1], ann=M.capex_ann_b[n-1];
   $("macroStats").innerHTML=[
     cell("AI capex, annualized", "$"+ann.toFixed(0)+"B", ` <small>${M.quarters[n-1]}</small>`),
@@ -1284,12 +1736,13 @@ function renderMacro(){
   const maxP=Math.max(...M.pct_gdp);
   $("macroBars").innerHTML='<div class="note" style="margin-top:10px"><strong>AI capex as % of GDP</strong>, annualized</div>'+
     M.quarters.map((q,i)=>`<div class="hbar"><span class="k">${q}</span><span class="track"><i style="width:${(M.pct_gdp[i]/maxP*100).toFixed(0)}%;background:${M.pct_gdp[i]>=0.9?"var(--crit)":M.pct_gdp[i]>=0.6?"var(--warn)":"var(--bull)"}"></i></span><span class="v">${M.pct_gdp[i].toFixed(2)}%${M.growth_share[i]!=null?' <span class="sub">· '+M.growth_share[i].toFixed(0)+'% of ΔGDP</span>':""}</span></div>`).join("");
+  $("macroVerdict").innerHTML=`AI capex is <strong>${pct.toFixed(2)}% of GDP</strong>${gs!=null?` and <strong>${gs.toFixed(0)}% of GDP growth</strong>`:""} &ndash; no peacetime precedent outside railways and telecom.`;
   $("macroNote").innerHTML=`Combined MSFT/GOOGL/AMZN/META/ORCL capex (SEC), annualized, over nominal GDP (FRED, SAAR). &ldquo;Share of GDP growth&rdquo; is the change in annualized capex over the change in GDP &ndash; noisy quarter to quarter, but the level Kedrosky uses to argue the buildout is now propping up headline growth. A capex cycle this large relative to the economy has no peacetime precedent outside railways and telecom. As of ${esc(M.asof)}.`;
 }
 function renderDepreciation(){
   const F=mkt?.fundamentals, cell=(l,v,x="")=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}${x}</div></div>`;
   const have=F&&F.quarters?.length&&F.dep_b&&F.dep_b.some(v=>v!=null);
-  if(!have){ $("depStats").innerHTML='<div class="sub">Depreciation lines unavailable this cycle (SEC D&amp;A tags).</div>'; $("depBars").innerHTML=""; $("depNote").innerHTML=""; return; }
+  if(!have){ $("depStats").innerHTML='<div class="sub">Depreciation lines unavailable this cycle (SEC D&amp;A tags).</div>'; $("depBars").innerHTML=""; $("depNote").innerHTML=""; $("depVerdict").innerHTML=""; return; }
   const idx=F.quarters.map((q,i)=>({q,d:F.dep_b[i],r:(F.dep_b[i]!=null&&F.capex_b[i])?F.dep_b[i]/F.capex_b[i]*100:null})).filter(x=>x.r!=null);
   const last=idx[idx.length-1], first=idx[0], trend=last&&first?last.r-first.r:null;
   $("depStats").innerHTML=[
@@ -1300,6 +1753,8 @@ function renderDepreciation(){
   const maxR=Math.max(...idx.map(x=>x.r));
   $("depBars").innerHTML='<div class="note" style="margin-top:10px"><strong>Depreciation as % of capex</strong> &ndash; falling = cost recognition lagging the spend</div>'+
     idx.map(x=>`<div class="hbar"><span class="k">${x.q}</span><span class="track"><i style="width:${(x.r/maxR*100).toFixed(0)}%;background:${x.r<40?"var(--crit)":x.r<60?"var(--warn)":"var(--bull)"}"></i></span><span class="v">${x.r.toFixed(0)}%</span></div>`).join("");
+  $("depVerdict").innerHTML = trend==null ? `Depreciation is <strong>${last.r.toFixed(0)}%</strong> of capex.`
+    : `Cost recognition is <strong>${trend<-5?"lagging the spend":trend>5?"catching up with the spend":"keeping pace with the spend"}</strong> &ndash; depreciation is ${last.r.toFixed(0)}% of capex, ${trend<0?"down":"up"} ${Math.abs(trend).toFixed(0)} pts across the window.`;
   $("depNote").innerHTML=`Combined D&amp;A addback vs. cash capex, same filers as the fundamentals panel. GPUs depreciate in ~3&ndash;5 years but hyperscalers extended disclosed server useful-life assumptions (Microsoft, Google, Meta all lengthened them since 2020), which slows depreciation and lifts reported earnings even as cash goes out the door. A ratio drifting <em>down</em> while capex climbs is that gap widening &ndash; the same capitalization dynamic that flattered dot-com telecom before the writedowns. As of ${esc(F.asof)}.`;
 }
 function renderAiCredit(){
@@ -1308,7 +1763,7 @@ function renderAiCredit(){
   const LEV=[["CRWV","CoreWeave"],["ORCL","Oracle"],["NBIS","Nebius"],["IREN","IREN"]];
   const dds=LEV.map(([s,n])=>({n,dd:drawdown(E[s])})).filter(x=>x.dd!=null);
   const basketDD=dds.length?dds.reduce((a,b)=>a+b.dd,0)/dds.length:null;
-  if(ccc==null&&bizdDD==null&&!dds.length){ $("aicreditStats").innerHTML='<div class="sub">Run the fetcher to enable this panel.</div>'; $("aicreditBars").innerHTML=""; $("aicreditNote").innerHTML=""; return; }
+  if(ccc==null&&bizdDD==null&&!dds.length){ $("aicreditStats").innerHTML='<div class="sub">Run the fetcher to enable this panel.</div>'; $("aicreditBars").innerHTML=""; $("aicreditNote").innerHTML=""; $("aicreditVerdict").innerHTML=""; return; }
   $("aicreditStats").innerHTML=[
     ccc!=null?cell("CCC OAS (junk tier)", ccc.toFixed(2)+"%", ` <small>${ccc>=12?"stressed":ccc>=10?"elevated":"contained"}</small>`):"",
     bizdDD!=null?cell("BIZD (private credit)", bizdDD.toFixed(1)+"%", ` <small>from 6mo high</small>`):"",
@@ -1319,6 +1774,15 @@ function renderAiCredit(){
     $("aicreditBars").innerHTML='<div class="note" style="margin-top:10px"><strong>Levered-AI names</strong> &ndash; drawdown from 6-month high</div>'+
       dds.map(x=>`<div class="hbar"><span class="k">${esc(x.n)}</span><span class="track"><i style="width:${(Math.min(1,x.dd/worst)*100).toFixed(0)}%;background:${x.dd<=-25?"var(--crit)":x.dd<=-12?"var(--warn)":"var(--bull)"}"></i></span><span class="v">${x.dd.toFixed(1)}%</span></div>`).join("");
   } else $("aicreditBars").innerHTML="";
+  // the panel's thesis is that equity reprices financing risk before credit does, so the
+  // verdict reads the two together rather than reporting either alone
+  const cccBand=ccc==null?null:ccc>=12?"stressed":ccc>=10?"elevated":"contained";
+  const parts=[];
+  if(cccBand) parts.push(`Junk credit <strong>${cccBand}</strong> at ${ccc.toFixed(2)}%`);
+  if(basketDD!=null) parts.push(`levered-AI equity down <strong>${Math.abs(basketDD).toFixed(0)}%</strong> on average`);
+  $("aicreditVerdict").innerHTML = parts.length
+    ? parts.join(", ")+` &ndash; ${cccBand==="contained"&&basketDD!=null&&basketDD<=-15?"financing risk is showing up in equity first, which is where it usually shows up first.":"the two are moving together."}`
+    : "";
   $("aicreditNote").innerHTML=`BIZD is the VanEck BDC ETF &ndash; a liquid proxy for the direct-lending / private-credit funds that increasingly hold data-center and neocloud debt (the pension- and insurer-held paper Kedrosky compares to 2008). CCC OAS is the junk-credit tier where neocloud issuers price. Free feeds carry no issuer-level spread for CoreWeave or Oracle DC vehicles, so their equity drawdown stands in as the market&rsquo;s leading read on financing risk. Credit usually cracks before equity in capex-heavy bubbles &ndash; watch BIZD and CCC turning while the index holds.`;
 }
 function renderPower(){
@@ -1328,7 +1792,7 @@ function renderPower(){
   const chg90=s=>{ const ser=E[s]; if(!ser||ser.length<2) return null; const w=ser.slice(-63); return (w[w.length-1].c/w[0].c-1)*100; };
   const pg=["VST","CEG"].map(chg90).filter(v=>v!=null);
   const pgAvg=pg.length?pg.reduce((a,b)=>a+b)/pg.length:null, xlu=chg90("XLU");
-  if(yoy==null&&xlu==null&&!pg.length){ $("powerStats").innerHTML='<div class="sub">Run the fetcher (FRED electricity CPI + XLU) to enable this panel.</div>'; $("powerBars").innerHTML=""; $("powerNote").innerHTML=""; return; }
+  if(yoy==null&&xlu==null&&!pg.length){ $("powerStats").innerHTML='<div class="sub">Run the fetcher (FRED electricity CPI + XLU) to enable this panel.</div>'; $("powerBars").innerHTML=""; $("powerNote").innerHTML=""; $("powerVerdict").innerHTML=""; return; }
   $("powerStats").innerHTML=[
     yoy!=null?cell("Residential electricity", (yoy>0?"+":"")+yoy.toFixed(1)+"%", ` <small>CPI YoY</small>`):"",
     xlu!=null?cell("Utilities (XLU)", (xlu>0?"+":"")+xlu.toFixed(1)+"%", ` <small>90d</small>`):"",
@@ -1340,6 +1804,16 @@ function renderPower(){
     $("powerBars").innerHTML='<div class="note" style="margin-top:10px"><strong>Power-complex equities</strong> &ndash; 90-day return</div>'+
       bars.map(([n,v])=>`<div class="hbar"><span class="k">${esc(n)}</span><span class="track"><i style="width:${(Math.abs(v)/maxA*100).toFixed(0)}%;background:${v>=25?"var(--crit)":v>=10?"var(--warn)":"var(--bull)"}"></i></span><span class="v">${(v>0?"+":"")+v.toFixed(1)}%</span></div>`).join("");
   } else $("powerBars").innerHTML="";
+  // bills and power equities together: both rising is the buildout bidding for electricity,
+  // power rolling over while bills climb is the early crack in the physical layer
+  const pv=[];
+  if(yoy!=null) pv.push(`Bills <strong>${yoy>0?"+":""}${yoy.toFixed(1)}% YoY</strong>`);
+  if(pgAvg!=null) pv.push(`power-gen stocks <strong>${pgAvg>0?"+":""}${mnum(pgAvg,1)}%</strong> over 90 days`);
+  $("powerVerdict").innerHTML = pv.length
+    ? pv.join(" while ")+` &ndash; ${yoy!=null&&yoy>0&&pgAvg!=null&&pgAvg<0?"the physical layer is where to watch: households are still paying more while the market marks the demand pull down."
+      : yoy!=null&&yoy>0&&pgAvg!=null&&pgAvg>0?"the buildout is bidding electricity away from other users."
+      : "no clear signal from the physical layer."}`
+    : "";
   $("powerNote").innerHTML=`Electricity CPI (FRED, US city average) is the household bill &ndash; the number that drives local opposition to data centers. XLU and the merchant-power names (Vistra, Constellation) price the demand pull; they have re-rated hard on the AI-power thesis. Rising bills alongside surging power-gen equity is the buildout bidding electricity away from other users &ndash; a genuine externality and, if it reverses, a demand-destruction signal. Power stocks rolling over would be an early crack in the physical layer of the trade.`;
 }
 function renderCrossVenue(){
@@ -1364,6 +1838,25 @@ function renderCrossVenue(){
     for(const m of M) h+=`<tr><td class="sub">${esc(m.theme)}</td><td><a href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.title)}</a></td><td class="num">${(m.price*100).toFixed(0)}%</td><td class="num dim">${m.bettors??"–"}</td></tr>`;
     $("manifoldTable").innerHTML=h+"</tbody>";
   }
+  // A venue divergence signal needs the same theme priced on 2+ venues; the widest such
+  // spread is the verdict. Themes carried by only one venue say nothing about agreement.
+  const byTheme=new Map();
+  const add=(theme,venue,p)=>{ if(theme==null||p==null) return;
+    if(!byTheme.has(theme)) byTheme.set(theme,new Map()); byTheme.get(theme).set(venue,p*100); };
+  for(const m of K?.markets||[]) add(m.theme,"Kalshi",m.price);
+  for(const q of MC?.questions||[]) add(q.theme,"Metaculus",q.prob);
+  for(const m of M||[]) add(m.theme,"Manifold",m.price);
+  let widest=null;
+  for(const [theme,venues] of byTheme){
+    if(venues.size<2) continue;
+    const vals=[...venues.values()], spread=Math.max(...vals)-Math.min(...vals);
+    if(!widest||spread>widest.spread) widest={theme,spread,venues:[...venues.keys()]};
+  }
+  $("crossVerdict").innerHTML = !widest
+    ? (byTheme.size?"No theme is priced on more than one venue right now &ndash; no divergence signal available.":"")
+    : widest.spread<10
+      ? `${widest.venues.join(", ")} roughly agree &ndash; the widest cross-venue gap is <strong>${widest.spread.toFixed(0)} pts</strong> (${esc(widest.theme)}). No venue divergence signal.`
+      : `Venues disagree: <strong>${widest.spread.toFixed(0)} pts</strong> between ${widest.venues.join(" and ")} on ${esc(widest.theme)} &ndash; worth a look before trusting either price.`;
   $("kalshiCap").innerHTML="Where the same theme trades on several venues, disagreement is a confidence signal. "
     +"Kalshi quotes are public and need no API key &ndash; bid/ask and depth come straight off the unauthenticated feed. "
     +(K&&!K.authed&&K.note?`<strong>${esc(K.note)}</strong> `:"")
@@ -1416,15 +1909,46 @@ function renderCoverage(){
   if(coverage.suggestions.length) notes.push("Possible successor markets: "+coverage.suggestions.map(s=>`<a href="https://polymarket.com/event/${esc(s.slug)}" target="_blank" rel="noopener">${esc(s.title)}</a>`).join("; "));
   $("coverageNote").innerHTML=notes.length?notes.join("<br>"):"All constituents live; none resolved or dropped.";
 }
+const ageTxt=ms=>{ const h=ms/3600000; return h<1?"<1h":h<48?Math.round(h)+"h":Math.round(h/24)+"d"; };
+// §5.2 panel status. ok = no badge; stale = its source is past its cadence; unreliable =
+// the panel failed its own consistency check, so the body is greyed and the verdict carries
+// the reason. Statuses are recomputed every render, so a panel heals itself when data does.
+function setPanelStatus(cardId, status, label){
+  const card=$(cardId); if(!card) return;
+  card.classList.toggle("is-unreliable", status==="unreliable");
+  const h2=card.querySelector("h2"); if(!h2) return;
+  let b=h2.querySelector(".pstatus");
+  if(status==="ok"){ if(b) b.remove(); return; }
+  if(!b){ b=document.createElement("span"); b.className="pstatus"; h2.appendChild(b); }
+  b.className="pstatus "+status;
+  b.textContent=label;
+}
+// The fetcher's own freshness, banded exactly where the header pill stops calling it good
+// (2h — the Action runs every ~30min, so past 2h it has missed cycles). Sharing the constant
+// is the point: a panel and the pill can never disagree about what "stale" means.
+const FRESH_MS = 2*3600000;
+function fetcherStale(){
+  if(!mkt?.updated) return null;
+  const age=Date.now()-Date.parse(mkt.updated);
+  return age>=FRESH_MS ? {age, label:`data ${ageTxt(age)} old`} : null;
+}
+// every panel whose numbers come out of market-data.json rather than the live Polymarket feed
+const FETCHER_PANELS=["p-vol","p-credit","p-breadth","p-insiders","p-leaps","p-fund",
+                      "p-capex","p-dep","p-kgpu","p-aicredit","p-power"];
+function renderStatuses(){
+  const st=fetcherStale();
+  for(const id of FETCHER_PANELS) setPanelStatus(id, st?"stale":"ok", st?st.label:"");
+  // the monotonicity check already fires; this is what makes the panel *look* broken
+  setPanelStatus("p-val", valUnreliable?"unreliable":"ok", valUnreliable?"⚠ unreliable – see note":"");
+}
 function renderFresh(){
   const now=Date.now();
   const dot=(state)=>`<i style="background:var(--${state})"></i>`;
-  const ageTxt=ms=>{ const h=ms/3600000; return h<1?"<1h":h<48?Math.round(h)+"h":Math.round(h/24)+"d"; };
   const items=[];
   items.push(`<span>${dot(lastPolyRefresh&&now-lastPolyRefresh<180000?"good":"crit")}Polymarket ${lastPolyRefresh?"live · "+new Date(lastPolyRefresh).toLocaleTimeString():"—"}</span>`);
   if(mkt?.updated){
     const age=now-Date.parse(mkt.updated);
-    items.push(`<span>${dot(age<2*3600000?"good":age<36*3600000?"warn":"crit")}Fetcher data ${ageTxt(age)} old</span>`);
+    items.push(`<span>${dot(age<FRESH_MS?"good":age<36*3600000?"warn":"crit")}Fetcher data ${ageTxt(age)} old</span>`);
     if(mkt.equity?.NVDA?.length) items.push(`<span>${dot("good")}Equity through ${mkt.equity.NVDA[mkt.equity.NVDA.length-1].d}</span>`);
     if(mkt.fred?.HY_OAS) items.push(`<span>${dot("good")}FRED ${mkt.fred.HY_OAS.last_date}</span>`);
     if(mkt.gpu) items.push(`<span>${dot("good")}GPU spot ${mkt.gpu.date}</span>`);
@@ -1607,6 +2131,7 @@ function takeSnapshot(){
   save.crash=+indexNowFixed("bear","mkt").toFixed(2);
   save.reg=+indexNowFixed("bear","gov").toFixed(2);
   if(sig.gauge?.score!=null) save.gauge=+sig.gauge.score.toFixed(1);
+  if(lastRegime!=null) save.regime=lastRegime;   // lets the verdict block say "regime unchanged"
   store[today]=save; try{ localStorage.setItem(SNAP_KEY,JSON.stringify(store)); }catch(e){}
   const days=Object.keys(store).sort(), breaks=days.filter((d,i)=>i>0&&store[d].comp!==store[days[i-1]].comp).length;
   $("snapCap").innerHTML=`Daily snapshot (equal weight, raw odds, gauge) kept in this browser. <strong>${days.length}</strong> day(s)${days.length?" since "+days[0]:""}${breaks?`; ${breaks} composition change(s) flagged for chain-linking`:""}. The history chart above is already chain-linked, so composition turnover doesn&rsquo;t create artificial steps.`;
@@ -1618,15 +2143,128 @@ $("snapExport").onclick=()=>{ let store={}; try{ store=migrateSnaps(JSON.parse(l
   for(let i=0;i<days.length;i++){ const d=days[i],s=store[d]; csv+=`${d},${s.bull??""},${s.bear??""},${s.crash??""},${s.reg??""},${s.china??""},${s.macro??""},${s.gauge??""},${i>0&&s.comp!==store[days[i-1]].comp?1:0}\n`; }
   const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="ai-crash-snapshots.csv"; a.click(); };
 
+/* ================= Views (§1) =================
+   One document, five views. The Worker serves this same asset for every
+   /polymarket-ai-index/<view> path, so routing is real and shareable while the data is
+   fetched once and switching is instant. Elements carry data-view (space-separated);
+   anything without one is global and shows on every view. */
+const VIEWS = {
+  "today":              { name:"Today",              title:null },
+  "markets":            { name:"Market signals",     title:"Market signals" },
+  "gpu":                { name:"GPU & fundamentals", title:"GPU & fundamentals" },
+  "prediction-markets": { name:"Prediction markets", title:"Prediction markets" },
+  "methodology":        { name:"Methodology & data", title:"Methodology" },
+};
+const BASE = "/polymarket-ai-index";
+let view = "today";
+
+/* §4.2: the ladder, both rent panels and the depreciation gap argue one thesis, so the GPU
+   view runs them in narrative order instead of the historical source order. Moved once at
+   boot — never per view switch — so charts and listeners are built exactly once. */
+function assembleGpuStory(){
+  const host=$("gpuStory"); if(!host) return;
+  for(const id of ["p-kgpu","p-b200","p-h100","p-dep"]){
+    const el=$(id); if(el) host.appendChild(el);
+  }
+}
+function viewFromPath(){
+  const m = location.pathname.match(/\/polymarket-ai-index\/([a-z-]+)\/?$/);
+  return (m && VIEWS[m[1]]) ? m[1] : "today";
+}
+function applyView(v){
+  view = VIEWS[v] ? v : "today";
+  for(const el of document.querySelectorAll("[data-view]")){
+    const views = el.dataset.view.split(/\s+/);
+    el.hidden = !views.includes(view);
+  }
+  // A two-up row whose partner moved to another view must not hold an empty column.
+  // Rows with their own data-view were already decided above — don't second-guess them.
+  for(const g of document.querySelectorAll(".grid2")){
+    if(g.dataset.view) continue;
+    const kids = [...g.children].filter(c => !c.hidden);
+    g.hidden = kids.length === 0;
+    g.style.gridTemplateColumns = kids.length === 1 ? "1fr" : "";
+  }
+  for(const a of document.querySelectorAll(".topnav > a[data-nav]"))
+    a.setAttribute("aria-current", a.dataset.nav === view ? "page" : "false");
+  applyRegimeTitle();
+}
+// the regime emoji stays in the title on every view (§1.1)
+function applyRegimeTitle(){
+  const r = lastRegime;
+  const prefix = r==="stressed" ? "🔴 STRESSED – " : r==="elevated" ? "⚠ Elevated – " : "";
+  const suffix = VIEWS[view]?.title ? " · " + VIEWS[view].title : "";
+  document.title = prefix + "AI Crash Monitor" + suffix;
+}
+function navigate(v, push=true, anchor=null){
+  if(!VIEWS[v]) v="today";   // never write an unknown view to the URL bar; applyView clamps too
+  const path = (v==="today" ? BASE : `${BASE}/${v}`) + (anchor?`#${anchor}`:"");
+  if(push) history.pushState({v,anchor}, "", path);
+  applyView(v);
+  // a cross-link has to land on its target, not the top of the destination view
+  const t = anchor && $(anchor);
+  if(t) t.scrollIntoView({block:"start"}); else window.scrollTo(0,0);
+}
+document.addEventListener("click", e => {
+  const a = e.target.closest("a[data-nav]");
+  if(!a || e.metaKey || e.ctrlKey || e.shiftKey) return;
+  e.preventDefault();
+  navigate(a.dataset.nav, true, a.dataset.anchor || null);
+});
+window.addEventListener("popstate", () => {
+  applyView(viewFromPath());
+  const id = location.hash.slice(1), t = id && $(id);
+  if(t) t.scrollIntoView({block:"start"});
+});
+
+/* "What changed": the biggest movers across every tracked market, computed rather than
+   picked. Ranked by |24h move|, with the existing unusual-volume detection as the tiebreak
+   signal — a big move on heavy volume is the one worth reading. */
+function renderWhatChanged(){
+  const spike = new Map(sig.spikes.map(s => [s.c.id, s.ratio]));
+  const movers = CONSTITUENTS.map(c => {
+    const m = markets.get(c.id);
+    if(!m || m.closed || m.d1 == null) return null;
+    return { label:c.label, d1:m.d1*100, vol:spike.get(c.id)||null };
+  }).filter(Boolean).sort((a,b) => Math.abs(b.d1) - Math.abs(a.d1)).slice(0,3);
+  const el = $("changedList");
+  if(!movers.length || Math.abs(movers[0].d1) < 0.5){
+    el.innerHTML = '<div class="note">Nothing moved materially in the last 24 hours.</div>';
+    return;
+  }
+  el.innerHTML = movers.map(m =>
+    `<div class="chg"><span class="m ${m.d1>0?"up":"down"}">${m.d1>0?"+":"−"}${Math.abs(m.d1).toFixed(1)} pts</span>`
+    + `<span class="n">${esc(m.label)}</span>`
+    + `<span class="w">${m.vol?`⚡ ${m.vol.toFixed(1)}× volume`:""}</span></div>`).join("");
+}
+/* Nav cards: each deep-dive page fronted by its single most important live number. */
+function renderNavCards(){
+  const g = sig.gauge?.fam || {};
+  const capex = (()=>{ const F=mkt?.fundamentals; if(!F?.quarters?.length) return null;
+    const n=F.quarters.length, o=F.ocf_b[n-1]; return o?F.capex_b[n-1]/o*100:null; })();
+  const bubble = markets.get(BUBBLE_ID);
+  const fresh = mkt?.updated ? ageTxt(Date.now()-Date.parse(mkt.updated))+" old" : "no data";
+  const cards = [
+    { v:"markets",            t:"Market signals",     val: g.opt?.v!=null ? g.opt.v.toFixed(0) : "–", l:"options skew" },
+    { v:"gpu",                t:"GPU & fundamentals", val: capex!=null ? capex.toFixed(0)+"%" : "–", l:"capex / operating cash flow" },
+    { v:"prediction-markets", t:"Prediction markets", val: bubble&&!bubble.closed ? (bubble.yes*100).toFixed(1)+"%" : "–", l:"AI bubble burst in 2026" },
+    { v:"methodology",        t:"Methodology & data", val: fresh, l:"fetcher freshness" },
+  ];
+  $("navCards").innerHTML = cards.map(c =>
+    `<a class="navcard" href="${BASE}/${c.v}" data-nav="${c.v}"><div class="t">${esc(c.t)} &rarr;</div>`
+    + `<div class="v">${c.val}</div><div class="l">${esc(c.l)}</div></a>`).join("");
+}
+
 /* ================= Orchestration ================= */
 function renderAll(){
   computeSignals();
   renderGauge(); renderTiles(); renderRegime(); renderStack(); renderMomentum();
   renderVol(); renderCredit(); renderBreadth(); renderInsiders();
-  renderNvda(); renderH100(); renderB200(); renderKalshiGpu(); renderValuations(); renderLeaps(); renderFundamentals(); renderMacro(); renderDepreciation(); renderAiCredit(); renderPower(); renderCrossVenue();
+  renderNvda(); renderH100(); renderB200(); renderKalshiGpu(); renderValuations(); renderLeaps(); renderFundamentals(); renderMacro(); renderDepreciation(); renderAiCredit(); renderPower(); renderCrossVenue(); renderClaims();
   renderMainChart(); renderEquity(); renderLeadLag();
   for(const s of SIDES) renderTable(s);
-  renderCoverage(); renderFresh(); takeSnapshot();
+  renderWhatChanged(); renderNavCards();
+  renderCoverage(); renderFresh(); renderStatuses(); takeSnapshot();
 }
 async function refreshPrices(){
   try{ await fetchMarkets(); await fetchBook(); renderAll();
@@ -1656,7 +2294,7 @@ $("alertBtn").onclick=async()=>{ if(!("Notification" in window)){ alert("This br
   if(alertsOn) new Notification("AI Crash Monitor","Alerts enabled. You'll be notified when the crash regime escalates."); };
 
 $("foot").innerHTML=`<p style="margin-top:8px"><strong>Composite.</strong> 100×Σ(wᵢ·pᵢ)/Σwᵢ over constituents live at each timestamp; the history panels are <strong>chain-linked</strong> (only common-member moves shift the line, so markets entering/leaving cause no step) and back-adjusted to read in probability units. Closed/resolved markets are dropped from the live index (see coverage). <strong>Deadline-adjusted</strong> basis annualizes only one-time-event markets (pᵢ→1−(1−p)^(365/days)); structural questions (†) are left raw.</p>
-<p style="margin-top:8px"><strong>Crash-Pressure Gauge.</strong> Five equally-weighted families, each normalized 0–100 vs calm→stress refs: prediction markets (bubble 0–40%, NVDA tail 0–25%, H100&lt;$2 0–30%), options skew (NVDA RR 1–10pt, SOXX 4–15pt), vol complex (VIX/VIX3M 0.82–1.05, VXN 18–40, SKEW 115–160, VVIX 90–130), credit (HYG &amp; HY/IG drawdown 0→−8%/−6%, HY OAS 2.5–5.0%, CCC OAS 8.5–14%), equity drawdown (NVDA 0→−50%, SOXX 0→−40%). The gauge history chart is reconstructed from stored daily series; its prediction-market family is bubble-market-only, so it slightly understates days when the NVDA-tail or H100 signals were hot. Regime: stressed at gauge≥55 / crash≥40 / crash≥25 with z≥2 / any stack≥25%; elevated at gauge≥35 / crash≥25 / z≥1.5 / stack≥15%. The chip states which condition fired. “Crash” here means the crash-market basket – Bear’s MKT sleeve, unchanged in membership by the Bear merge – and not the Bear composite: these bands price crash risk, so regulatory odds must not trip them.</p>
+<p style="margin-top:8px"><strong>Crash-Pressure Gauge.</strong> Five equally-weighted families, each normalized 0–100 vs calm→stress refs: prediction markets (bubble 0–40%, NVDA tail 0–25%, H100&lt;$2 0–30%), options skew (NVDA RR 1–10pt, SOXX 4–15pt), vol complex (VIX/VIX3M 0.82–1.05, VXN 18–40, SKEW 115–160, VVIX 90–130), credit (HYG &amp; HY/IG drawdown 0→−8%/−6%, HY OAS 2.5–5.0%, CCC OAS 8.5–14%), equity drawdown (NVDA 0→−50%, SOXX 0→−40%). The gauge history chart is reconstructed from stored daily series; its prediction-market family is bubble-market-only, so it slightly understates days when the NVDA-tail or H100 signals were hot. Regime: stressed at gauge≥55 / crash≥40 / crash≥25 with z≥2; elevated at gauge≥35 / crash≥25 / z≥1.5 / stack≥15%. A single early-warning market (China competition, one bubble print, one euphoria read) caps at Elevated — it can no longer trip Stressed on its own. The chip states which condition fired. “Crash” here means the crash-market basket – Bear’s MKT sleeve, unchanged in membership by the Bear merge – and not the Bear composite: these bands price crash risk, so regulatory odds must not trip them.</p>
 <p style="margin-top:8px"><strong>Leading vs confirming.</strong> The five families are also split into a <em>leading</em> sub-score (prediction markets, options skew, credit – all priced before the fact) and a <em>confirming</em> sub-score (vol complex, equity drawdown – both move with or after prices). The headline gauge stays the mean of all five for continuity, but the split is the honest read: only the leading side can warn, and the lead-lag study below shows even that lead is unproven.</p>
 <p style="margin-top:8px"><strong>Bull split.</strong> Bull constituents are tagged TECH (model releases, benchmarks, hardware – technology-progress odds) or CAP (IPOs, valuation flips – capital-markets odds). Technology progress historically survives financial unwinds (railways, dot-com), so the capital-only sub-reading is the cleaner cycle signal; the tech side mostly tells you the release calendar is intact.</p>
 <p style="margin-top:8px"><strong>LEAPS tail.</strong> From the same CBOE chains: the expiry nearest 365d (min 250d), the listed put nearest each drawdown level, and P(S<sub>T</sub>&lt;K)=N(&minus;d2) at that strike&rsquo;s IV with r=4%. Risk-neutral, so it overstates real-world odds by the variance risk premium – use it as a deep-market ceiling to sanity-check the thin Polymarket bubble book, not as a forecast.</p>
@@ -1664,20 +2302,29 @@ $("foot").innerHTML=`<p style="margin-top:8px"><strong>Composite.</strong> 100×
 <p style="margin-top:8px"><strong>Kedrosky panels.</strong> Four non-price or real-economy signals from Paul Kedrosky&rsquo;s bubble thesis. <em>AI capex vs. the economy</em>: combined filer capex (SEC), annualized, over nominal GDP (FRED GDP, SAAR); &ldquo;share of GDP growth&rdquo; is Δ(annualized capex)/Δ(GDP), noisy but the scale argument. <em>GPU depreciation gap</em>: combined D&amp;A addback vs. cash capex; a falling ratio while capex climbs flags cost recognition lagging the spend (the extended-useful-life earnings flatter). <em>AI &amp; private-credit stress</em>: BIZD (BDC/private-credit proxy) + CCC OAS + drawdown of the levered-AI names (CRWV/ORCL/NBIS/IREN) &ndash; no free issuer-level spread exists for neocloud debt, so equity stands in. <em>Power &amp; electricity</em>: residential electricity CPI (FRED) plus XLU and merchant-power equities (VST/CEG). All are slow-moving or proxied by design; read them as context, not triggers.</p>
 <p style="margin-top:8px"><strong>Lead-lag.</strong> Non-overlapping windows, 2,000-shuffle permutation test, recomputed on history refresh only. The bubble market is reflexive with NVDA/SOXX so the ex-bubble row is the cleaner read – treat all of it as descriptive.</p>
 <p style="margin-top:8px"><strong>Cadence &amp; sources.</strong> Live Polymarket data (Gamma + CLOB, incl. bubble-market order-book depth) refreshes every 60s; histories, market-data.json and cached studies every 10min; NVDA/H100 events re-discovered hourly. market-data.json is produced by <code>update-market-data.py</code> (GitHub Action, ~30min cadence): Yahoo Finance (equity/vol/credit proxies), CBOE delayed quotes (25Δ risk reversals, single-name IV term structure, LEAPS tail), FRED keyless CSV (HY OAS, CCC OAS, NFCI, nominal GDP, electricity CPI), SEC EDGAR Form 4 (open-market S/P only, recent-filings sample), SEC XBRL companyconcept (capex/OCF/depreciation fundamentals), vast.ai public asks (realized H100 $/GPU-hr), Kalshi public API (cross-venue themes <em>and</em> the GPU compute markets: H100/H200/B200/A100 weekly + monthly, quotes unauthenticated, settled on the Ornn index), Metaculus (optional token), Manifold public API (play-money). Constituents curated 2026-07-10; not investment advice.</p>
+<p style="margin-top:8px"><strong>Singularity claims watch.</strong> Five falsifiable claims from Raoul Pal&rsquo;s economic-singularity thesis (&ldquo;AI Revolution: How to Invest&rdquo;, Real Vision, Jul 2026), read against the tape. AGI-by-2027 and Chatbot-Arena odds reuse existing bull constituents; Optimus-release and California-robotaxi odds are pinned Polymarket markets tracked <em>outside</em> the indexes, so they move no composite; the quarterly US-GDP bracket event is re-discovered like the NVDA/H100 events. Core goods CPI (CUSR0000SACL1E), residential electricity CPI, unemployment (UNRATE), prime-age participation (LNS11300060) and realized real GDP growth (A191RL1Q225SBEA) come from FRED via the fetcher. Bands: market odds &ge;50% = the claim is priced, &ge;20% = live; goods CPI &le; &minus;0.5% YoY = deflation validating; unemployment +0.3pt/6mo while prime-age participation holds = displacement signature. The panel feeds no gauge family &ndash; it is context: euphoria broadening toward the narrative, or the labor/backlash channel arming, both of which the crash gauge would only see later.</p>
 <p style="margin-top:8px"><strong>GPU compute, two venues, two indices.</strong> Polymarket and Kalshi both price GPU rents, but they do not settle on the same underlying: Kalshi resolves on the <a href="https://dashboard.ornnai.com/" target="_blank" rel="noopener">Ornn</a> index, while this dashboard&rsquo;s realized tape is vast.ai&rsquo;s public asks &ndash; a decentralized marketplace of interruptible hosts that prints structurally below a curated index. The Ornn reference is read for free from each Kalshi weekly market&rsquo;s &ldquo;price to beat&rdquo; strike, which is set at the Ornn print when the market opens, so it dates to that week&rsquo;s open rather than to now. Implied medians come from the monthly ladder as the 50% crossing of the survival curve P(value &gt; strike), after dropping one-sided books (bid 0 / ask 1) and quotes wider than 15c and forcing survival to be non-increasing in strike; where the crossing falls outside the quoted strikes the panel shows no median rather than an invented one. Kalshi&rsquo;s Dec-31 GPU contracts resolve &ldquo;above $X <em>by</em> Dec 31&rdquo; &ndash; a running maximum, upward-biased vs. a terminal value &ndash; and are excluded on purpose. Only the weekly and monthly are true forward points, so no long-dated compute curve is claimed here.</p>`;
+
+assembleGpuStory();
+applyView(viewFromPath());   // before any fetch, so the right view paints immediately
+// a shared cross-link URL (/…/markets#p-breadth) must land on its panel, not the view top
+function scrollToHash(){ if(!location.hash) return; const t=$(location.hash.slice(1)); if(t) t.scrollIntoView({block:"start"}); }
+scrollToHash();
 
 (async()=>{
   try{
     await fetchMarkets();
-    await Promise.all([fetchHistories(false), fetchNvda(), fetchH100(), fetchB200(), fetchValuations(), fetchMkt(), fetchSnapshots(), fetchBook()]);
+    await Promise.all([fetchHistories(false), fetchNvda(), fetchH100(), fetchB200(), fetchValuations(), fetchGdp(), fetchMkt(), fetchSnapshots(), fetchBook()]);
     if(coverage.excluded.length) await findSuccessors();
     computeLeadLagCache();
     gaugeHistCache=computeGaugeHistory(90);
     renderAll();
+    // panels above the anchor grew from placeholder to full content, so realign the deep link
+    scrollToHash();
     $("status").textContent="Updated "+new Date().toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
     setInterval(refreshPrices,60_000);
     setInterval(refreshHeavy,600_000);
-    setInterval(()=>{ fetchNvda(); fetchH100(); fetchB200(); fetchValuations(); },3_600_000);
+    setInterval(()=>{ fetchNvda(); fetchH100(); fetchB200(); fetchValuations(); fetchGdp(); },3_600_000);
   }catch(e){ $("err").textContent="Initialization failed: "+e.message; $("err").style.display="block"; }
 })();
 </script>
