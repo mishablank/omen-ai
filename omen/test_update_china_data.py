@@ -18,8 +18,9 @@ def test_parse_gjson_strips_antiscrape_prefix():
     assert ucd.parse_gjson(b")]}',\n{\"a\": 1}") == {"a": 1}
 
 
-def test_us_terms_include_llama():
+def test_us_terms_include_llama_and_meta():
     assert "Llama AI" in ucd.TRENDS_TERMS_US
+    assert "Meta AI" in ucd.TRENDS_TERMS_US
 
 
 def test_trends_batches_share_anchor_and_respect_5_term_cap():

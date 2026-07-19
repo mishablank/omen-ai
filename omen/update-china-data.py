@@ -167,7 +167,8 @@ def openrouter_week():
 # fetched in batches that all share the anchor (ChatGPT) and are rescaled onto
 # batch 0's scale via the anchor's ratio.
 # "Llama AI" not bare "Llama": the bare string is dominated by the animal.
-TRENDS_TERMS_US = ["ChatGPT", "Gemini", "Claude", "Llama AI"]
+# "Meta AI" captures the consumer assistant product built on Llama.
+TRENDS_TERMS_US = ["ChatGPT", "Gemini", "Claude", "Llama AI", "Meta AI"]
 # "Kimi AI"/"GLM AI" not bare "Kimi"/"GLM": the bare strings are dominated by
 # homonyms in US search (Kimi Antonelli/Raikkonen, generalized linear models).
 TRENDS_TERMS_CN = ["DeepSeek", "Qwen", "Kimi AI", "GLM AI", "MiMo", "MiniMax", "Seed 1.6", "Seed 2.0"]
