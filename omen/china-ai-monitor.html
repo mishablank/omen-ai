@@ -538,7 +538,7 @@ function renderEQ(){
     const dd = last/hi - 1;
     const min = Math.min(...ser.map(p=>p.c)), rng = hi-min || 1;
     const pts = ser.map((p,i)=>`${(i/(ser.length-1)*100).toFixed(1)},${(28-(p.c-min)/rng*26).toFixed(1)}`).join(" ");
-    return `<div class="eq"><span class="sym">${sym}</span><span class="dd ${dd<-0.15?'down':''}">${(dd*100).toFixed(1)}%</span><div class="px">$${last.toFixed(2)}</div><svg viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${dd<-0.15?'var(--crit)':'var(--us)'}" stroke-width="1.6"/></svg></div>`;
+    return `<div class="eq"><span class="sym">${sym}</span><span class="dd ${dd<0?'down':''}">${(dd*100).toFixed(1)}%</span><div class="px">$${last.toFixed(2)}</div><svg viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${dd<0?'var(--crit)':'var(--us)'}" stroke-width="1.6"/></svg></div>`;
   };
   const syms = EQ_SYMS.filter(s => S.eq.equity[s]);
   g.innerHTML = syms.map(sym => card(sym, S.eq.equity[sym])).join("");
