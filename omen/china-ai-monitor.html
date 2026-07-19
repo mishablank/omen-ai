@@ -235,11 +235,11 @@
 
 <footer id="foot">
   <h3>Methodology</h3>
-  <b>Chinese AI Adoption Index</b> = &Sigma;(w<sub>i</sub>&middot;s<sub>i</sub>)/&Sigma;w<sub>i</sub> over available signal families, each normalized 0&ndash;100 against fixed reference ranges: OpenRouter Chinese token share 0&rarr;70% (w=30), Hugging Face Chinese share of open-weight downloads 0&rarr;70% (w=20), GitHub star velocity across the flagship basket 0&rarr;2,000/day (w=15), Western search/consumer interest share 0&rarr;50% (w=10), consumer app adoption 0&rarr;100 judgmental (w=10), LMArena proximity 100&minus;Elo-gap, floored at 0 (w=5). Weights follow the source note's suggested scheme; excluded families renormalize.
+  <b>Chinese AI Adoption Index</b> = &Sigma;(w<sub>i</sub>&middot;s<sub>i</sub>)/&Sigma;w<sub>i</sub> over available signal families, each normalized 0&ndash;100 against fixed reference ranges: OpenRouter Chinese token share 0&rarr;70% (w=30), Hugging Face Chinese share of open-weight downloads 0&rarr;70% (w=20), GitHub star velocity across the flagship basket 0&rarr;2,000/day (w=15), Western search/consumer interest share 0&rarr;50% (w=10), consumer-app Western top-chart presence 0&rarr;100 (basket-mean best top-100 rank, w=10), LMArena proximity 100&minus;Elo-gap, floored at 0 (w=5). Weights follow the source note's suggested scheme; excluded families renormalize.
   <b>SPI</b> = Chinese-lab &divide; US-lab routed tokens (named authors) on OpenRouter, trailing week.
   <b>Frontier price gap</b> = median output $/M of US flagships (GPT-5.6 family, Claude Opus/Sonnet, Gemini Pro/Flash) &divide; median of Chinese flagships (DeepSeek V4, GLM-5.x, Kimi K2.x, Qwen Max, MiniMax M3).
   <h3>Caveats</h3>
-  OpenRouter sees only routed traffic &ndash; it overstates Chinese share of the total market (first-party US API traffic is invisible) but is the best public real-time proxy for the substitutable segment. HF download totals mix model generations and exclude derivative quantizations. Leaderboard, search-interest and app figures are dated snapshots (see freshness strip) refreshed by <code>update-china-data.py</code>. Prediction-market prices are thin in places. Nothing here is a validated forecast of equity returns &ndash; the companion monitor's own lead-lag test is honest about that.
+  OpenRouter sees only routed traffic &ndash; it overstates Chinese share of the total market (first-party US API traffic is invisible) but is the best public real-time proxy for the substitutable segment. HF download totals mix model generations and exclude derivative quantizations. Leaderboard, search-interest (Google Trends) and consumer-app chart presence (Apple RSS + Google Play top charts) are refreshed by <code>update-china-data.py</code>; only the Artificial-Analysis scores remain a dated manual snapshot (see freshness strip). Prediction-market prices are thin in places. Nothing here is a validated forecast of equity returns &ndash; the companion monitor's own lead-lag test is honest about that.
   <h3>Sources</h3>
   <a href="https://openrouter.ai/rankings" target="_blank" rel="noopener">OpenRouter rankings</a> &middot;
   <a href="https://huggingface.co" target="_blank" rel="noopener">Hugging Face Hub API</a> &middot;
@@ -554,7 +554,7 @@ function renderSnapshotPanels(){
   const gap = lb.us_leader_score - lb.best_score;
   IDX.arena = { w:5, val: clamp01(1 - gap/100)*100, detail: "Elo gap "+gap+" (as of "+lb.asof+")" };
   IDX.search = { w:10, val: clamp01((snap.search_consumer.western_share_pct/100)/0.50)*100, detail: "~"+snap.search_consumer.western_share_pct+"% of Western AI referral traffic ("+snap.search_consumer.asof+")" };
-  IDX.apps = { w:10, val: snap.apps.score, detail: "domestic-heavy; no Western top-chart presence ("+snap.apps.asof+")" };
+  IDX.apps = { w:10, val: snap.apps.score, detail: (snap.apps.detail || "domestic-heavy; no Western top-chart presence")+" ("+snap.apps.asof+")" };
 }
 const FAMILY_LABEL = { openrouter:"OpenRouter token share", hf:"HF download share", github:"GitHub star velocity", search:"Western search/consumer", apps:"Consumer apps", arena:"LMArena proximity" };
 function renderGauge(){

@@ -35,6 +35,7 @@ MANUAL = {
     # static fallback only - google_trends() overrides this when it succeeds
     "search_consumer": {"western_share_pct": 1, "asof": "2026-04",
                         "note": "Goodie AI-referral report: DeepSeek+Qwen <1% of Western AI referral traffic."},
+    # static fallback only - compute_apps() (iOS RSS + Android Play charts) overrides this
     "apps": {"score": 20, "asof": "2026-01",
              "note": "Qwen app >200M MAU, Doubao >100M DAU, DeepSeek ~82M WAU - overwhelmingly domestic."},
 }
@@ -267,6 +268,119 @@ def pick_search_consumer(fresh, prev, manual):
     return manual
 
 
+# ---- consumer-app Western chart presence -------------------------------------
+# Replaces the old judgmental "apps" score with a live signal: how present are the
+# flagship Chinese AI apps in Western app-store top charts. iOS comes from Apple's
+# keyless marketing RSS (fetched here); Android comes from app-charts.json, written
+# by update-app-charts.mjs (google-play-scraper) because Play has no key-free charts
+# API. Both stores feed the same basket/scoring below.
+APPLE_RSS = "https://rss.applemarketingtools.com/api/v2/{country}/apps/top-free/100/apps.json"
+APP_COUNTRIES = ["us", "gb", "de", "fr", "jp", "in", "br", "ca", "au", "kr"]
+APP_FETCH_DEPTH = 200  # Play is fetched this deep so 101-200 ranks surface as near-misses;
+# scoring itself is top-100 only (a rank in the long tail is not "top-chart presence").
+# Basket order defines the composite; keep the patterns in sync with the regex in
+# update-app-charts.mjs. Matched against "<title/name> <appId/artist>", case-insensitively.
+APP_BASKET = [
+    ("DeepSeek", re.compile(r"deepseek", re.I)),
+    ("Qwen", re.compile(r"\bqwen\b|tongyi", re.I)),
+    ("Doubao", re.compile(r"doubao|\bcici\b", re.I)),
+    ("Kimi", re.compile(r"\bkimi\b|kimichat", re.I)),
+    ("MiniMax", re.compile(r"talkie|hailuo|minimax|weaver\.app", re.I)),
+]
+
+
+def app_points(rank):
+    """Top-100 chart rank -> 0..100 (#1 = 100, #100 = 1); ranks past top-100 score 0."""
+    return max(0, 101 - rank)
+
+
+def match_app(title, extra=""):
+    """Return the basket label for a chart entry, or None if it is not a CN AI app."""
+    text = f"{title} {extra}".lower()
+    for label, rx in APP_BASKET:
+        if rx.search(text):
+            return label
+    return None
+
+
+def _fmt_hit(h):
+    store = {"android": "Play", "ios": "iOS"}.get(h["store"], h["store"])
+    return f'{h["label"]} #{h["rank"]} ({h["country"].upper()} {store})'
+
+
+def apps_score(hits):
+    """Combined iOS+Android hits -> apps dict (basket-mean of best per-app chart rank)."""
+    best = {}
+    for h in hits:
+        if h["label"] not in best or h["rank"] < best[h["label"]]["rank"]:
+            best[h["label"]] = h
+    per_app = [app_points(best[lbl]["rank"]) if lbl in best else 0 for lbl, _ in APP_BASKET]
+    score = round(sum(per_app) / len(APP_BASKET))
+    charted = sorted(best.values(), key=lambda h: h["rank"])
+    top100 = [h for h in charted if h["rank"] <= 100]
+    if top100:
+        lead = "; ".join(_fmt_hit(h) for h in top100[:3])
+    elif charted:
+        lead = "no Chinese AI app in any iOS or Play top-100 (nearest: " + _fmt_hit(charted[0]) + ")"
+    else:
+        lead = "no Chinese AI app in any iOS or Play top-100"
+    return {
+        "score": score,
+        "asof": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "source": "app-charts",
+        "best": [{"label": h["label"], "rank": h["rank"], "store": h["store"], "country": h["country"]}
+                 for h in charted],
+        "markets": APP_COUNTRIES,
+        "detail": f"{lead}; basket-mean Western top-100 presence {score}/100 across {len(APP_COUNTRIES)} markets",
+        "note": f"iOS Apple RSS top-100 + Android Play top-{APP_FETCH_DEPTH} across {len(APP_COUNTRIES)} markets; "
+                "presence = basket-mean of best top-100 chart rank "
+                "(DeepSeek/Qwen/Doubao/Kimi/MiniMax), #1=100 #100=1; ranks past top-100 score 0.",
+    }
+
+
+def apple_hits(countries):
+    """Fetch Apple's keyless top-free RSS per country -> (hits, any_country_ok)."""
+    hits, ok = [], False
+    for c in countries:
+        try:
+            results = jget(APPLE_RSS.format(country=c))["feed"]["results"]
+            ok = True
+        except Exception:
+            continue
+        for i, a in enumerate(results):
+            lbl = match_app(a.get("name", ""), a.get("artistName", ""))
+            if lbl:
+                hits.append({"label": lbl, "store": "ios", "country": c, "rank": i + 1})
+    return hits, ok
+
+
+def android_hits():
+    """Read app-charts.json (written by update-app-charts.mjs); None if it never ran."""
+    p = HERE / "app-charts.json"
+    if not p.exists():
+        return None
+    return json.loads(p.read_text()).get("hits", [])
+
+
+def compute_apps():
+    """iOS + Android chart presence -> apps dict, or None if no store was reachable."""
+    ios, ios_ok = apple_hits(APP_COUNTRIES)
+    andr = android_hits()
+    if not ios_ok and andr is None:
+        return None
+    return apps_score(ios + (andr or []))
+
+
+def pick_apps(fresh, prev, manual):
+    """Fresh computed value, else the previous run's computed value, else MANUAL."""
+    if fresh:
+        return fresh
+    prev_a = (prev or {}).get("apps", {})
+    if prev_a.get("source") == "app-charts":
+        return prev_a
+    return manual
+
+
 def run():
     hist_path = HERE / "china-history.json"
     hist = json.loads(hist_path.read_text()) if hist_path.exists() else {}
@@ -320,6 +434,18 @@ def run():
     except Exception as e:
         print(f"  FAILED ({e}) - carrying previous trends value or manual snapshot", file=sys.stderr)
     out["search_consumer"] = pick_search_consumer(fresh, prev, MANUAL["search_consumer"])
+
+    print("consumer app Western chart presence ...")
+    fresh_apps = None
+    try:
+        fresh_apps = compute_apps()
+        if fresh_apps:
+            print(f"  score {fresh_apps['score']}/100 - {fresh_apps['detail']}")
+        else:
+            print("  no store reachable - carrying previous apps value or manual snapshot")
+    except Exception as e:
+        print(f"  FAILED ({e}) - carrying previous apps value or manual snapshot", file=sys.stderr)
+    out["apps"] = pick_apps(fresh_apps, prev, MANUAL["apps"])
 
     hist_path.write_text(json.dumps(hist))
     data_path.write_text(json.dumps(out, indent=1))
