@@ -491,7 +491,8 @@ function renderPrices(){
   const tb = $("priceTable").querySelector("tbody");
   if(!S.prices){ tb.innerHTML = '<tr><td colspan="4" class="sub">OpenRouter pricing unavailable.</td></tr>'; return; }
   const row = (m,s) => `<tr><td>${esc(m.label)}</td><td><span class="tag ${s}">${s.toUpperCase()}</span></td><td class="num">$${m.inP.toFixed(2)}</td><td class="num">$${m.outP.toFixed(2)}</td></tr>`;
-  tb.innerHTML = S.prices.us.map(m=>row(m,"us")).join("") + S.prices.cn.map(m=>row(m,"cn")).join("");
+  tb.innerHTML = [...S.prices.us.map(m=>({m,s:"us"})), ...S.prices.cn.map(m=>({m,s:"cn"}))]
+    .sort((a,b)=>b.m.inP-a.m.inP).map(({m,s})=>row(m,s)).join("");
   const med = a => { const v=a.map(m=>m.outP).sort((x,y)=>x-y); return v.length? v[Math.floor(v.length/2)] : null; };
   const mu = med(S.prices.us), mc = med(S.prices.cn);
   if(mu && mc){
