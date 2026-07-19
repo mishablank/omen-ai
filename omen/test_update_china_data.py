@@ -18,9 +18,13 @@ def test_parse_gjson_strips_antiscrape_prefix():
     assert ucd.parse_gjson(b")]}',\n{\"a\": 1}") == {"a": 1}
 
 
+def test_us_terms_include_llama():
+    assert "Llama AI" in ucd.TRENDS_TERMS_US
+
+
 def test_trends_batches_share_anchor_and_respect_5_term_cap():
     batches = ucd.trends_batches()
-    assert batches[0][:3] == ucd.TRENDS_TERMS_US
+    assert batches[0][:len(ucd.TRENDS_TERMS_US)] == ucd.TRENDS_TERMS_US
     flat = batches[0] + [t for b in batches[1:] for t in b[1:]]
     assert flat == ucd.TRENDS_TERMS_US + ucd.TRENDS_TERMS_CN
     for b in batches:
