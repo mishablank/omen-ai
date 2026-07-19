@@ -335,13 +335,14 @@
 </section>
 
 <div class="card" id="p-crown" data-view="markets">
-  <h2 id="crownTitle">The #1 crown <span class="sub" style="font-weight:400">&ndash; how many companies are bigger than NVDA?</span></h2>
+  <h2 id="crownTitle">NVDA vs the AI stack <span class="sub" style="font-weight:400">&ndash; the customers, the landlords, the suppliers, the memory tell</span></h2>
   <div class="vline" id="crownVerdict"></div>
   <div id="crownAnswer"></div>
   <div class="statrow" id="crownStats"></div>
+  <div id="crownGroups"></div>
   <div id="crownBars"></div>
   <details class="howto"><summary>How to read this</summary>
-    <div class="cap">Polymarket&rsquo;s &ldquo;largest company&rdquo; market prices each firm&rsquo;s odds of being the most valuable US company at month-end &ndash; a live, capital-weighted ranking. The headline count is how many AI-related US names the market currently ranks <em>above</em> NVIDIA (its P(#1) is the highest, so today that is zero); the bars are each name&rsquo;s implied odds of wearing the crown at the deadline. These are month-end #1 odds, not live market caps &ndash; but at this horizon they track current standing closely, and P(NVDA loses #1) is the market&rsquo;s read on whether that flips.</div>
+    <div class="cap">Ranking NVDA against Apple by market cap says nothing about the AI trade &ndash; the comparisons that do are <em>inside</em> the stack. <strong>Hyperscalers</strong> (MSFT, GOOGL, AMZN, META, ORCL) are NVDA&rsquo;s customers: if the arms dealer persistently outruns the armies, the market is paying for GPU shipments it doubts will earn a return. <strong>Neoclouds</strong> (CRWV, NBIS, IREN) are the levered GPU landlords &ndash; the financing leg of the buildout, and historically the first link to crack. <strong>DRAM/HBM</strong> (MU) is the supply-chain confirmation: HBM demand is a direct derivative of GPU demand, so Micron diverging from NVDA is a tell in either direction. <strong>Semis &amp; networking</strong> (AVGO, ANET, SMCI) are fellow suppliers on the same order books; <strong>power</strong> (VST, CEG) is the physical constraint. Returns are from 6-month daily closes (Yahoo), groups equal-weight; &ldquo;vs NVDA&rdquo; is the 3-month spread in points; &rho; is the 60-session correlation of daily returns with NVDA &ndash; how much of a name&rsquo;s tape is just NVDA beta.</div>
     <div class="note" id="crownNote"></div>
   </details>
 </div>
@@ -743,9 +744,10 @@ async function fetchB200(){
   b.sort((x,y)=>(x.lo??-1)-(y.lo??-1));
   b200={ title:ev.title, url:`https://polymarket.com/event/${ev.slug}`, brackets:b };
 }
-// "The #1 crown": Polymarket's largest-company market ranks each firm by P(#1 at month-end),
-// a live capital-weighted read on who is bigger than NVDA. The near-month event is picked
-// (soonest endDate); the year-labelled Dec market and the 2nd/3rd/private variants are excluded.
+// Polymarket's largest-company market ranks each firm by P(#1 at month-end). It now feeds
+// only the context footnote of the stack-comparison card (a size ranking vs Apple is not an
+// AI-stack read). The near-month event is picked (soonest endDate); the year-labelled Dec
+// market and the 2nd/3rd/private variants are excluded.
 let crown=null;
 async function fetchCrown(){
   const ev=await discoverEvent("Largest Company end of", /^Largest Company end of \w+\??$/i, /\d{4}|private/i);
@@ -1566,34 +1568,121 @@ function renderInsiders(){
   const dir=totNet<0?"selling":"buying";
   $("insiderVerdict").innerHTML=`Net <strong>${dir} ${fmtUsd(Math.abs(totNet))}</strong> across ${syms.length} names over 90d &ndash; ${totNet<0?"normal for these names; watch for acceleration, not the level.":"a net buy, which is unusual for this group."}`;
 }
+// The stack map: who each peer IS to NVDA. Groups are equal-weight; every ticker
+// here already ships in market-data.json's 6-month equity block, so no new fetches.
+const STACK_GROUPS=[
+  {label:"Hyperscalers", role:"the customers", syms:["MSFT","GOOGL","AMZN","META","ORCL"]},
+  {label:"Neoclouds", role:"the levered landlords", syms:["CRWV","NBIS","IREN"]},
+  {label:"DRAM / HBM", role:"the memory supplier", syms:["MU"]},
+  {label:"Semis &amp; networking", role:"fellow suppliers", syms:["AVGO","ANET","SMCI"]},
+  {label:"Power", role:"the physical constraint", syms:["VST","CEG"]},
+  {label:"Benchmarks", role:"the yardsticks", syms:["SOXX","SPY"]},
+];
+// pct return over the last n sessions; null when the series can't cover ~80% of the
+// window (a short-history name must not masquerade as a full-horizon return)
+function stackRet(s,n){ if(!s||s.length<2) return null;
+  if(s.length-1<n*0.8) return null;
+  const base=s[Math.max(0,s.length-1-n)].c;
+  return base?(s[s.length-1].c/base-1)*100:null; }
+// Pearson correlation of daily returns vs NVDA over the last n sessions, date-aligned
+function stackCorr(s,nv,n=60){ if(!s||!nv) return null;
+  const m=new Map(nv.map(p=>[p.d,p.c])), w=[];
+  for(const p of s) if(m.has(p.d)) w.push([p.c,m.get(p.d)]);
+  const t=w.slice(-(n+1)); if(t.length<21) return null;
+  const ra=[],rb=[];
+  for(let i=1;i<t.length;i++){ ra.push(t[i][0]/t[i-1][0]-1); rb.push(t[i][1]/t[i-1][1]-1); }
+  const mean=a=>a.reduce((x,y)=>x+y,0)/a.length, ma=mean(ra), mb=mean(rb);
+  let num=0,da=0,db=0;
+  for(let i=0;i<ra.length;i++){ num+=(ra[i]-ma)*(rb[i]-mb); da+=(ra[i]-ma)**2; db+=(rb[i]-mb)**2; }
+  return da&&db?num/Math.sqrt(da*db):null; }
 function renderCrown(){
-  const box=$("crownAnswer"), stat=$("crownStats"), bars=$("crownBars"), v=$("crownVerdict"), note=$("crownNote");
-  const isNv=r=>/nvidia|nvda/i.test(r.name);
-  if(!crown||!crown.rows.length){ box.innerHTML=""; stat.innerHTML=""; bars.innerHTML=""; note.innerHTML="";
-    v.innerHTML='<span class="sub">Largest-company market not found right now.</span>'; return; }
-  $("crownTitle").innerHTML=`The #1 crown <span class="sub" style="font-weight:400">&ndash; how many companies are bigger than NVDA? <a href="${crown.url}" target="_blank" rel="noopener">${esc(crown.title)}</a></span>`;
-  const rows=crown.rows, nv=rows.find(isNv);
-  // render the deadline in UTC so a 23:59Z close doesn't roll into the next day and disagree with the event title
-  const deadline=crown.end?new Date(crown.end).toLocaleDateString(undefined,{month:"short",day:"numeric",timeZone:"UTC"}):"month-end";
-  if(!nv){ box.innerHTML=""; stat.innerHTML=""; bars.innerHTML=""; note.innerHTML="";
-    v.innerHTML='<span class="sub">NVIDIA is not listed in the current market.</span>'; return; }
-  const above=rows.filter(r=>!isNv(r)&&r.p>nv.p), n=above.length;
-  const challengers=rows.filter(r=>!isNv(r)), top=challengers[0];
-  const pLose=clamp((1-nv.p)*100,0,100);
+  const box=$("crownAnswer"), stat=$("crownStats"), groups=$("crownGroups"), bars=$("crownBars"), v=$("crownVerdict"), note=$("crownNote");
+  const E=mkt?.equity;
+  const nvS=E?.NVDA;
+  // Polymarket's market-cap crown survives only as a context footnote — a size ranking
+  // against Apple says nothing about the AI trade, so it no longer leads the card.
+  let crownFoot="";
+  if(crown&&crown.rows.length){
+    const isNvRow=r=>/nvidia|nvda/i.test(r.name), nvRow=crown.rows.find(isNvRow);
+    const top=crown.rows.filter(r=>!isNvRow(r))[0];
+    const deadline=crown.end?new Date(crown.end).toLocaleDateString(undefined,{month:"short",day:"numeric",timeZone:"UTC"}):"month-end";
+    if(nvRow) crownFoot=`Context, not signal: <a href="${crown.url}" target="_blank" rel="noopener">Polymarket&rsquo;s market-cap crown</a> prices NVDA at <strong>${(nvRow.p*100).toFixed(0)}%</strong> to be the largest US company at ${esc(deadline)}${top?`, ${esc(top.name)} at ${(top.p*100).toFixed(0)}%`:""} &ndash; a size ranking vs Apple and friends, not a read on the AI stack.`;
+  }
+  if(!nvS||nvS.length<30){
+    box.innerHTML=""; stat.innerHTML=""; groups.innerHTML=""; bars.innerHTML="";
+    v.innerHTML='<span class="sub">market-data.json not loaded &ndash; run the fetcher to enable the stack comparison.</span>';
+    note.innerHTML=crownFoot; return; }
+  const M1=21, M3=63;
+  // per-name rows, NVDA first as the reference
+  const names=[];
+  for(const g of STACK_GROUPS) for(const sym of g.syms){
+    const s=E[sym]; if(!s||s.length<2) continue;
+    names.push({sym, group:g, r1:stackRet(s,M1), r3:stackRet(s,M3), r6:(s[s.length-1].c/s[0].c-1)*100,
+      dd:drawdown(s), corr:stackCorr(s,nvS)});
+  }
+  const nv={sym:"NVDA", r1:stackRet(nvS,M1), r3:stackRet(nvS,M3), r6:(nvS[nvS.length-1].c/nvS[0].c-1)*100, dd:drawdown(nvS), corr:1};
+  // equal-weight group returns + spread vs NVDA over 3M
+  const gRows=STACK_GROUPS.map(g=>{
+    const rs=g.syms.map(sym=>({r1:stackRet(E[sym],M1), r3:stackRet(E[sym],M3)})).filter(r=>r.r3!=null);
+    if(!rs.length) return null;
+    const ew=k=>rs.reduce((a,b)=>a+(b[k]??0),0)/rs.length;
+    return {g, r1:ew("r1"), r3:ew("r3"), spread:nv.r3!=null?ew("r3")-nv.r3:null};
+  }).filter(Boolean);
+  // the honest replacement for "who's bigger than NVDA": who's BEATING NVDA
+  const beating=names.filter(r=>r.sym!=="NVDA"&&r.sym!=="SPY"&&r.sym!=="SOXX"&&r.r3!=null&&nv.r3!=null&&r.r3>nv.r3);
+  const nStack=names.filter(r=>r.sym!=="NVDA"&&r.sym!=="SPY"&&r.sym!=="SOXX"&&r.r3!=null).length;
   box.innerHTML=`<div style="display:flex;align-items:baseline;gap:16px;margin:16px 0 2px;flex-wrap:wrap">`+
-    `<div style="font-family:Georgia,'Times New Roman',serif;font-size:56px;font-weight:600;line-height:.85;color:var(--acc)">${n}</div>`+
-    `<div style="font-size:13.5px;color:var(--text-secondary);max-width:440px">AI-related US ${n===1?"company the market ranks":"companies the market ranks"} above <strong>NVIDIA</strong> by valuation today${n===0?" &ndash; it is the most valuable name in the field.":`: ${above.map(r=>esc(r.name)).join(", ")}.`}</div></div>`;
-  const cells=[
-    `<div class="stat"><div class="l">P(NVDA loses #1) by ${esc(deadline)}</div><div class="v">${pLose.toFixed(1)}%</div></div>`,
-    `<div class="stat"><div class="l">NVDA odds of holding #1</div><div class="v">${(nv.p*100).toFixed(1)}%</div></div>`];
-  if(top) cells.push(`<div class="stat"><div class="l">Nearest challenger</div><div class="v">${esc(top.name)}<small> · ${(top.p*100).toFixed(1)}%</small></div></div>`);
-  stat.innerHTML=cells.join("");
-  if(n===0) v.innerHTML=`The market ranks <strong>NVIDIA #1</strong> &ndash; <strong>0</strong> AI-related US companies sit above it. It prices a <strong>${pLose.toFixed(0)}%</strong> chance a challenger takes the crown by ${esc(deadline)}${top?`, with <strong>${esc(top.name)}</strong> (${(top.p*100).toFixed(0)}%) the only live threat`:""}.`;
-  else v.innerHTML=`The market now ranks <strong>${n}</strong> compan${n===1?"y":"ies"} above NVIDIA &ndash; ${above.map(r=>esc(r.name)).join(", ")}. NVIDIA holds a <strong>${(nv.p*100).toFixed(0)}%</strong> shot at reclaiming #1 by ${esc(deadline)}.`;
-  const show=rows.filter(r=>isNv(r)||r.p>=0.01).slice(0,9);
-  bars.innerHTML=`<div class="note" style="margin-top:14px"><strong>Implied odds of being the largest US company at ${esc(deadline)}</strong></div>`+
-    show.map(r=>hbar((isNv(r)?"&#9819; ":"")+esc(r.name), r.p*100, isNv(r)?"var(--acc)":"var(--reg)")).join("");
-  note.innerHTML=`Only named firms are counted; Polymarket&rsquo;s unlisted &ldquo;Company A&hellip;T&rdquo; and &ldquo;Other&rdquo; placeholders are dropped. Each figure is the raw last price on that outcome, so the column need not sum to exactly 100%.`;
+    `<div style="font-family:Georgia,'Times New Roman',serif;font-size:56px;font-weight:600;line-height:.85;color:var(--acc)">${beating.length}<span style="font-size:24px;color:var(--muted)">/${nStack}</span></div>`+
+    `<div style="font-size:13.5px;color:var(--text-secondary);max-width:440px">AI-stack names beating <strong>NVDA</strong> over the last 3 months${beating.length?`: ${beating.sort((a,b)=>b.r3-a.r3).map(r=>r.sym).join(", ")}.`:" &ndash; nothing in the stack is outrunning it."}</div></div>`;
+  const pf=(x,dp=1)=>x==null?"&ndash;":`<span style="color:${x>=0?"var(--good)":"var(--crash)"}">${x>0?"+":""}${x.toFixed(dp)}%</span>`;
+  const pp=x=>x==null?"&ndash;":`<span style="color:${x>=0?"var(--good)":"var(--crash)"}">${x>0?"+":""}${x.toFixed(1)}pp</span>`;
+  const hy=gRows.find(r=>r.g.role==="the customers"), neo=gRows.find(r=>r.g.role==="the levered landlords"), mu=names.find(r=>r.sym==="MU");
+  stat.innerHTML=[
+    `<div class="stat"><div class="l">NVDA, 3M</div><div class="v">${pf(nv.r3)}</div></div>`,
+    hy?`<div class="stat"><div class="l">Customers vs NVDA (3M)</div><div class="v">${pp(hy.spread)}</div></div>`:"",
+    neo?`<div class="stat"><div class="l">Neoclouds vs NVDA (3M)</div><div class="v">${pp(neo.spread)}</div></div>`:"",
+    mu&&mu.r3!=null&&nv.r3!=null?`<div class="stat"><div class="l">Micron vs NVDA (3M)</div><div class="v">${pp(mu.r3-nv.r3)}</div></div>`:"",
+  ].join("");
+  // group spread bars: equal-weight 3M return minus NVDA's, signed
+  const maxSp=Math.max(...gRows.map(r=>Math.abs(r.spread??0)),1);
+  groups.innerHTML='<div class="note" style="margin-top:14px"><strong>Group vs NVDA, 3 months</strong> (equal-weight spread, points)</div>'+
+    gRows.map(r=>{ const s=r.spread??0, w=Math.abs(s)/maxSp*100;
+      return `<div class="hbar" style="grid-template-columns:250px 1fr 54px"><span class="k">${r.g.label} <span class="sub">(${r.g.role})</span></span><span class="track"><i style="width:${w.toFixed(0)}%;background:${s>=0?"var(--good)":"var(--crash)"}"></i></span><span class="v">${s>0?"+":""}${s.toFixed(1)}</span></div>`; }).join("");
+  // the comprehensive per-name table
+  const row=r=>`<tr><td><strong>${r.sym}</strong></td><td><span class="sub">${r.group?r.group.label:""}</span></td>`+
+    `<td class="num">${pf(r.r1)}</td><td class="num">${pf(r.r3)}</td><td class="num">${pf(r.r6)}</td>`+
+    `<td class="num">${r.sym==="NVDA"?"&ndash;":pp(r.r3!=null&&nv.r3!=null?r.r3-nv.r3:null)}</td>`+
+    `<td class="num">${r.corr==null?"&ndash;":r.corr.toFixed(2)}</td>`+
+    `<td class="num">${r.dd==null?"&ndash;":`<span style="color:${r.dd<=-15?"var(--crash)":"var(--text-secondary)"}">${r.dd.toFixed(1)}%</span>`}</td></tr>`;
+  const nvRow=`<tr style="background:var(--warn-wash)"><td><strong>&#9819; NVDA</strong></td><td><span class="sub">the reference</span></td>`+
+    `<td class="num">${pf(nv.r1)}</td><td class="num">${pf(nv.r3)}</td><td class="num">${pf(nv.r6)}</td><td class="num">&ndash;</td><td class="num">1.00</td>`+
+    `<td class="num">${nv.dd==null?"&ndash;":nv.dd.toFixed(1)+"%"}</td></tr>`;
+  bars.innerHTML=`<div class="tscroll"><table><thead><tr><th>Name</th><th>Group</th><th class="num">1M</th><th class="num">3M</th><th class="num">6M</th><th class="num">vs NVDA 3M</th><th class="num" style="text-transform:none">&rho; 60d</th><th class="num">Off 6M high</th></tr></thead><tbody>`+
+    nvRow+names.filter(r=>r.sym!=="NVDA").sort((a,b)=>(b.r3??-1e9)-(a.r3??-1e9)).map(row).join("")+`</tbody></table></div>`;
+  // verdict: name the divergences that matter, in stack order
+  if(nv.r3!=null){
+    // every divergence that fires gets named, biggest tell first, not just the first match
+    const reads=[];
+    if(mu&&mu.r3!=null&&mu.r3-nv.r3>8)
+      reads.push({mag:mu.r3-nv.r3, t:"memory is running far hotter than the GPU (HBM scarcity, the supply-chain confirmation of demand)"});
+    if(neo&&neo.spread!=null&&neo.spread<-8)
+      reads.push({mag:-neo.spread, t:"the levered landlords who finance the buildout are being marked down (the classic late-cycle divergence &ndash; read with the credit panel)"});
+    if(hy&&hy.spread!=null&&hy.spread<-8)
+      reads.push({mag:-hy.spread, t:"the arms dealer is outrunning its own customers (the market pays for GPU shipments it doubts will earn a return)"});
+    if(hy&&hy.spread!=null&&hy.spread>5)
+      reads.push({mag:hy.spread, t:"the customers are outrunning their supplier (capital migrating from picks-and-shovels to the application layer)"});
+    if(neo&&neo.spread!=null&&neo.spread>8)
+      reads.push({mag:neo.spread, t:"the financing leg is leading &ndash; the most reflexive corner of the stack is being paid up"});
+    const read=reads.length?reads.sort((a,b)=>b.mag-a.mag).map(r=>r.t).join("; ")
+      :"no leg of the stack is diverging hard from NVDA &ndash; the complex is trading as one trade";
+    const seg=[`Over 3 months NVDA is ${pf(nv.r3,0)}`];
+    if(hy) seg.push(`its customers ${pf(hy.r3,0)}`);
+    if(neo) seg.push(`the neoclouds ${pf(neo.r3,0)}`);
+    if(mu&&mu.r3!=null) seg.push(`Micron ${pf(mu.r3,0)}`);
+    v.innerHTML=`${seg.join(", ")}. ${read.charAt(0).toUpperCase()+read.slice(1)}.`;
+  } else v.innerHTML="";
+  note.innerHTML=[crownFoot,
+    `Returns from 6-month daily closes; a dash means the name&rsquo;s history doesn&rsquo;t cover that window. Groups are equal-weight, so one neocloud can swing its group. &rho; is correlation of daily returns with NVDA over ~60 sessions &ndash; high &rho; with lagging returns means a name falls on NVDA&rsquo;s bad days but doesn&rsquo;t keep up on the good ones.`].filter(Boolean).join("<br>");
 }
 function renderNvda(){
   if(!nvda){ $("nvdaLadder").innerHTML='<div class="note">Monthly NVDA bracket event not found right now.</div>'; $("nvdaVerdict").innerHTML=""; return; }
@@ -1995,7 +2084,7 @@ function fetcherStale(){
 }
 // every panel whose numbers come out of market-data.json rather than the live Polymarket feed
 const FETCHER_PANELS=["p-vol","p-credit","p-breadth","p-insiders","p-leaps","p-fund",
-                      "p-capex","p-dep","p-kgpu","p-aicredit","p-power"];
+                      "p-capex","p-dep","p-kgpu","p-aicredit","p-power","p-crown"];
 function renderStatuses(){
   const st=fetcherStale();
   for(const id of FETCHER_PANELS) setPanelStatus(id, st?"stale":"ok", st?st.label:"");
@@ -2014,7 +2103,7 @@ function renderFresh(){
     if(mkt.fred?.HY_OAS) items.push(`<span>${dot("good")}FRED ${mkt.fred.HY_OAS.last_date}</span>`);
     if(mkt.gpu) items.push(`<span>${dot("good")}GPU spot ${mkt.gpu.date}</span>`);
   } else {
-    items.push(`<span>${dot("crit")}<strong>market-data.json missing</strong> &ndash; run <code>python3 update-market-data.py</code> (options, vol, credit, breadth, insider panels empty)</span>`);
+    items.push(`<span>${dot("crit")}<strong>market-data.json missing</strong> &ndash; run <code>python3 update-market-data.py</code> (options, vol, credit, breadth, stack-comparison, insider panels empty)</span>`);
   }
   $("freshStrip").innerHTML=items.join("");
 }
