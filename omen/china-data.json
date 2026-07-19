@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-19T07:31:53Z",
+ "updated": "2026-07-19T09:58:26Z",
  "snapshot_date": "2026-07-19",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -9,9 +9,27 @@
   "asof": "2026-07-12"
  },
  "search_consumer": {
-  "western_share_pct": 1,
-  "asof": "2026-04",
-  "note": "Goodie AI-referral report: DeepSeek+Qwen <1% of Western AI referral traffic."
+  "western_share_pct": 3.2,
+  "asof": "2026-07",
+  "source": "google-trends",
+  "terms_us": [
+   "ChatGPT",
+   "Gemini",
+   "Claude",
+   "Llama AI",
+   "Meta AI"
+  ],
+  "terms_cn": [
+   "DeepSeek",
+   "Qwen",
+   "Kimi AI",
+   "GLM AI",
+   "MiMo",
+   "MiniMax",
+   "Seed 1.6",
+   "Seed 2.0"
+  ],
+  "note": "Google Trends US, 90-day avg: 8 Chinese AI terms = 3.2% of AI-assistant search interest vs ChatGPT+Gemini+Claude+Llama AI+Meta AI."
  },
  "apps": {
   "score": 20,
@@ -33,71 +51,71 @@
   "cnOrgs": [
    {
     "org": "Qwen",
-    "dl": 257470921
+    "dl": 254117065
    },
    {
     "org": "deepseek-ai",
-    "dl": 34366198
+    "dl": 33973641
    },
    {
     "org": "zai-org",
-    "dl": 15159199
+    "dl": 14796305
    },
    {
     "org": "moonshotai",
-    "dl": 4712312
+    "dl": 4537880
    },
    {
     "org": "MiniMaxAI",
-    "dl": 2935296
+    "dl": 2836334
    },
    {
     "org": "tencent",
-    "dl": 1523420
+    "dl": 1514420
    },
    {
     "org": "XiaomiMiMo",
-    "dl": 1374512
+    "dl": 1357916
    },
    {
     "org": "stepfun-ai",
-    "dl": 1295601
+    "dl": 1273075
    }
   ],
   "usOrgs": [
    {
     "org": "google",
-    "dl": 64018831
+    "dl": 62430732
    },
    {
     "org": "meta-llama",
-    "dl": 36609484
+    "dl": 36559973
    },
    {
     "org": "nvidia",
-    "dl": 24158308
+    "dl": 24056344
    },
    {
     "org": "openai",
-    "dl": 12212978
+    "dl": 12044579
    },
    {
     "org": "microsoft",
-    "dl": 6787035
+    "dl": 6713386
    },
    {
     "org": "allenai",
-    "dl": 3094362
+    "dl": 3021467
    }
   ],
-  "cn": 318837459,
-  "us": 146880998
+  "cn": 314406636,
+  "us": 144826481
  },
  "openrouter_week": {
   "week": "2026-07-13",
-  "cn_share": 0.6073,
-  "us_share": 0.3148,
-  "spi": 1.93,
-  "total_tokens": 56682586220454
+  "cn_share": 0.6079,
+  "us_share": 0.314,
+  "spi": 1.936,
+  "total_tokens": 57433691835917
  }
 }
