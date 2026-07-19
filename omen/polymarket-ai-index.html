@@ -339,10 +339,11 @@
   <div class="vline" id="crownVerdict"></div>
   <div id="crownAnswer"></div>
   <div class="statrow" id="crownStats"></div>
+  <div id="crownCaps"></div>
   <div id="crownGroups"></div>
   <div id="crownBars"></div>
   <details class="howto"><summary>How to read this</summary>
-    <div class="cap">Ranking NVDA against Apple by market cap says nothing about the AI trade &ndash; the comparisons that do are <em>inside</em> the stack. <strong>Hyperscalers</strong> (MSFT, GOOGL, AMZN, META, ORCL) are NVDA&rsquo;s customers: if the arms dealer persistently outruns the armies, the market is paying for GPU shipments it doubts will earn a return. <strong>Neoclouds</strong> (CRWV, NBIS, IREN) are the levered GPU landlords &ndash; the financing leg of the buildout, and historically the first link to crack. <strong>DRAM/HBM</strong> (MU) is the supply-chain confirmation: HBM demand is a direct derivative of GPU demand, so Micron diverging from NVDA is a tell in either direction. <strong>Semis &amp; networking</strong> (AVGO, ANET, SMCI) are fellow suppliers on the same order books; <strong>power</strong> (VST, CEG) is the physical constraint. Returns are from 6-month daily closes (Yahoo), groups equal-weight; &ldquo;vs NVDA&rdquo; is the 3-month spread in points; &rho; is the 60-session correlation of daily returns with NVDA &ndash; how much of a name&rsquo;s tape is just NVDA beta.</div>
+    <div class="cap">Ranking NVDA against Apple by market cap says nothing about the AI trade &ndash; the comparisons that do are <em>inside</em> the stack. <strong>Hyperscalers</strong> (MSFT, GOOGL, AMZN, META, ORCL) are NVDA&rsquo;s customers: if the arms dealer persistently outruns the armies, the market is paying for GPU shipments it doubts will earn a return. <strong>Neoclouds</strong> (CRWV, NBIS, IREN) are the levered GPU landlords &ndash; the financing leg of the buildout, and historically the first link to crack. <strong>DRAM/HBM</strong> (MU) is the supply-chain confirmation: HBM demand is a direct derivative of GPU demand, so Micron diverging from NVDA is a tell in either direction. <strong>Semis &amp; networking</strong> (AVGO, ANET, SMCI) are fellow suppliers on the same order books; <strong>power</strong> (VST, CEG) is the physical constraint. Two lenses on the same peers: <strong>size</strong> &ndash; live market capitalization, every name&rsquo;s cap as a share of NVDA&rsquo;s (is the arms dealer really worth 50 landlords and 5 Microns?) &ndash; and <strong>performance</strong> &ndash; returns from 6-month daily closes (Yahoo), groups equal-weight; &ldquo;vs NVDA&rdquo; is the 3-month spread in points; &rho; is the 60-session correlation of daily returns with NVDA &ndash; how much of a name&rsquo;s tape is just NVDA beta.</div>
     <div class="note" id="crownNote"></div>
   </details>
 </div>
@@ -1595,8 +1596,9 @@ function stackCorr(s,nv,n=60){ if(!s||!nv) return null;
   let num=0,da=0,db=0;
   for(let i=0;i<ra.length;i++){ num+=(ra[i]-ma)*(rb[i]-mb); da+=(ra[i]-ma)**2; db+=(rb[i]-mb)**2; }
   return da&&db?num/Math.sqrt(da*db):null; }
+function fmtCap(v){ return v==null?"&ndash;":v>=1e12?"$"+(v/1e12).toFixed(2)+"T":"$"+(v/1e9).toFixed(0)+"B"; }
 function renderCrown(){
-  const box=$("crownAnswer"), stat=$("crownStats"), groups=$("crownGroups"), bars=$("crownBars"), v=$("crownVerdict"), note=$("crownNote");
+  const box=$("crownAnswer"), stat=$("crownStats"), capsEl=$("crownCaps"), groups=$("crownGroups"), bars=$("crownBars"), v=$("crownVerdict"), note=$("crownNote");
   const E=mkt?.equity;
   const nvS=E?.NVDA;
   // Polymarket's market-cap crown survives only as a context footnote — a size ranking
@@ -1609,9 +1611,10 @@ function renderCrown(){
     if(nvRow) crownFoot=`Context, not signal: <a href="${crown.url}" target="_blank" rel="noopener">Polymarket&rsquo;s market-cap crown</a> prices NVDA at <strong>${(nvRow.p*100).toFixed(0)}%</strong> to be the largest US company at ${esc(deadline)}${top?`, ${esc(top.name)} at ${(top.p*100).toFixed(0)}%`:""} &ndash; a size ranking vs Apple and friends, not a read on the AI stack.`;
   }
   if(!nvS||nvS.length<30){
-    box.innerHTML=""; stat.innerHTML=""; groups.innerHTML=""; bars.innerHTML="";
+    box.innerHTML=""; stat.innerHTML=""; capsEl.innerHTML=""; groups.innerHTML=""; bars.innerHTML="";
     v.innerHTML='<span class="sub">market-data.json not loaded &ndash; run the fetcher to enable the stack comparison.</span>';
     note.innerHTML=crownFoot; return; }
+  const CAP=mkt?.caps?.by||{}, capOf=sym=>CAP[sym]?.cap??null;
   const M1=21, M3=63;
   // per-name rows, NVDA first as the reference
   const names=[];
@@ -1643,6 +1646,29 @@ function renderCrown(){
     neo?`<div class="stat"><div class="l">Neoclouds vs NVDA (3M)</div><div class="v">${pp(neo.spread)}</div></div>`:"",
     mu&&mu.r3!=null&&nv.r3!=null?`<div class="stat"><div class="l">Micron vs NVDA (3M)</div><div class="v">${pp(mu.r3-nv.r3)}</div></div>`:"",
   ].join("");
+  // ---- market capitalization: the size comparison, NVDA = 100% ----
+  const nvCap=capOf("NVDA");
+  let capSentence="";
+  if(nvCap){
+    const gCap=g=>{ const vals=g.syms.map(capOf).filter(x=>x!=null); return vals.length===g.syms.length?vals.reduce((a,b)=>a+b,0):null; };
+    const hyG=STACK_GROUPS.find(g=>g.role==="the customers"), neoG=STACK_GROUPS.find(g=>g.role==="the levered landlords");
+    const hyCap=hyG?gCap(hyG):null, neoCap=neoG?gCap(neoG):null, muCap=capOf("MU");
+    const ratios=[];
+    if(muCap) ratios.push(`<div class="stat"><div class="l">= Microns</div><div class="v">${(nvCap/muCap).toFixed(1)}&times;</div></div>`);
+    if(neoCap) ratios.push(`<div class="stat"><div class="l">= the 3 neoclouds combined</div><div class="v">${(nvCap/neoCap).toFixed(0)}&times;</div></div>`);
+    if(hyCap) ratios.push(`<div class="stat"><div class="l">vs its 5 customers combined</div><div class="v">${(nvCap/hyCap*100).toFixed(0)}%<small> of ${fmtCap(hyCap)}</small></div></div>`);
+    const capRows=[];
+    for(const g of STACK_GROUPS){ if(g.role==="the yardsticks") continue;
+      for(const sym of g.syms){ const c=capOf(sym); if(c!=null) capRows.push({sym,c}); } }
+    capRows.sort((a,b)=>b.c-a.c);
+    capsEl.innerHTML=`<div class="note" style="margin-top:16px"><strong>Market capitalization</strong> (NVDA = 100%)</div>`+
+      `<div class="statrow" style="margin-top:8px"><div class="stat"><div class="l">NVDA market cap</div><div class="v">${fmtCap(nvCap)}</div></div>${ratios.join("")}</div>`+
+      `<div style="margin-top:6px">`+
+      `<div class="hbar"><span class="k">&#9819; NVDA</span><span class="track"><i style="width:100%;background:var(--acc)"></i></span><span class="v">${fmtCap(nvCap)}</span></div>`+
+      capRows.map(r=>`<div class="hbar"><span class="k">${r.sym}</span><span class="track"><i style="width:${Math.max(r.c/nvCap*100,0.4).toFixed(1)}%;background:var(--reg)"></i></span><span class="v">${fmtCap(r.c)}</span></div>`).join("")+`</div>`;
+    if(muCap&&neoCap&&hyCap)
+      capSentence=` By size, NVDA&rsquo;s ${fmtCap(nvCap)} is ${(nvCap/muCap).toFixed(1)} Microns, ${(nvCap/neoCap).toFixed(0)}&times; the three neoclouds combined, and ${(nvCap/hyCap*100).toFixed(0)}% of its five biggest customers put together.`;
+  } else capsEl.innerHTML="";
   // group spread bars: equal-weight 3M return minus NVDA's, signed
   const maxSp=Math.max(...gRows.map(r=>Math.abs(r.spread??0)),1);
   groups.innerHTML='<div class="note" style="margin-top:14px"><strong>Group vs NVDA, 3 months</strong> (equal-weight spread, points)</div>'+
@@ -1650,14 +1676,16 @@ function renderCrown(){
       return `<div class="hbar" style="grid-template-columns:250px 1fr 54px"><span class="k">${r.g.label} <span class="sub">(${r.g.role})</span></span><span class="track"><i style="width:${w.toFixed(0)}%;background:${s>=0?"var(--good)":"var(--crash)"}"></i></span><span class="v">${s>0?"+":""}${s.toFixed(1)}</span></div>`; }).join("");
   // the comprehensive per-name table
   const row=r=>`<tr><td><strong>${r.sym}</strong></td><td><span class="sub">${r.group?r.group.label:""}</span></td>`+
+    `<td class="num">${fmtCap(capOf(r.sym))}</td>`+
     `<td class="num">${pf(r.r1)}</td><td class="num">${pf(r.r3)}</td><td class="num">${pf(r.r6)}</td>`+
     `<td class="num">${r.sym==="NVDA"?"&ndash;":pp(r.r3!=null&&nv.r3!=null?r.r3-nv.r3:null)}</td>`+
     `<td class="num">${r.corr==null?"&ndash;":r.corr.toFixed(2)}</td>`+
     `<td class="num">${r.dd==null?"&ndash;":`<span style="color:${r.dd<=-15?"var(--crash)":"var(--text-secondary)"}">${r.dd.toFixed(1)}%</span>`}</td></tr>`;
   const nvRow=`<tr style="background:var(--warn-wash)"><td><strong>&#9819; NVDA</strong></td><td><span class="sub">the reference</span></td>`+
+    `<td class="num">${fmtCap(capOf("NVDA"))}</td>`+
     `<td class="num">${pf(nv.r1)}</td><td class="num">${pf(nv.r3)}</td><td class="num">${pf(nv.r6)}</td><td class="num">&ndash;</td><td class="num">1.00</td>`+
     `<td class="num">${nv.dd==null?"&ndash;":nv.dd.toFixed(1)+"%"}</td></tr>`;
-  bars.innerHTML=`<div class="tscroll"><table><thead><tr><th>Name</th><th>Group</th><th class="num">1M</th><th class="num">3M</th><th class="num">6M</th><th class="num">vs NVDA 3M</th><th class="num" style="text-transform:none">&rho; 60d</th><th class="num">Off 6M high</th></tr></thead><tbody>`+
+  bars.innerHTML=`<div class="tscroll"><table><thead><tr><th>Name</th><th>Group</th><th class="num">Mkt cap</th><th class="num">1M</th><th class="num">3M</th><th class="num">6M</th><th class="num">vs NVDA 3M</th><th class="num" style="text-transform:none">&rho; 60d</th><th class="num">Off 6M high</th></tr></thead><tbody>`+
     nvRow+names.filter(r=>r.sym!=="NVDA").sort((a,b)=>(b.r3??-1e9)-(a.r3??-1e9)).map(row).join("")+`</tbody></table></div>`;
   // verdict: name the divergences that matter, in stack order
   if(nv.r3!=null){
@@ -1679,10 +1707,12 @@ function renderCrown(){
     if(hy) seg.push(`its customers ${pf(hy.r3,0)}`);
     if(neo) seg.push(`the neoclouds ${pf(neo.r3,0)}`);
     if(mu&&mu.r3!=null) seg.push(`Micron ${pf(mu.r3,0)}`);
-    v.innerHTML=`${seg.join(", ")}. ${read.charAt(0).toUpperCase()+read.slice(1)}.`;
-  } else v.innerHTML="";
+    v.innerHTML=`${seg.join(", ")}. ${read.charAt(0).toUpperCase()+read.slice(1)}.${capSentence}`;
+  } else v.innerHTML=capSentence.trim();
+  const capsAsof=mkt?.caps?.asof?new Date(mkt.caps.asof).toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}):null;
   note.innerHTML=[crownFoot,
-    `Returns from 6-month daily closes; a dash means the name&rsquo;s history doesn&rsquo;t cover that window. Groups are equal-weight, so one neocloud can swing its group. &rho; is correlation of daily returns with NVDA over ~60 sessions &ndash; high &rho; with lagging returns means a name falls on NVDA&rsquo;s bad days but doesn&rsquo;t keep up on the good ones.`].filter(Boolean).join("<br>");
+    `Returns from 6-month daily closes; a dash means the name&rsquo;s history doesn&rsquo;t cover that window. Groups are equal-weight, so one neocloud can swing its group. &rho; is correlation of daily returns with NVDA over ~60 sessions &ndash; high &rho; with lagging returns means a name falls on NVDA&rsquo;s bad days but doesn&rsquo;t keep up on the good ones.`,
+    nvCap?`Market caps from Nasdaq&rsquo;s screener (delayed quotes${capsAsof?`, as of ${esc(capsAsof)}`:""}); benchmarks are ETFs and carry no cap.`:""].filter(Boolean).join("<br>");
 }
 function renderNvda(){
   if(!nvda){ $("nvdaLadder").innerHTML='<div class="note">Monthly NVDA bracket event not found right now.</div>'; $("nvdaVerdict").innerHTML=""; return; }

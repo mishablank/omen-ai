@@ -140,6 +140,39 @@ def get(url, timeout=25, headers=None, data=None):
         return r.read().decode()
 
 
+def nasdaq_caps(symbols):
+    """Live market caps for the stack-comparison card, one keyless request.
+
+    Nasdaq's screener endpoint returns every US-listed common stock (NYSE +
+    Nasdaq, incl. foreign private issuers like IREN/NBIS that SEC XBRL covers
+    only annually) with marketCap and last sale. Yahoo's quote endpoint would
+    be the obvious source but is crumb-gated; this one is not.
+    """
+    import gzip
+    url = "https://api.nasdaq.com/api/screener/stocks?tableonly=true&limit=25&download=true"
+    req = urllib.request.Request(url, headers={**UA, "Accept": "application/json",
+                                               "Accept-Encoding": "gzip"})
+    with urllib.request.urlopen(req, timeout=40) as r:
+        raw = r.read()
+        if r.headers.get("Content-Encoding") == "gzip" or raw[:2] == b"\x1f\x8b":
+            raw = gzip.decompress(raw)
+    rows = json.loads(raw)["data"]["rows"]
+    want = set(symbols)
+    out = {}
+    for row in rows:
+        sym = row.get("symbol")
+        if sym not in want:
+            continue
+        try:
+            cap = float(row["marketCap"].replace(",", ""))
+            px = float(row["lastsale"].replace("$", "").replace(",", ""))
+        except (KeyError, ValueError, AttributeError):
+            continue
+        if cap > 0:
+            out[sym] = {"cap": cap, "px": px}
+    return out
+
+
 def yahoo_series(sym, rng="6mo"):
     j = json.loads(get(f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?range={rng}&interval=1d"))
     res = j["chart"]["result"][0]
@@ -919,6 +952,20 @@ def build():
             print(f"equity {sym}: {len(data['equity'][sym])} pts")
         except Exception as e:
             print(f"equity {sym}: FAIL {e}")
+
+    # market caps for the stack-comparison card (ETFs have no cap; skip the benchmarks)
+    cap_syms = [s for s in EQUITY if s not in ("SOXX", "SPY")]
+    try:
+        caps = nasdaq_caps(cap_syms)
+        data["caps"] = {"asof": data["updated"], "by": caps}
+        print(f"caps: {len(caps)}/{len(cap_syms)} names (NVDA ${caps.get('NVDA', {}).get('cap', 0) / 1e12:.2f}T)")
+        missing = sorted(set(cap_syms) - set(caps))
+        if missing:
+            print(f"caps missing: {missing}")
+    except Exception as e:
+        print(f"caps: FAIL {e}")
+        if prev.get("caps"):           # carry the last good snapshot, original asof intact
+            data["caps"] = prev["caps"]
 
     for ysym, name in VOL.items():
         try:
