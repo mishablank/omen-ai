@@ -8,7 +8,6 @@ CORS-open API:
 
   - LMArena leaderboard (arena.ai) : best Chinese model rank/Elo, top-10/20 counts
   - GitHub star velocity           : server-side baseline in china-history.json
-  - BABA / KWEB contrast series    : Yahoo chart API
   - OpenRouter weekly share        : appended to china-snapshots.csv (durable history)
   - Google Trends search interest  : Chinese apps' share of US AI-assistant searches
                                      (unofficial API; datacenter IPs often 429 -> the
@@ -113,14 +112,6 @@ def github_velocity(hist):
         # runs don't reset it to "now" every time and never produce a velocity
         hist["github"] = {"t": now, "total": total, "stars": stars}
     return per_day, stars
-
-
-def yahoo_series(sym):
-    d = jget(f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?range=6mo&interval=1d")
-    r = d["chart"]["result"][0]
-    ts, cl = r["timestamp"], r["indicators"]["quote"][0]["close"]
-    return [{"d": datetime.fromtimestamp(t, timezone.utc).strftime("%Y-%m-%d"), "c": round(c, 2)}
-            for t, c in zip(ts, cl) if c is not None]
 
 
 def huggingface():
@@ -305,12 +296,6 @@ def run():
         print(f"  CN {out['hf']['cn']/1e6:.0f}M vs US {out['hf']['us']/1e6:.0f}M / 30d")
     except Exception as e:
         print(f"  FAILED ({e}) - page falls back to its client fetch", file=sys.stderr)
-
-    print("yahoo BABA/KWEB ...")
-    try:
-        out["equity_extra"] = {s: yahoo_series(s) for s in ("BABA", "KWEB")}
-    except Exception as e:
-        print(f"  FAILED ({e})", file=sys.stderr)
 
     print("openrouter weekly share ...")
     try:
