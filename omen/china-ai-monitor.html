@@ -237,7 +237,7 @@
   <h3>Methodology</h3>
   <b>Chinese AI Adoption Index</b> = &Sigma;(w<sub>i</sub>&middot;s<sub>i</sub>)/&Sigma;w<sub>i</sub> over available signal families, each normalized 0&ndash;100 against fixed reference ranges: OpenRouter Chinese token share 0&rarr;70% (w=30), Hugging Face Chinese share of open-weight downloads 0&rarr;70% (w=20), GitHub star velocity across the flagship basket 0&rarr;2,000/day (w=15), Western search/consumer interest share 0&rarr;50% (w=10), consumer-app Western top-chart presence 0&rarr;100 (basket-mean best top-100 rank, w=10), LMArena proximity 100&minus;Elo-gap, floored at 0 (w=5). Weights follow the source note's suggested scheme; excluded families renormalize.
   <b>SPI</b> = Chinese-lab &divide; US-lab routed tokens (named authors) on OpenRouter, trailing week.
-  <b>Frontier price gap</b> = median output $/M of US flagships (GPT-5.6 family, Claude Opus/Sonnet, Gemini Pro/Flash) &divide; median of Chinese flagships (DeepSeek V4, GLM-5.x, Kimi K2.x, Qwen Max, MiniMax M3).
+  <b>Frontier price gap</b> = median output $/M of US flagships (GPT-5.6 family, Claude Opus/Sonnet, Gemini Pro/Flash) &divide; median of Chinese flagships (DeepSeek V4, GLM-5.x, Kimi K2.x/K3, Qwen Max, MiniMax M3).
   <h3>Caveats</h3>
   OpenRouter sees only routed traffic &ndash; it overstates Chinese share of the total market (first-party US API traffic is invisible) but is the best public real-time proxy for the substitutable segment. HF download totals mix model generations and exclude derivative quantizations. Leaderboard, search-interest (Google Trends) and consumer-app chart presence (Apple RSS + Google Play top charts) are refreshed by <code>update-china-data.py</code>; only the Artificial-Analysis scores remain a dated manual snapshot (see freshness strip). Prediction-market prices are thin in places. Nothing here is a validated forecast of equity returns &ndash; the companion monitor's own lead-lag test is honest about that.
   <h3>Sources</h3>
@@ -293,6 +293,7 @@ const PRICE_CN = [
   { pick:["deepseek/deepseek-v4-pro"], label:"DeepSeek V4 Pro" },
   { pick:["deepseek/deepseek-v4-flash"], label:"DeepSeek V4 Flash" },
   { pick:["z-ai/glm-5.2","z-ai/glm-5.1"], label:"GLM-5.2 (Z.ai)" },
+  { pick:["moonshotai/kimi-k3"], label:"Kimi K3" },
   { pick:["moonshotai/kimi-k2.7-code","moonshotai/kimi-k2.6"], label:"Kimi K2.7 Code" },
   { pick:["minimax/minimax-m3"], label:"MiniMax M3" },
   { pick:["qwen/qwen3.7-max","qwen/qwen3.6-max","qwen/qwen3-max"], label:"Qwen Max" }
