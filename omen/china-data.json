@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-19T11:18:20Z",
+ "updated": "2026-07-19T13:41:06Z",
  "snapshot_date": "2026-07-19",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -32,19 +32,19 @@
   "note": "Google Trends US, 90-day avg: 8 Chinese AI terms = 3.2% of AI-assistant search interest vs ChatGPT+Gemini+Claude+Llama AI+Meta AI."
  },
  "apps": {
-  "score": 4,
+  "score": 6,
   "asof": "2026-07-19",
   "source": "app-charts",
   "best": [
    {
     "label": "Kimi",
-    "rank": 79,
-    "store": "ios",
+    "rank": 69,
+    "store": "android",
     "country": "ca"
    },
    {
     "label": "MiniMax",
-    "rank": 112,
+    "rank": 111,
     "store": "android",
     "country": "br"
    }
@@ -61,7 +61,7 @@
    "au",
    "kr"
   ],
-  "detail": "Kimi #79 (CA iOS); basket-mean Western top-100 presence 4/100 across 10 markets",
+  "detail": "Kimi #69 (CA Play); basket-mean Western top-100 presence 6/100 across 10 markets",
   "note": "iOS Apple RSS top-100 + Android Play top-200 across 10 markets; presence = basket-mean of best top-100 chart rank (DeepSeek/Qwen/Doubao/Kimi/MiniMax), #1=100 #100=1; ranks past top-100 score 0."
  },
  "lmarena": {
@@ -141,9 +141,9 @@
  },
  "openrouter_week": {
   "week": "2026-07-13",
-  "cn_share": 0.6087,
-  "us_share": 0.313,
-  "spi": 1.944,
-  "total_tokens": 58179065149428
+  "cn_share": 0.6091,
+  "us_share": 0.3125,
+  "spi": 1.949,
+  "total_tokens": 58682558896382
  }
 }
