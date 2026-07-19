@@ -60,8 +60,14 @@ jobs:
 
       - name: Refresh China AI monitor snapshot data
         # Slow-moving fields for china-ai-monitor.html (leaderboard ranks, GitHub star
-        # velocity, BABA/KWEB, OpenRouter weekly share, consumer-app chart presence). The
-        # page fetches the fast data live in-browser; this only regenerates china-data.json.
+        # velocity, OpenRouter weekly share, Vercel gateway share, Ollama pulls, Kalshi
+        # odds, fine-tune trees, SDK installs, consumer-app chart presence). The page
+        # fetches the fast data live in-browser; this only regenerates china-data.json.
+        # Both keys are optional: without ARTIFICIAL_ANALYSIS_API_KEY the AA scores stay
+        # a dated snapshot; without CF_RADAR_TOKEN the Radar panel stays hidden.
+        env:
+          ARTIFICIAL_ANALYSIS_API_KEY: ${{ secrets.ARTIFICIAL_ANALYSIS_API_KEY }}
+          CF_RADAR_TOKEN: ${{ secrets.CF_RADAR_TOKEN }}
         run: python3 omen/update-china-data.py
 
       - name: Refresh China AI event timeline (optional; needs XAI_API_KEY)

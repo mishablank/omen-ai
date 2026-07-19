@@ -55,6 +55,7 @@
   .tag { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; letter-spacing: .04em; }
   .tag.cn { background: var(--cn-wash); color: var(--cn); }
   .tag.us { background: var(--us-wash); color: var(--us); }
+  .tag.src { background: var(--grid); color: var(--text-secondary); }
   .gauge { display: grid; grid-template-columns: 240px 1fr; gap: 26px; align-items: center; margin-top: 6px; }
   @media (max-width: 700px) { .gauge { grid-template-columns: 1fr; } }
   .gaugeNum { font-size: 60px; font-weight: 600; line-height: 1; }
@@ -134,7 +135,7 @@
     <div class="cats" id="cats"></div>
   </div>
   <div class="statrow">
-    <div class="stat"><div class="l">Substitution Pressure Index (SPI)</div><div class="v" id="spiVal">&ndash;</div><div class="l">Chinese-lab tokens &divide; US-lab tokens, OpenRouter trailing week</div></div>
+    <div class="stat"><div class="l">Substitution Pressure Index (SPI)</div><div class="v" id="spiVal">&ndash;</div><div class="l" id="spiSub">Chinese-lab tokens &divide; US-lab tokens, OpenRouter trailing week</div></div>
     <div class="stat"><div class="l">Chinese share of routed tokens</div><div class="v" id="cnShareVal">&ndash;</div><div class="l">named Chinese labs, trailing week</div></div>
     <div class="stat"><div class="l">4-week change</div><div class="v" id="cnShareDelta">&ndash;</div><div class="l">share, percentage points</div></div>
     <div class="stat"><div class="l">Frontier price gap</div><div class="v" id="priceGapVal">&ndash;</div><div class="l">US flagship output $/M &divide; Chinese flagship</div></div>
@@ -205,15 +206,59 @@
       <div class="stat"><div class="l">Chinese models in top 10 / top 20</div><div class="v" id="lbCounts">&ndash;</div><div class="l">text arena, ordinal ranks</div></div>
       <div class="stat"><div class="l">Artificial Analysis index</div><div class="v" id="aaVals">&ndash;</div><div class="l" id="aaSub"></div></div>
     </div>
-    <div class="note">Source: <a href="https://arena.ai/leaderboard/text" target="_blank" rel="noopener">arena.ai</a> (ex-lmarena.ai) and <a href="https://artificialanalysis.ai/models" target="_blank" rel="noopener">Artificial Analysis</a>. No public CORS API &ndash; refreshed via the updater script, values dated in the header.</div>
+    <div class="note">Sources: LMArena's official <a href="https://huggingface.co/datasets/lmarena-ai/leaderboard-dataset" target="_blank" rel="noopener">leaderboard dataset</a> (CC BY 4.0; <a href="https://arena.ai/leaderboard/text" target="_blank" rel="noopener">arena.ai</a> scrape as fallback) and <a href="https://artificialanalysis.ai/models" target="_blank" rel="noopener">Artificial Analysis</a> (live via its free Data API when the updater has a key, else a dated snapshot). Refreshed by the updater script, values dated in the header.</div>
   </div>
 </div>
 
-<!-- ============ POLYMARKET ============ -->
+<div class="grid2">
+  <!-- ============ VERCEL AI GATEWAY ============ -->
+  <div class="card">
+    <h2>Router cross-check &ndash; Vercel AI Gateway <span class="sub" id="vgAsof">&ndash; daily token share, batch</span></h2>
+    <div class="splitbar" id="vgSplit"></div>
+    <div class="splitlab"><span id="vgSplitL"></span><span id="vgSplitR"></span></div>
+    <div id="vgLabs"></div>
+    <div class="chartwrap"><svg id="vgSpark" viewBox="0 0 960 120" preserveAspectRatio="none" style="display:none"></svg></div>
+    <div class="note" id="vgNote">Lab share of text tokens on <a href="https://vercel.com/ai-gateway/leaderboards/models" target="_blank" rel="noopener">Vercel AI Gateway</a> &ndash; production web apps, a different population than OpenRouter's price-sensitive routing, so it de-biases the headline SPI. When the two routers disagree, the truth is usually in between. Data: &ldquo;AI Gateway Leaderboard Data&rdquo; &copy; Vercel, CC BY 4.0 (export cached 24h).</div>
+  </div>
+
+  <!-- ============ OLLAMA ============ -->
+  <div class="card">
+    <h2>Local adoption &ndash; Ollama pulls <span class="sub" id="olAsof">&ndash; lifetime cumulative, batch</span></h2>
+    <div class="splitbar" id="olSplit"></div>
+    <div class="splitlab"><span id="olSplitL"></span><span id="olSplitR"></span></div>
+    <div id="olModels"></div>
+    <div class="note" id="olNote">Pull counts from the <a href="https://ollama.com/library" target="_blank" rel="noopener">Ollama library</a> &ndash; the self-hosted segment that no router or HF download counter sees, and where Chinese open-weight models are disproportionately run. Lifetime totals (a stock, not a flow); the daily rate appears once two refreshes are &gt;20h apart.</div>
+  </div>
+</div>
+
+<div class="grid2">
+  <!-- ============ HF FINE-TUNE TREES ============ -->
+  <div class="card">
+    <h2>Ecosystem gravity &ndash; fine-tune trees <span class="sub" id="ftAsof">&ndash; batch</span></h2>
+    <div id="ftBars"></div>
+    <div class="note">Models fine-tuned from each flagship base on Hugging Face (the model-tree count on each base's page). Who builds <i>on</i> your model is a stickier adoption signal than raw downloads &ndash; a big tree means training recipes, tooling and habits are already committed to that base.</div>
+  </div>
+
+  <!-- ============ PYPI SDKS ============ -->
+  <div class="card">
+    <h2>Lab SDK installs &ndash; PyPI weekly <span class="sub" id="sdkAsof">&ndash; batch</span></h2>
+    <div id="sdkBars"></div>
+    <div class="note">Weekly installs of each lab's first-party Python SDK (<a href="https://pypistats.org" target="_blank" rel="noopener">pypistats.org</a>). Big caveat: Chinese APIs are OpenAI-compatible, so much Chinese-model usage rides the <code>openai</code> package &ndash; the Chinese side is a hard undercount. Watch the trend, not the level.</div>
+  </div>
+</div>
+
+<!-- ============ CLOUDFLARE RADAR (shown only when the updater has a token) ============ -->
+<div class="card" id="radarCard" style="display:none">
+  <h2>Consumer AI traffic &ndash; Cloudflare Radar <span class="sub" id="rdAsof">&ndash; batch</span></h2>
+  <div id="rdList"></div>
+  <div class="note">Generative-AI services ranked by 1.1.1.1 DNS resolver traffic (<a href="https://radar.cloudflare.com/ai-insights" target="_blank" rel="noopener">Cloudflare Radar</a>) &ndash; actual visits, not search-term or app-chart proxies. Chinese services highlighted.</div>
+</div>
+
+<!-- ============ PREDICTION MARKETS ============ -->
 <div class="card">
-  <h2>Prediction markets &ndash; Chinese AI leadership <span class="sub">&ndash; live Polymarket odds</span></h2>
+  <h2>Prediction markets &ndash; Chinese AI leadership <span class="sub">&ndash; live Polymarket odds + Kalshi (batch, daily)</span></h2>
   <table id="pmTable"><thead><tr><th>Market</th><th class="num">YES</th><th class="num">24h &Delta;</th></tr></thead><tbody></tbody></table>
-  <div class="note">Leadership markets resolve on <a href="https://arena.ai/leaderboard/text" target="_blank" rel="noopener">arena.ai</a> rankings. These are the market's own probabilities that Chinese labs take or hold the frontier &ndash; the cleanest forward-looking read in this monitor.</div>
+  <div class="note">Polymarket leadership markets resolve on <a href="https://arena.ai/leaderboard/text" target="_blank" rel="noopener">arena.ai</a> rankings; <a href="https://kalshi.com/markets/kxbestllmchina/chinese-llm-best" target="_blank" rel="noopener">Kalshi</a> is a CFTC-regulated exchange with deeper AI books, fetched by the daily updater (no CORS API). These are the market's own probabilities that Chinese labs take or hold the frontier &ndash; the cleanest forward-looking read in this monitor.</div>
 </div>
 
 <!-- ============ EQUITY ============ -->
@@ -235,18 +280,23 @@
 
 <footer id="foot">
   <h3>Methodology</h3>
-  <b>Chinese AI Adoption Index</b> = &Sigma;(w<sub>i</sub>&middot;s<sub>i</sub>)/&Sigma;w<sub>i</sub> over available signal families, each normalized 0&ndash;100 against fixed reference ranges: OpenRouter Chinese token share 0&rarr;70% (w=30), Hugging Face Chinese share of open-weight downloads 0&rarr;70% (w=20), GitHub star velocity across the flagship basket 0&rarr;2,000/day (w=15), Western search/consumer interest share 0&rarr;50% (w=10), consumer-app Western top-chart presence 0&rarr;100 (basket-mean best top-100 rank, w=10), LMArena proximity 100&minus;Elo-gap, floored at 0 (w=5). Weights follow the source note's suggested scheme; excluded families renormalize.
+  <b>Chinese AI Adoption Index</b> = &Sigma;(w<sub>i</sub>&middot;s<sub>i</sub>)/&Sigma;w<sub>i</sub> over available signal families, each normalized 0&ndash;100 against fixed reference ranges: router Chinese token share 0&rarr;70% (w=30; mean of the OpenRouter and Vercel-AI-Gateway normalized shares when both are available, OpenRouter alone otherwise), Hugging Face Chinese share of open-weight downloads 0&rarr;70% (w=20), GitHub star velocity across the flagship basket 0&rarr;2,000/day (w=15), Ollama Chinese share of named-family pulls 0&rarr;70% (w=10), Western search/consumer interest share 0&rarr;50% (w=10), consumer-app Western top-chart presence 0&rarr;100 (basket-mean best top-100 rank, w=10), LMArena proximity 100&minus;Elo-gap, floored at 0 (w=5). Weights follow the source note's suggested scheme, extended with the local-adoption family; excluded families renormalize.
   <b>SPI</b> = Chinese-lab &divide; US-lab routed tokens (named authors) on OpenRouter, trailing week.
   <b>Frontier price gap</b> = median output $/M of US flagships (GPT-5.6 family, Claude Opus/Sonnet, Gemini Pro/Flash) &divide; median of Chinese flagships (DeepSeek V4, GLM-5.x, Kimi K2.x/K3, Qwen Max, MiniMax M3).
   <h3>Caveats</h3>
-  OpenRouter sees only routed traffic &ndash; it overstates Chinese share of the total market (first-party US API traffic is invisible) but is the best public real-time proxy for the substitutable segment. HF download totals mix model generations and exclude derivative quantizations. Leaderboard, search-interest (Google Trends) and consumer-app chart presence (Apple RSS + Google Play top charts) are refreshed by <code>update-china-data.py</code>; only the Artificial-Analysis scores remain a dated manual snapshot (see freshness strip). Prediction-market prices are thin in places. Nothing here is a validated forecast of equity returns &ndash; the companion monitor's own lead-lag test is honest about that.
+  OpenRouter sees only routed traffic &ndash; it overstates Chinese share of the total market (first-party US API traffic is invisible) but is the best public real-time proxy for the substitutable segment; the Vercel AI Gateway cross-check (production apps, export cached 24h) partially corrects that bias and currently reads much lower. HF download totals mix model generations and exclude derivative quantizations. Ollama pulls are lifetime cumulative, so they lag shifts; the derived daily rate is the leading part. Fine-tune-tree counts depend on authors declaring <code>base_model</code> metadata. PyPI SDK installs undercount the Chinese side badly (OpenAI-compatible APIs ride the <code>openai</code> package). Leaderboard (LMArena official dataset, arena.ai scrape fallback), search interest (Google Trends), consumer-app chart presence (Apple RSS + Google Play), Vercel, Ollama, Kalshi, fine-tune trees and SDK installs are all refreshed by <code>update-china-data.py</code>; Artificial-Analysis scores refresh live when the updater has an <code>ARTIFICIAL_ANALYSIS_API_KEY</code>, else they remain a dated snapshot, and the Cloudflare-Radar consumer-traffic panel appears only when a <code>CF_RADAR_TOKEN</code> is configured (see freshness strip). Prediction-market prices are thin in places; Kalshi quotes are daily-batch, not live. Nothing here is a validated forecast of equity returns &ndash; the companion monitor's own lead-lag test is honest about that.
   <h3>Sources</h3>
   <a href="https://openrouter.ai/rankings" target="_blank" rel="noopener">OpenRouter rankings</a> &middot;
+  <a href="https://vercel.com/ai-gateway/leaderboards/models" target="_blank" rel="noopener">Vercel AI Gateway leaderboards</a> (data &copy; Vercel, CC BY 4.0) &middot;
   <a href="https://huggingface.co" target="_blank" rel="noopener">Hugging Face Hub API</a> &middot;
+  <a href="https://ollama.com/library" target="_blank" rel="noopener">Ollama library</a> &middot;
   <a href="https://docs.github.com/rest" target="_blank" rel="noopener">GitHub API</a> &middot;
   <a href="https://polymarket.com/markets/ai" target="_blank" rel="noopener">Polymarket Gamma API</a> &middot;
-  <a href="https://arena.ai/leaderboard/text" target="_blank" rel="noopener">arena.ai</a> &middot;
-  <a href="https://artificialanalysis.ai/models" target="_blank" rel="noopener">Artificial Analysis</a> &middot;
+  <a href="https://kalshi.com/category/science/ai" target="_blank" rel="noopener">Kalshi trade API</a> &middot;
+  <a href="https://huggingface.co/datasets/lmarena-ai/leaderboard-dataset" target="_blank" rel="noopener">LMArena leaderboard dataset</a> (CC BY 4.0) &middot;
+  <a href="https://artificialanalysis.ai/" target="_blank" rel="noopener">Artificial Analysis</a> &middot;
+  <a href="https://pypistats.org" target="_blank" rel="noopener">pypistats.org</a> &middot;
+  <a href="https://radar.cloudflare.com/ai-insights" target="_blank" rel="noopener">Cloudflare Radar AI Insights</a> &middot;
   <a href="https://www.cnbc.com/2026/07/07/chinese-ai-models-costs-us-openai-anthropic.html" target="_blank" rel="noopener">CNBC 2026-07-07</a>
   <br><br>Built as part of <a href="index.html">OMEN</a>. Not investment advice.
 </footer>
@@ -434,6 +484,7 @@ async function loadEQ(){
 async function loadSnap(){
   try{ const d = await jget("china-data.json", {cache:"no-store"}); snap = { ...SNAP, ...d }; }catch(e){}
   const parts=[]; if(snap.lmarena?.asof) parts.push("arena "+snap.lmarena.asof); if(snap.search_consumer?.asof) parts.push("consumer "+snap.search_consumer.asof);
+  if(snap.vercel_gateway?.asof) parts.push("vercel "+snap.vercel_gateway.asof); if(snap.ollama?.asof) parts.push("ollama "+snap.ollama.asof);
   dot("sn", "warn", parts.join(" · ") || "embedded snapshot");
 }
 /* ---------------- renderers ---------------- */
@@ -469,10 +520,19 @@ function renderOR(){
   const mx = labs[0]?.[1]||1;
   $("orLabs").innerHTML = labs.map(([a,t]) =>
     `<div class="hbar"><span class="k">${esc(CN_LABEL[a]||a)}</span><span class="track"><i style="width:${t/mx*100}%"></i></span><span class="v">${fmtT(t)} · ${pct(t/tot)}</span></div>`).join("");
-  // gauge inputs
-  IDX.openrouter = { w:30, val: clamp01((cn/tot)/0.70)*100, detail: pct(cn/tot)+" of routed tokens" };
+  // gauge inputs - blend the two routers when the Vercel cross-check is available,
+  // so one platform's user mix can't set the headline family on its own
+  const orNorm = clamp01((cn/tot)/0.70)*100;
+  const vg = snap.vercel_gateway;
+  if(vg && vg.cn_share!=null){
+    const vgNorm = clamp01((vg.cn_share/100)/0.70)*100;
+    IDX.openrouter = { w:30, val:(orNorm+vgNorm)/2, detail: pct(cn/tot)+" OpenRouter · "+vg.cn_share.toFixed(1)+"% Vercel" };
+  } else {
+    IDX.openrouter = { w:30, val: orNorm, detail: pct(cn/tot)+" of routed tokens" };
+  }
   $("cnShareVal").textContent = pct(cn/tot);
   $("spiVal").textContent = (cn/Math.max(1,us)).toFixed(2)+"x";
+  if(vg?.spi!=null) $("spiSub").textContent = "OpenRouter trailing week · Vercel gateway cross-check "+vg.spi.toFixed(2)+"x";
   if(S.orShare?.length>4){
     const last=S.orShare.at(-1), prev=S.orShare.at(-5);
     const dl=(last.cn/last.tot - prev.cn/prev.tot)*100;
@@ -523,11 +583,83 @@ function renderGH(){
 }
 function renderPM(){
   const tb = $("pmTable").querySelector("tbody");
-  if(!S.pm){ tb.innerHTML = '<tr><td colspan="3" class="sub">Polymarket unavailable right now.</td></tr>'; return; }
-  tb.innerHTML = S.pm.map(m => {
+  const rows = [];
+  if(S.pm) for(const m of S.pm){
     const d = m.d24!=null ? `<span class="${m.d24>=0?'down':'up'}">${m.d24>=0?"+":""}${(m.d24*100).toFixed(1)}pt</span>` : "–";
-    return `<tr><td>${m.slug?`<a href="https://polymarket.com/event/${esc(m.slug)}" target="_blank" rel="noopener">${esc(m.label)}</a>`:esc(m.label)}</td><td class="num"><b>${m.p!=null? (m.p*100).toFixed(1)+"%":"–"}</b></td><td class="num">${d}</td></tr>`;
-  }).join("");
+    rows.push(`<tr><td><span class="tag src">PM</span> ${m.slug?`<a href="https://polymarket.com/event/${esc(m.slug)}" target="_blank" rel="noopener">${esc(m.label)}</a>`:esc(m.label)}</td><td class="num"><b>${m.p!=null? (m.p*100).toFixed(1)+"%":"–"}</b></td><td class="num">${d}</td></tr>`);
+  }
+  if(snap.kalshi?.markets) for(const m of snap.kalshi.markets){
+    rows.push(`<tr><td><span class="tag src">KALSHI</span> <a href="https://kalshi.com/markets/${esc(m.series)}" target="_blank" rel="noopener">${esc(m.label)}</a></td><td class="num"><b>${m.p!=null? (m.p*100).toFixed(1)+"%":"–"}</b></td><td class="num">–</td></tr>`);
+  }
+  tb.innerHTML = rows.length ? rows.join("") : '<tr><td colspan="3" class="sub">Prediction markets unavailable right now.</td></tr>';
+}
+/* ---------------- batch-fed panels (china-data.json) ---------------- */
+function renderVercel(){
+  const vg = snap.vercel_gateway;
+  if(!vg){ $("vgSplit").outerHTML = '<div class="note">No Vercel gateway data yet &ndash; appears after the next server-side refresh.</div>'; return; }
+  $("vgAsof").textContent = "– daily token share, "+vg.asof;
+  const other = Math.max(0, 100 - vg.cn_share - vg.us_share);
+  $("vgSplit").innerHTML = `<i style="width:${vg.cn_share}%;background:var(--cn)"></i><i style="width:${vg.us_share}%;background:var(--us)"></i><i style="width:${other}%;background:var(--other)"></i>`;
+  $("vgSplitL").innerHTML = `<b style="color:var(--cn)">Chinese ${vg.cn_share.toFixed(1)}%</b>`;
+  $("vgSplitR").innerHTML = `<b style="color:var(--us)">US ${vg.us_share.toFixed(1)}%</b> · other ${other.toFixed(1)}% · SPI ${vg.spi!=null? vg.spi.toFixed(2)+"x":"–"}`;
+  const mx = vg.top_cn?.[0]?.share || 1;
+  $("vgLabs").innerHTML = (vg.top_cn||[]).map(l =>
+    `<div class="hbar"><span class="k">${esc(l.lab)}</span><span class="track"><i style="width:${l.share/mx*100}%"></i></span><span class="v">${l.share.toFixed(1)}%</span></div>`).join("");
+  if(vg.series?.length > 6){
+    const s = vg.series, W=960, H=120, L=46, R=10, T=8, B=22;
+    const mxv = Math.max(...s.map(p=>Math.max(p.cn,p.us)))*1.08;
+    const xs = i => L + (W-L-R)*(i/(s.length-1)), ys = v => T + (H-T-B)*(1 - v/mxv);
+    const path = key => s.map((p,i)=>`${i?"L":"M"}${xs(i).toFixed(1)},${ys(p[key]).toFixed(1)}`).join("");
+    let g = "";
+    for(const f of [0,.5,1]) g += `<line x1="${L}" y1="${ys(f*mxv)}" x2="${W-R}" y2="${ys(f*mxv)}" stroke="var(--grid)"/><text x="${L-6}" y="${ys(f*mxv)+4}" text-anchor="end" font-size="11" fill="var(--muted)">${(f*mxv).toFixed(0)}%</text>`;
+    g += `<text x="${xs(0)}" y="${H-6}" font-size="11" fill="var(--muted)">${s[0].d}</text><text x="${xs(s.length-1)}" y="${H-6}" text-anchor="end" font-size="11" fill="var(--muted)">${s.at(-1).d}</text>`;
+    const el = $("vgSpark");
+    el.style.display = "block";
+    el.innerHTML = g + `<path d="${path("cn")}" fill="none" stroke="var(--cn)" stroke-width="2"/><path d="${path("us")}" fill="none" stroke="var(--us)" stroke-width="2"/>`;
+  }
+}
+function renderOllama(){
+  const o = snap.ollama;
+  if(!o){ $("olSplit").outerHTML = '<div class="note">No Ollama data yet &ndash; appears after the next server-side refresh.</div>'; return; }
+  $("olAsof").textContent = "– lifetime cumulative, "+o.asof;
+  const tot = o.cn + o.us;
+  $("olSplit").innerHTML = `<i style="width:${o.cn/tot*100}%;background:var(--cn)"></i><i style="width:${o.us/tot*100}%;background:var(--us)"></i>`;
+  const rate = k => o[k]!=null ? " · +"+fmtT(Math.max(0,o[k]))+"/day" : "";
+  $("olSplitL").innerHTML = `<b style="color:var(--cn)">Chinese ${pct(o.cn/tot)}</b> · ${fmtT(o.cn)}${rate("cn_per_day")}`;
+  $("olSplitR").innerHTML = `<b style="color:var(--us)">US open ${pct(o.us/tot)}</b> · ${fmtT(o.us)}${rate("us_per_day")}`;
+  const rows = [...(o.cn_top||[]).map(m=>({...m,s:"cn"})), ...(o.us_top||[]).map(m=>({...m,s:"us"}))].sort((a,b)=>b.pulls-a.pulls).slice(0,7);
+  const mx = rows[0]?.pulls || 1;
+  $("olModels").innerHTML = rows.map(m =>
+    `<div class="hbar"><span class="k"><span class="tag ${m.s}">${m.s.toUpperCase()}</span> <a href="https://ollama.com/library/${esc(m.name)}" target="_blank" rel="noopener">${esc(m.name)}</a></span><span class="track"><i style="width:${m.pulls/mx*100}%;${m.s==="us"?"background:var(--us)":""}"></i></span><span class="v">${fmtT(m.pulls)}</span></div>`).join("");
+  IDX.ollama = { w:10, val: clamp01((o.cn/tot)/0.70)*100, detail: pct(o.cn/tot)+" of named-family pulls" };
+}
+function renderFinetunes(){
+  const ft = snap.hf_finetunes;
+  if(!ft){ $("ftBars").innerHTML = '<div class="note">No fine-tune data yet &ndash; appears after the next server-side refresh.</div>'; return; }
+  $("ftAsof").textContent = "– Hugging Face model trees, "+ft.asof;
+  const rows = [...ft.cn.map(x=>({...x,s:"cn"})), ...ft.us.map(x=>({...x,s:"us"}))].sort((a,b)=>b.n-a.n);
+  const mx = rows[0]?.n || 1;
+  $("ftBars").innerHTML = rows.map(x =>
+    `<div class="hbar"><span class="k"><span class="tag ${x.s}">${x.s.toUpperCase()}</span> <a href="https://huggingface.co/${esc(x.base)}" target="_blank" rel="noopener">${esc(x.base.split("/")[1])}</a></span><span class="track"><i style="width:${x.n/mx*100}%;${x.s==="us"?"background:var(--us)":""}"></i></span><span class="v">${x.n.toLocaleString()}</span></div>`).join("")
+    + `<div class="note">Basket totals: Chinese bases <b>${ft.cn_total.toLocaleString()}</b> vs US open-weight bases <b>${ft.us_total.toLocaleString()}</b> fine-tunes.</div>`;
+}
+function renderSDK(){
+  const sdk = snap.sdk;
+  if(!sdk){ $("sdkBars").innerHTML = '<div class="note">No SDK data yet &ndash; appears after the next server-side refresh.</div>'; return; }
+  $("sdkAsof").textContent = "– pypistats, "+sdk.asof;
+  const rows = [...sdk.cn.map(x=>({...x,s:"cn"})), ...sdk.us.map(x=>({...x,s:"us"}))].sort((a,b)=>b.wk-a.wk);
+  const mx = rows[0]?.wk || 1;
+  $("sdkBars").innerHTML = rows.map(x =>
+    `<div class="hbar"><span class="k"><span class="tag ${x.s}">${x.s.toUpperCase()}</span> <a href="https://pypistats.org/packages/${esc(x.pkg)}" target="_blank" rel="noopener">${esc(x.pkg)}</a></span><span class="track"><i style="width:${Math.max(0.5,x.wk/mx*100)}%;${x.s==="us"?"background:var(--us)":""}"></i></span><span class="v">${fmtT(x.wk)}/wk</span></div>`).join("");
+}
+function renderRadar(){
+  const rd = snap.radar_ai;
+  if(!rd?.services?.length) return;   // card stays hidden until the updater has a token
+  $("radarCard").style.display = "";
+  $("rdAsof").textContent = "– 1.1.1.1 DNS rank, "+rd.asof;
+  $("rdList").innerHTML = rd.services.map(s =>
+    `<div class="hbar"><span class="k">#${s.rank} ${s.cn?'<span class="tag cn">CN</span> ':""}${esc(s.name)}</span><span class="track"><i style="width:${Math.max(2,(21-s.rank)/20*100)}%;${s.cn?"":"background:var(--us)"}"></i></span><span class="v">${s.cn?"Chinese":""}</span></div>`).join("")
+    + `<div class="note">${rd.cn_in_top20} Chinese service${rd.cn_in_top20===1?"":"s"} in the generative-AI top 20${rd.cn_best? " (best: "+esc(rd.cn_best.name)+" at #"+rd.cn_best.rank+")":""}.</div>`;
 }
 function renderEQ(){
   const g = $("eqGrid");
@@ -552,13 +684,13 @@ function renderSnapshotPanels(){
   $("lbGapSub").textContent = "vs "+lb.us_leader+" at "+lb.us_leader_score;
   $("lbCounts").textContent = lb.top10+" / "+lb.top20;
   $("aaVals").textContent = aa.cn_score+" vs "+aa.us_score;
-  $("aaSub").textContent = aa.cn_best+" vs "+aa.us_best+" ("+aa.asof+")";
+  $("aaSub").textContent = aa.cn_best+" vs "+aa.us_best+" ("+aa.asof+(aa.source==="aa-api"?", live API":"")+")";
   const gap = lb.us_leader_score - lb.best_score;
   IDX.arena = { w:5, val: clamp01(1 - gap/100)*100, detail: "Elo gap "+gap+" (as of "+lb.asof+")" };
   IDX.search = { w:10, val: clamp01((snap.search_consumer.western_share_pct/100)/0.50)*100, detail: "~"+snap.search_consumer.western_share_pct+"% of Western AI referral traffic ("+snap.search_consumer.asof+")" };
   IDX.apps = { w:10, val: snap.apps.score, detail: (snap.apps.detail || "domestic-heavy; no Western top-chart presence")+" ("+snap.apps.asof+")" };
 }
-const FAMILY_LABEL = { openrouter:"OpenRouter token share", hf:"HF download share", github:"GitHub star velocity", search:"Western search/consumer", apps:"Consumer apps", arena:"LMArena proximity" };
+const FAMILY_LABEL = { openrouter:"Router token share (OR+Vercel)", hf:"HF download share", github:"GitHub star velocity", ollama:"Ollama pull share", search:"Western search/consumer", apps:"Consumer apps", arena:"LMArena proximity" };
 function renderGauge(){
   const fams = Object.entries(IDX);
   const live = fams.filter(([,f])=>f.val!=null);
@@ -584,6 +716,8 @@ function renderGauge(){
 async function boot(){
   await Promise.all([ loadSnap() ]);
   renderSnapshotPanels();
+  renderVercel(); renderOllama(); renderFinetunes(); renderSDK(); renderRadar();
+  renderPM();   // Kalshi rows render immediately; Polymarket rows join once live
   await Promise.all([ loadOpenRouter().then(()=>{renderOR();renderTopModels();renderTrend();}), loadPrices().then(renderPrices), loadHF().then(renderHF), loadGH().then(renderGH), loadPM().then(renderPM), loadEQ().then(renderEQ) ]);
   renderGauge();
 }
