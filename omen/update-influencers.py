@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Auto-score the influencer sentiment board into influencers.json.
+"""Auto-score the KOL board into influencers.json.
 
 Reads the roster (name, org, cat, url handle) below, asks Grok's Live Search to read
 each voice's recent public posts, and scores each -100 (max bearish on the AI trade)
