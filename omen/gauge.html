@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OMEN — The Gauge</title>
+<meta name="description" content="OMEN's crash-pressure gauge – five signal families (prediction markets, options skew, credit, volatility, equity drawdown) scored 0–100 against fixed calm→stress ranges.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="favicon.svg">
+<meta name="theme-color" content="#0b0a08">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="OMEN">
+<meta property="og:title" content="OMEN — The Gauge">
+<meta property="og:description" content="How much crash risk is priced in: five signal families scored 0–100 against fixed calm→stress ranges.">
+<meta property="og:image" content="og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="OMEN — The Gauge">
+<meta name="twitter:description" content="How much crash risk is priced in: five signal families scored 0–100 against fixed calm→stress ranges.">
+<meta name="twitter:image" content="og-image.png">
+<style>
+:root{
+  --bg:#0b0a08; --bg2:#0f0d0a; --panel:#13110c; --panel2:#181510;
+  --line:#262117; --line2:#3a3222;
+  --ink:#ece7db; --mut:#a59c88; --dim:#6e6656;
+  --acc:#e3a63c; --accT:#f2c977; --accD:#8a6420;
+  --bull:#79c99a; --bullT:#a1e0bb; --bullD:#2c5c43;
+  --bear:#e2685a;
+  --crash:#e2685a; --crashT:#f1968c; --crashD:#6e2c25;
+  --reg:#8fa8d8; --regT:#b0c4e9; --regD:#37456b;
+  --pos:#79c99a; --neg:#e2685a;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --serif:Georgia,"Iowan Old Style","Palatino Linotype","Times New Roman",serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);overflow-x:hidden;
+  background-image:radial-gradient(1100px 480px at 78% -120px,rgba(227,166,60,.07),transparent 70%)}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--acc);color:#141005}
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 28px}
+section{padding:72px 0}
+.kick{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--acc);font-weight:600;display:flex;align-items:center;gap:10px}
+.kick::before{content:"";width:22px;height:1px;background:var(--acc);display:inline-block}
+
+/* ---------- ticker ---------- */
+.ticker{border-bottom:1px solid var(--line);background:var(--bg2);font-family:var(--mono);font-size:11px;color:var(--mut);
+  overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.ticker::-webkit-scrollbar{display:none}
+.ticker .in{display:flex;gap:0;max-width:1180px;margin:0 auto;padding:0 28px;height:36px;align-items:center}
+.ticker .it{display:inline-flex;gap:8px;align-items:baseline;padding:0 20px;border-right:1px solid var(--line)}
+.ticker .it:first-child{padding-left:0}
+.ticker .it b{color:var(--ink);font-weight:600}
+.ticker .lab{color:var(--dim);letter-spacing:.08em}
+
+/* ---------- nav ---------- */
+nav{position:sticky;top:0;z-index:50;background:rgba(11,10,8,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:34px;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-weight:700;font-size:21px;letter-spacing:.02em}
+.logo svg{width:26px;height:26px}
+nav .links{display:flex;gap:28px;margin-left:auto}
+nav .links a{font-size:13px;color:var(--mut);transition:color .2s}
+nav .links a:hover{color:var(--accT)}
+nav .links a.here{color:var(--accT);font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:600;
+  background:var(--acc);color:#181204;padding:11px 20px;border:0;border-radius:6px;cursor:pointer;transition:background .15s,transform .15s}
+.btn:hover{background:var(--accT);transform:translateY(-1px)}
+nav .btn{padding:9px 16px;margin-left:6px}
+@media(max-width:760px){nav .links{display:none}}
+
+/* ---------- section headers ---------- */
+.shead{margin-bottom:56px}
+.shead h1{font-family:var(--serif);font-size:clamp(30px,4.2vw,46px);font-weight:700;letter-spacing:-.01em;line-height:1.1;margin-top:18px}
+.shead p{color:var(--mut);margin-top:14px;max-width:560px;line-height:1.65;font-size:15px}
+.shead p b{color:var(--ink)}
+
+/* ---------- daily reading meter ---------- */
+.meter{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:38px 36px 30px;margin-bottom:64px}
+.meter .cap{font-size:12px;color:var(--mut)}
+.meter .cap b{color:var(--ink);font-family:var(--mono)}
+.bandlabels{display:flex;justify-content:space-between;font-size:10.5px;letter-spacing:.1em;color:var(--dim);margin:26px 0 12px;text-transform:uppercase}
+.bandlabels span.active{color:var(--accT);font-weight:700}
+.track{position:relative;height:4px;border-radius:2px;background:linear-gradient(90deg,var(--bullD),#5c5222 45%,var(--crashD));}
+.needle{position:absolute;top:-8px;bottom:-8px;width:2px;background:var(--accT);box-shadow:0 0 12px rgba(242,201,119,.8);transition:left 1.2s cubic-bezier(.2,.8,.2,1)}
+.needle::after{content:"";position:absolute;top:-7px;left:50%;transform:translateX(-50%);width:7px;height:7px;border-radius:50%;background:var(--accT)}
+.ghostmark{position:absolute;top:-4px;bottom:-4px;width:1px;background:var(--dim)}
+.meterfoot{display:flex;justify-content:space-between;font-size:10.5px;letter-spacing:.1em;color:var(--dim);margin-top:16px;text-transform:uppercase}
+.driver{margin-top:32px;border-left:2px solid var(--acc);padding:6px 0 6px 24px}
+.driver .q{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:8px}
+.driver .meta{font-size:11.5px;letter-spacing:.06em;color:var(--mut);text-transform:uppercase}
+.driver .meta b{color:var(--accT)}
+
+/* ---------- gauge ---------- */
+.grid2{display:grid;grid-template-columns:320px 1fr;gap:56px;align-items:start}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.gaugebox{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:34px 30px;text-align:center}
+.gaugenum{font-family:var(--mono);font-size:76px;font-weight:700;line-height:1;letter-spacing:-.02em}
+.gaugenum small{font-size:22px;color:var(--dim)}
+.gaugebox .k2{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--acc);font-weight:600;display:block;margin-bottom:20px}
+.gaugebox .regime{display:inline-block;margin-top:16px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+  color:var(--bull);border:1px solid var(--bullD);border-radius:99px;padding:6px 16px}
+.gaugebox .foot{margin-top:20px;font-size:10.5px;color:var(--dim);letter-spacing:.06em;line-height:1.8;text-transform:uppercase}
+.fam{margin-bottom:24px}
+.fam .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.fam .name{font-family:var(--serif);font-weight:700;font-size:16px}
+.fam .val{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--accT)}
+.fam .bar{height:3px;border-radius:2px;background:var(--line);position:relative}
+.fam .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:linear-gradient(90deg,var(--accD),var(--acc));width:0;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+.fam .note{font-size:11px;color:var(--dim);margin-top:7px;letter-spacing:.02em}
+
+/* ---------- equity strip ---------- */
+.eqgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:64px}
+@media(max-width:980px){.eqgrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.eqgrid{grid-template-columns:1fr}}
+.eq{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:20px;position:relative}
+.eq .sym{font-weight:800;font-size:13px;letter-spacing:.1em}
+.eq .dd{font-family:var(--mono);font-size:11.5px;font-weight:700;float:right}
+.eq .px{font-family:var(--mono);font-size:22px;font-weight:700;margin:10px 0 2px}
+.eq .cap{font-size:9.5px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
+.eq svg{display:block;width:100%;height:56px;margin-top:12px}
+.eq .tip{position:absolute;pointer-events:none;background:var(--panel2);border:1px solid var(--line2);border-radius:5px;font-family:var(--mono);font-size:10px;
+  padding:4px 8px;transform:translate(-50%,-130%);white-space:nowrap;display:none;z-index:5}
+
+/* ---------- ranges ---------- */
+.ranges{margin-top:64px;font-size:12px;color:var(--dim);line-height:2}
+.ranges b{color:var(--mut);font-weight:700;letter-spacing:.08em}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--line);padding:40px 0;background:var(--bg2)}
+.fbase{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;font-size:11px;letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
+.up{color:var(--pos)}.down{color:var(--neg)}
+</style>
+</head>
+<body>
+
+<div class="ticker">
+  <div class="in">
+    <span class="it"><span class="lab">CRASH PRESSURE</span><b id="tk-gauge">23.6/100</b><span id="tk-regime" style="color:var(--bull)">CALM</span></span>
+    <span class="it"><span class="lab">SOURCE</span><b style="color:var(--mut)">POLYMARKET · CBOE · YAHOO · FRED</b></span>
+  </div>
+</div>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="index.html">
+      <svg viewBox="0 0 32 32" fill="none"><path d="M3 16C7 9.2 11.4 6 16 6s9 3.2 13 10c-4 6.8-8.4 10-13 10S7 22.8 3 16z" stroke="#e3a63c" stroke-width="2"/><circle cx="16" cy="16" r="4.6" fill="#e3a63c"/><circle cx="16" cy="16" r="1.8" fill="#0b0a08"/></svg>
+      OMEN
+    </a>
+    <div class="links">
+      <a href="indexes.html">The Indexes</a>
+      <a href="gauge.html" class="here">The Gauge</a>
+      <a href="methodology.html">Methodology</a>
+      <a href="influencers.html">KOLs</a>
+      <a href="china-ai-monitor.html">China Watch</a>
+      <a href="ai-capex.html">AI CapEx</a>
+    </div>
+    <a class="btn" href="polymarket-ai-index.html">Open the monitor</a>
+  </div>
+</nav>
+
+<section id="gauge">
+  <div class="wrap">
+    <div class="shead">
+      <span class="kick">The gauge</span>
+      <h1>How much crash risk<br>is priced in.</h1>
+      <p>Five signal families, each normalized 0–100 against calm→stress reference levels. Three are <b>leading</b> (prediction markets, options skew, credit – priced before the fact) and two are <b>confirming</b> (volatility, equity drawdown – they rise while a crash happens, not before). Only the leading side can warn; a high confirming score means the damage is already on the tape.</p>
+    </div>
+
+    <div class="meter">
+      <span class="cap">CRASH-PRESSURE GAUGE &nbsp;·&nbsp; <b id="meterCap">23.6 / 100</b> &nbsp;·&nbsp; FIVE SIGNAL FAMILIES</span>
+      <div class="bandlabels">
+        <span>Deep calm</span><span class="active">Calm</span><span>Elevated</span><span>Stressed</span><span>Crisis</span>
+      </div>
+      <div class="track">
+        <span class="ghostmark" style="left:23%" title="yesterday"></span>
+        <span class="needle" id="needle" style="left:2%"></span>
+      </div>
+      <div class="meterfoot"><span>◀ Calm</span><span>Yesterday ┆ · Today ▎</span><span>Crisis ▶</span></div>
+
+      <div class="driver">
+        <div class="q">SOXX 25Δ risk reversal – 9.2 vol pts of downside skew</div>
+        <div class="meta">Highest-pressure family · <b>Options skew 32 / 100</b> · Puts over calls on the semis complex · As of 2026-07-10</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="gaugebox">
+        <span class="k2">Crash pressure</span>
+        <div class="gaugenum" id="gaugeNum">0<small>/100</small></div>
+        <div class="regime">Regime · Calm</div>
+        <div class="foot">Stressed ≥ 55 · Elevated ≥ 35<br>Snapshot 2026-07-10 20:22 UTC</div>
+      </div>
+      <div id="fams"></div>
+    </div>
+
+    <div class="eqgrid" id="eqgrid"></div>
+
+    <div class="ranges">
+      <b>REFERENCE RANGES (CALM → STRESS)</b> – prediction markets: bubble-burst 0–40% · NVDA deep tail 0–25% · H100&lt;$2 0–30% &nbsp;/&nbsp; options skew: NVDA 25Δ RR 1–10 pt · SOXX 4–15 pt &nbsp;/&nbsp; volatility: VIX/VIX3M 0.82–1.05 · VXN 18–40 · SKEW 115–160 · VVIX 90–130 &nbsp;/&nbsp; credit: HYG drawdown 0 to −8% · HY/IG 0 to −6% &nbsp;/&nbsp; equity: NVDA 0 → −50% · SOXX 0 → −40%
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap fbase">
+    <span>© 2026 – OMEN · Not investment advice</span>
+    <span><a href="index.html" style="color:var(--mut)">← Back to the verdict</a></span>
+  </div>
+</footer>
+
+<script>
+"use strict";
+/* ================= baked snapshot (2026-07-11) ================= */
+// Bear-side markets only – the gauge reads the crash basket (MKT sleeve) and the
+// bubble-burst market; the full 20-market set lives on indexes.html.
+const MARKETS=[
+{id:"691340",side:"bear",theme:"mkt",yes:0.1595},
+{id:"676827",side:"bear",theme:"mkt",yes:0.0615},
+{id:"676846",side:"bear",theme:"mkt",yes:0.044},
+{id:"2787889",side:"bear",theme:"gov",yes:0.3},
+{id:"2787891",side:"bear",theme:"gov",yes:0.22},
+{id:"2787890",side:"bear",theme:"gov",yes:0.255},
+{id:"2698575",side:"bear",theme:"gov",yes:0.11},
+{id:"676842",side:"bear",theme:"gov",yes:0.21},
+{id:"2839991",side:"bear",theme:"gov",yes:0.375}
+];
+let GAUGE = 23.6;
+// g: "lead" = priced before the fact (can warn) · "conf" = moves with/after prices (confirms)
+let FAMILIES = [
+ {key:"pred",   g:"lead", label:"Prediction markets", v:25.2, note:"Bubble burst 16% · NVDA deep tail 4% · H100 <$2 5.9%"},
+ {key:"opt",    g:"lead", label:"Options skew", v:32.4, note:"NVDA 25Δ RR 2.6 pt · SOXX 25Δ RR 9.2 pt"},
+ {key:"credit", g:"lead", label:"Credit", v:11.3, note:"HYG −1.8% off high · HY/IG ratio at its high"},
+ {key:"vol",    g:"conf", label:"Volatility complex", v:24.3, note:"VXN 24.9 · SKEW 144.7 · VIX/VIX3M 0.81 · VVIX 87.3"},
+ {key:"equity", g:"conf", label:"Equity drawdown", v:24.5, note:"NVDA −10.5% · SOXX −11.2% off highs"},
+];
+const EQ = {
+ NVDA:{px:210.96,dd:-10.5,s:[180.05,183.04,183.34,177.82,182.65,184.77,186.03,183.14,180.25,183.22,181.93,180.4,178.56,172.7,175.64,175.2,178.68,171.24,167.52,165.17,174.4,175.75,177.39,177.64,178.1,182.08,183.91,188.63,189.31,196.51,198.87,198.35,201.68,202.06,199.88,202.5,199.64,208.27,216.61,213.17,209.25,199.57,198.45,198.48,196.5,207.83,211.5,215.2,219.44,220.78,225.83,235.74,225.32,222.32,220.61,223.47,219.51,215.33,214.86,212.6,214.25,211.14,224.36,222.82,214.75,218.66,205.1,208.64,208.19,200.42,204.87,205.19,212.45,207.41,204.65,210.69,208.65,200.04,199.0,195.74,192.53,194.97,200.09,197.58,194.83,195.55,196.93,204.12,202.78,210.96]},
+ SOXX:{px:581.34,dd:-11.2,s:[334.78,341.54,337.76,323.51,336.37,338.81,342.09,330.19,331.32,337.83,340.25,338.29,340.2,332.51,336.59,341.02,345.25,328.85,323.48,309.79,328.66,338.54,339.61,344.1,347.76,370.4,378.63,386.6,393.34,401.24,401.86,405.95,415.71,417.55,420.7,431.77,441.0,461.6,455.41,438.71,449.99,461.44,465.75,462.06,482.73,506.87,492.36,520.3,532.76,515.99,528.29,530.03,508.52,495.87,496.74,520.31,524.71,537.33,570.09,563.98,569.47,569.08,571.93,605.02,615.68,602.72,539.77,571.45,562.14,541.51,586.93,596.25,628.45,591.24,599.73,639.45,655.01,603.39,601.5,625.2,589.94,614.35,640.76,599.7,566.32,581.51,551.69,562.03,581.7,581.34]},
+ CRWV:{px:88.88,dd:-35.6,s:[73.78,79.5,74.82,72.99,74.41,74.92,81.96,79.86,81.11,85.86,82.12,82.82,80.66,81.47,81.96,83.02,87.58,80.45,74.81,69.15,77.47,78.44,82.24,80.94,85.24,88.9,92.0,102.0,110.27,117.2,118.69,119.56,116.85,117.43,115.16,122.54,117.42,110.14,112.06,105.53,114.19,111.6,119.01,125.43,127.89,137.98,128.84,114.15,114.7,107.75,111.31,114.21,107.3,103.77,99.81,101.28,107.58,105.49,105.89,104.27,106.86,109.53,124.82,119.27,110.93,108.03,100.39,102.37,98.45,95.61,95.74,100.55,106.71,117.03,115.21,117.95,111.29,105.72,100.88,98.76,96.58,95.51,99.54,85.68,81.75,86.46,83.53,90.0,89.7,88.88]},
+ ORCL:{px:140.64,dd:-43.3,s:[149.01,152.37,154.79,152.96,151.56,149.4,163.12,159.16,155.11,155.97,154.69,152.9,155.52,149.68,154.34,147.09,146.02,142.81,139.66,138.8,147.11,145.23,146.38,145.54,143.17,143.66,137.86,138.09,155.62,163.0,169.81,178.34,175.06,177.58,181.17,187.5,176.28,173.28,172.96,165.96,163.83,161.39,171.83,180.29,185.35,194.03,194.59,195.95,193.84,186.83,189.76,195.61,192.95,186.61,181.46,188.16,189.77,192.08,193.06,190.96,203.7,225.78,248.15,244.58,230.33,236.34,213.68,211.82,205.81,201.26,184.1,184.13,192.64,188.33,183.53,184.29,175.07,165.16,157.53,152.46,148.53,147.76,146.55,142.5,140.27,143.76,141.6,140.49,144.22,140.64]},
+};
+const GAMMA="https://gamma-api.polymarket.com";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ================= regime rules (same as the landing verdict) ================= */
+const REGIME_META={
+  calm:{word:"Calm", color:"var(--bullT)", border:"var(--bull)"},
+  elevated:{word:"Elevated", color:"var(--regT)", border:"var(--reg)"},
+  stressed:{word:"Stressed", color:"var(--crashT)", border:"var(--crash)"},
+};
+function crashLevel(){
+  const ms=MARKETS.filter(m=>m.theme==="mkt"&&!m.closed);
+  return ms.length?ms.reduce((a,m)=>a+m.yes,0)/ms.length*100:0;
+}
+function bubblePct(){
+  const bm=MARKETS.find(m=>m.id==="691340");
+  return (bm&&!bm.closed?bm.yes:0)*100;
+}
+function regimeOf(score,crash,bubble){
+  if(score>=55||crash>=40) return "stressed";
+  if(score>=35||crash>=25||bubble>=15) return "elevated";
+  return "calm";
+}
+
+/* ================= families ================= */
+const GROUPS={lead:"LEADING · PRICED BEFORE THE FACT", conf:"CONFIRMING · MOVES WITH PRICES"};
+function renderFams(animate){
+  let h="", g0=null;
+  for(const f of FAMILIES){
+    if(f.g!==g0){ g0=f.g;
+      const gv=FAMILIES.filter(x=>x.g===g0&&x.v!=null);
+      const gm=gv.length?gv.reduce((a,x)=>a+x.v,0)/gv.length:null;
+      h+=`<div style="display:flex;justify-content:space-between;align-items:baseline;margin:${h?"26px":"0"} 0 14px"><span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--mut)">${GROUPS[g0]}</span><span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accT)">${gm==null?"–":gm.toFixed(0)+" / 100"}</span></div>`; }
+    h+=`
+   <div class="fam">
+     <div class="top"><span class="name">${f.label}</span><span class="val">${f.v==null?"–":f.v.toFixed(1)+" / 100"}</span></div>
+     <div class="bar"><i data-w="${f.v??0}"${animate?"":` style="width:${f.v??0}%"`}></i></div>
+     <div class="note">${f.note}</div>
+   </div>`;
+  }
+  $("fams").innerHTML=h;
+}
+function animateGauge(){
+  const el=$("gaugeNum");
+  const io=new IntersectionObserver(es=>{
+    if(!es.some(e=>e.isIntersecting)) return;
+    io.disconnect();
+    const t0=performance.now();
+    (function tick(t){
+      const k=Math.min(1,(t-t0)/1100), e=1-Math.pow(1-k,3);
+      el.innerHTML=(GAUGE*e).toFixed(1)+"<small>/100</small>";
+      if(k<1) requestAnimationFrame(tick);
+    })(t0);
+    document.querySelectorAll(".fam .bar i").forEach(b=>b.style.width=b.dataset.w+"%");
+  },{threshold:.3});
+  io.observe(el);
+}
+
+/* ================= equity strip ================= */
+function sparkSvg(vals,w,h,color,fill){
+  const mn=Math.min(...vals), mx=Math.max(...vals), r=(mx-mn)||1;
+  const pts=vals.map((v,i)=>[i/(vals.length-1)*w, h-3-(v-mn)/r*(h-8)]);
+  const line=pts.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
+  const area=`M0,${h} L${line.replace(/ /g," L")} L${w},${h} Z`;
+  return `<svg width="100%" height="100%" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    ${fill?`<path d="${area}" fill="${color}" opacity=".12"/>`:""}
+    <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2" vector-effect="non-scaling-stroke"/>
+    <circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="3" fill="${color}"/></svg>`;
+}
+function renderEquity(){
+  const host=$("eqgrid"); host.innerHTML="";
+  for(const [sym,e] of Object.entries(EQ)){
+    const el=document.createElement("div");
+    el.className="eq";
+    el.innerHTML=`<span class="sym">${sym}</span><span class="dd down">${e.dd.toFixed(1)}% OFF HIGH</span>
+      <div class="px">$${e.px.toFixed(2)}</div><span class="cap">Last 90 sessions · daily close</span>${sparkSvg(e.s,300,56,"#e3a63c",true)}
+      <div class="tip"></div>`;
+    host.appendChild(el);
+    const svgEl=el.querySelector("svg"), tip=el.querySelector(".tip");
+    svgEl.addEventListener("pointermove",ev=>{
+      const r=svgEl.getBoundingClientRect();
+      const i=Math.max(0,Math.min(e.s.length-1,Math.round((ev.clientX-r.left)/r.width*(e.s.length-1))));
+      tip.style.display="block";
+      tip.style.left=(ev.clientX-el.getBoundingClientRect().left)+"px";
+      tip.style.top=(ev.clientY-el.getBoundingClientRect().top)+"px";
+      tip.textContent=`$${e.s[i].toFixed(2)} · ${e.s.length-1-i}d ago`;
+    });
+    svgEl.addEventListener("pointerleave",()=>tip.style.display="none");
+  }
+}
+
+/* ================= live layer ================= */
+const dd=s=>{ if(!s||!s.length) return null; const hi=Math.max(...s.map(p=>p.c)); return (s[s.length-1].c/hi-1)*100; };
+function famNotes(mkt, bubble){
+  const sk=mkt.skew||{}, V=mkt.vol||{}, F=mkt.fred||{}, E=mkt.equity||{};
+  const rr=s=>sk[s]?.rr!=null?(sk[s].rr*100).toFixed(1)+" pt":"–";
+  const ts=(V.VIX&&V.VIX3M)?(V.VIX.last/V.VIX3M.last).toFixed(2):"–";
+  return {
+    pred: bubble!=null?`Bubble burst ${bubble.toFixed(1)}% (bubble market only – see monitor for the full stack)`:"–",
+    opt: `NVDA 25Δ RR ${rr("NVDA")} · SOXX 25Δ RR ${rr("SOXX")}`,
+    credit: (F.HY_OAS?`HY OAS ${F.HY_OAS.last.toFixed(2)}%`:"–")+(F.CCC_OAS?` · CCC ${F.CCC_OAS.last.toFixed(2)}%`:""),
+    vol: (V.VXN?`VXN ${V.VXN.last.toFixed(1)}`:"–")+(V.SKEW?` · SKEW ${V.SKEW.last.toFixed(1)}`:"")+` · VIX/VIX3M ${ts}`+(V.VVIX?` · VVIX ${V.VVIX.last.toFixed(1)}`:""),
+    equity: (E.NVDA?`NVDA ${dd(E.NVDA).toFixed(1)}%`:"–")+(E.SOXX?` · SOXX ${dd(E.SOXX).toFixed(1)}%`:"")+" off highs",
+  };
+}
+function applyServerData(mkt){
+  const sg=mkt&&mkt.server_gauge;
+  if(!sg||sg.score==null) return;
+  const bubble=bubblePct()||((sg.bubble||0)*100);
+  const crash=crashLevel();
+  const regime=regimeOf(sg.score,crash,bubble);
+  const R=REGIME_META[regime];
+  GAUGE=sg.score;
+  $("gaugeNum").innerHTML=sg.score.toFixed(1)+"<small>/100</small>";
+  $("meterCap").textContent=sg.score.toFixed(1)+" / 100";
+  $("needle").style.left=Math.max(1,Math.min(99,sg.score))+"%";
+  const bands=document.querySelectorAll(".bandlabels span");
+  const bi=regime==="stressed"?(sg.score>=75?4:3):regime==="elevated"?2:(sg.score<12?0:1);
+  bands.forEach((b,i)=>b.classList.toggle("active",i===bi));
+  document.querySelectorAll(".regime").forEach(chip=>{ chip.textContent="Regime · "+R.word; chip.style.borderColor=R.border; chip.style.color=R.color; });
+  const tg=$("tk-gauge"); if(tg) tg.textContent=sg.score.toFixed(1)+"/100";
+  const tr=$("tk-regime"); if(tr){ tr.textContent=R.word.toUpperCase(); tr.style.color=R.border; }
+  const foot=document.querySelector(".gaugebox .foot");
+  if(foot) foot.innerHTML=`STRESSED &ge; 55 · ELEVATED &ge; 35<br>LEADING ${sg.lead??"–"} · CONFIRMING ${sg.conf??"–"}<br>SNAPSHOT ${esc(sg.at||mkt.updated||"")}`;
+  // families with live values + notes
+  const notes=famNotes(mkt, bubble);
+  for(const f of FAMILIES){ if(sg.fam&&sg.fam[f.key]!=null) f.v=sg.fam[f.key]; if(notes[f.key]) f.note=notes[f.key]; }
+  renderFams(false);
+  // driver box: name the condition that set the regime, else the hottest family
+  const q=document.querySelector(".driver .q"), meta=document.querySelector(".driver .meta");
+  if(q&&meta){
+    const trips=[];
+    if(bubble>=15) trips.push(`AI bubble-burst market at ${bubble.toFixed(1)}% – single-market signal (≥15% = Elevated; a lone market can't reach Stressed)`);
+    if(crash>=25) trips.push(`Crash markets at ${crash.toFixed(1)} (≥25 = Elevated)`);
+    if(sg.score>=35) trips.push(`Blended gauge at ${sg.score.toFixed(0)} (≥35 = Elevated)`);
+    if(regime!=="calm"&&trips.length){
+      q.textContent=trips[0];
+      meta.innerHTML=`REGIME DRIVER · <b>BLENDED GAUGE ${sg.score.toFixed(1)} / 100${sg.score<35?" – STILL IN THE CALM BAND, SINGLE-SIGNAL TRIP":""}</b> · AS OF ${esc((sg.at||"").slice(0,10))}`;
+    }else{
+      const top=FAMILIES.filter(f=>f.v!=null).slice().sort((a,b)=>b.v-a.v)[0];
+      if(top){ q.textContent=`${top.label} — ${top.note}`;
+        meta.innerHTML=`HIGHEST-PRESSURE FAMILY · <b>${top.label.toUpperCase()} ${top.v.toFixed(0)} / 100</b> · ${top.g==="lead"?"A LEADING (EX-ANTE) SIGNAL":"A CONFIRMING (COINCIDENT) SIGNAL"} · AS OF ${esc((sg.at||"").slice(0,10))}`; }
+    }
+  }
+  // equity strip from fresh closes
+  if(mkt.equity){
+    for(const sym of Object.keys(EQ)){
+      const s=mkt.equity[sym]; if(!s||s.length<10) continue;
+      EQ[sym]={px:s[s.length-1].c, dd:dd(s), s:s.slice(-90).map(p=>p.c)};
+    }
+    renderEquity();
+  }
+}
+async function goLive(){
+  try{
+    const qs=MARKETS.map(m=>"id="+m.id).join("&");
+    const [res,mktRes]=await Promise.all([
+      fetch(`${GAMMA}/markets?${qs}&limit=${MARKETS.length}`),
+      fetch("market-data.json",{cache:"no-store"}).catch(()=>null),
+    ]);
+    var mktData=null;
+    if(mktRes&&mktRes.ok){ try{ mktData=await mktRes.json(); }catch(e){} }
+    if(res.ok){
+      const arr=await res.json(); const byId={};
+      for(const m of arr) byId[String(m.id)]=m;
+      for(const m of MARKETS){
+        const g=byId[m.id]; if(!g) continue;
+        m.closed=!!g.closed||g.active===false;
+        if(!m.closed){
+          const p=JSON.parse(g.outcomePrices||'["0"]');
+          const bid=parseFloat(g.bestBid), ask=parseFloat(g.bestAsk);
+          m.yes=(isFinite(bid)&&isFinite(ask)&&ask>0)?(bid+ask)/2:parseFloat(p[0]||"0");
+        }
+      }
+    }
+    try{ applyServerData(mktData); }catch(e){ /* baked gauge stays */ }
+  }catch(e){ /* baked snapshot stays */ }
+}
+
+renderFams(true); renderEquity(); animateGauge();
+requestAnimationFrame(()=>{ $("needle").style.left=GAUGE+"%"; });
+goLive();
+</script>
+</body>
+</html>
