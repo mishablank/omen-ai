@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Influencer Sentiment Board &middot; AI Crash Monitor</title>
+<title>KOL Board &middot; AI Crash Monitor</title>
 <style>
   :root {
     /* OMEN dark-almanac theme: warm charcoal, amber accent */
@@ -44,7 +44,7 @@
   .note { font-size: 11.5px; color: var(--muted); margin-top: 9px; line-height: 1.55; }
   footer { margin-top: 22px; font-size: 12px; color: var(--muted); line-height: 1.6; }
   code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.92em; background: var(--grid); border-radius: 4px; padding: 1px 5px; }
-  /* influencer sentiment board */
+  /* KOL board */
   .inf { display: grid; grid-template-columns: 220px 1fr 96px; gap: 14px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--grid); font-size: 13px; }
   .inf:last-child { border-bottom: none; }
   @media (max-width: 700px) { .inf { grid-template-columns: 1fr 84px; } .inf .mid { grid-column: 1 / -1; } }
@@ -68,7 +68,7 @@
 
 <header>
   <a class="backlink" href="index.html">&larr; OMEN</a>
-  <h1>Influencer Sentiment Board</h1>
+  <h1>KOL Board</h1>
   <p class="sub">Where prominent financial &amp; tech voices stand on the AI trade &mdash; each read as simply <strong style="color:var(--bull)">Bull</strong> or <strong style="color:var(--crash)">Bear</strong>. This is a hand-set editorial snapshot, or auto-scored into <code>influencers.json</code> by <code>update-influencers.py</code> when an <code>XAI_API_KEY</code> is configured.</p>
 </header>
 
@@ -88,7 +88,7 @@
 </footer>
 
 <script>
-/* ================= Influencer sentiment board =================
+/* ================= KOL board =================
    Fallback data if influencers.json is absent. score drives direction + ordering only;
    it is never shown. cat: "macro" | "tech". */
 let INF_ASOF = "2026-07-11";
