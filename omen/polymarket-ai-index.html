@@ -334,6 +334,18 @@
   <p class="note" style="margin:16px 0 0">Four reads on the same question: how fast does AI silicon lose value?</p>
 </section>
 
+<div class="card" id="p-crown" data-view="markets">
+  <h2 id="crownTitle">The #1 crown <span class="sub" style="font-weight:400">&ndash; how many companies are bigger than NVDA?</span></h2>
+  <div class="vline" id="crownVerdict"></div>
+  <div id="crownAnswer"></div>
+  <div class="statrow" id="crownStats"></div>
+  <div id="crownBars"></div>
+  <details class="howto"><summary>How to read this</summary>
+    <div class="cap">Polymarket&rsquo;s &ldquo;largest company&rdquo; market prices each firm&rsquo;s odds of being the most valuable US company at month-end &ndash; a live, capital-weighted ranking. The headline count is how many AI-related US names the market currently ranks <em>above</em> NVIDIA (its P(#1) is the highest, so today that is zero); the bars are each name&rsquo;s implied odds of wearing the crown at the deadline. These are month-end #1 odds, not live market caps &ndash; but at this horizon they track current standing closely, and P(NVDA loses #1) is the market&rsquo;s read on whether that flips.</div>
+    <div class="note" id="crownNote"></div>
+  </details>
+</div>
+
 <div class="grid2">
   <div class="card" id="p-nvda" data-view="markets">
     <h2 id="nvdaTitle">NVDA market-implied tail</h2>
@@ -730,6 +742,26 @@ async function fetchB200(){
     b.push({lo,hi,p}); }
   b.sort((x,y)=>(x.lo??-1)-(y.lo??-1));
   b200={ title:ev.title, url:`https://polymarket.com/event/${ev.slug}`, brackets:b };
+}
+// "The #1 crown": Polymarket's largest-company market ranks each firm by P(#1 at month-end),
+// a live capital-weighted read on who is bigger than NVDA. The near-month event is picked
+// (soonest endDate); the year-labelled Dec market and the 2nd/3rd/private variants are excluded.
+let crown=null;
+async function fetchCrown(){
+  const ev=await discoverEvent("Largest Company end of", /^Largest Company end of \w+\??$/i, /\d{4}|private/i);
+  if(!ev){ crown=null; return; }
+  const rows=[];
+  for(const m of ev.markets||[]){ if(m.closed) continue;
+    const name=(m.groupItemTitle||m.question||"").trim();
+    // drop Polymarket's unlisted "Company A…T" and "Other" placeholders — only named firms count
+    if(!name||/^Company [A-Z]$/i.test(name)||/^other$/i.test(name)) continue;
+    const p=parseFloat(JSON.parse(m.outcomePrices||'[\"0\"]')[0]);
+    if(!isFinite(p)) continue;
+    rows.push({name,p});
+  }
+  if(!rows.length){ crown=null; return; }
+  rows.sort((a,b)=>b.p-a.p);
+  crown={ title:ev.title, url:`https://polymarket.com/event/${ev.slug}`, end:ev.endDate?Date.parse(ev.endDate):null, rows };
 }
 let valuations=null;
 let valUnreliable=false;   // set by renderValuations when the bracket ladder fails its monotonicity check
@@ -1534,6 +1566,35 @@ function renderInsiders(){
   const dir=totNet<0?"selling":"buying";
   $("insiderVerdict").innerHTML=`Net <strong>${dir} ${fmtUsd(Math.abs(totNet))}</strong> across ${syms.length} names over 90d &ndash; ${totNet<0?"normal for these names; watch for acceleration, not the level.":"a net buy, which is unusual for this group."}`;
 }
+function renderCrown(){
+  const box=$("crownAnswer"), stat=$("crownStats"), bars=$("crownBars"), v=$("crownVerdict"), note=$("crownNote");
+  const isNv=r=>/nvidia|nvda/i.test(r.name);
+  if(!crown||!crown.rows.length){ box.innerHTML=""; stat.innerHTML=""; bars.innerHTML=""; note.innerHTML="";
+    v.innerHTML='<span class="sub">Largest-company market not found right now.</span>'; return; }
+  $("crownTitle").innerHTML=`The #1 crown <span class="sub" style="font-weight:400">&ndash; how many companies are bigger than NVDA? <a href="${crown.url}" target="_blank" rel="noopener">${esc(crown.title)}</a></span>`;
+  const rows=crown.rows, nv=rows.find(isNv);
+  // render the deadline in UTC so a 23:59Z close doesn't roll into the next day and disagree with the event title
+  const deadline=crown.end?new Date(crown.end).toLocaleDateString(undefined,{month:"short",day:"numeric",timeZone:"UTC"}):"month-end";
+  if(!nv){ box.innerHTML=""; stat.innerHTML=""; bars.innerHTML=""; note.innerHTML="";
+    v.innerHTML='<span class="sub">NVIDIA is not listed in the current market.</span>'; return; }
+  const above=rows.filter(r=>!isNv(r)&&r.p>nv.p), n=above.length;
+  const challengers=rows.filter(r=>!isNv(r)), top=challengers[0];
+  const pLose=clamp((1-nv.p)*100,0,100);
+  box.innerHTML=`<div style="display:flex;align-items:baseline;gap:16px;margin:16px 0 2px;flex-wrap:wrap">`+
+    `<div style="font-family:Georgia,'Times New Roman',serif;font-size:56px;font-weight:600;line-height:.85;color:var(--acc)">${n}</div>`+
+    `<div style="font-size:13.5px;color:var(--text-secondary);max-width:440px">AI-related US ${n===1?"company the market ranks":"companies the market ranks"} above <strong>NVIDIA</strong> by valuation today${n===0?" &ndash; it is the most valuable name in the field.":`: ${above.map(r=>esc(r.name)).join(", ")}.`}</div></div>`;
+  const cells=[
+    `<div class="stat"><div class="l">P(NVDA loses #1) by ${esc(deadline)}</div><div class="v">${pLose.toFixed(1)}%</div></div>`,
+    `<div class="stat"><div class="l">NVDA odds of holding #1</div><div class="v">${(nv.p*100).toFixed(1)}%</div></div>`];
+  if(top) cells.push(`<div class="stat"><div class="l">Nearest challenger</div><div class="v">${esc(top.name)}<small> · ${(top.p*100).toFixed(1)}%</small></div></div>`);
+  stat.innerHTML=cells.join("");
+  if(n===0) v.innerHTML=`The market ranks <strong>NVIDIA #1</strong> &ndash; <strong>0</strong> AI-related US companies sit above it. It prices a <strong>${pLose.toFixed(0)}%</strong> chance a challenger takes the crown by ${esc(deadline)}${top?`, with <strong>${esc(top.name)}</strong> (${(top.p*100).toFixed(0)}%) the only live threat`:""}.`;
+  else v.innerHTML=`The market now ranks <strong>${n}</strong> compan${n===1?"y":"ies"} above NVIDIA &ndash; ${above.map(r=>esc(r.name)).join(", ")}. NVIDIA holds a <strong>${(nv.p*100).toFixed(0)}%</strong> shot at reclaiming #1 by ${esc(deadline)}.`;
+  const show=rows.filter(r=>isNv(r)||r.p>=0.01).slice(0,9);
+  bars.innerHTML=`<div class="note" style="margin-top:14px"><strong>Implied odds of being the largest US company at ${esc(deadline)}</strong></div>`+
+    show.map(r=>hbar((isNv(r)?"&#9819; ":"")+esc(r.name), r.p*100, isNv(r)?"var(--acc)":"var(--reg)")).join("");
+  note.innerHTML=`Only named firms are counted; Polymarket&rsquo;s unlisted &ldquo;Company A&hellip;T&rdquo; and &ldquo;Other&rdquo; placeholders are dropped. Each figure is the raw last price on that outcome, so the column need not sum to exactly 100%.`;
+}
 function renderNvda(){
   if(!nvda){ $("nvdaLadder").innerHTML='<div class="note">Monthly NVDA bracket event not found right now.</div>'; $("nvdaVerdict").innerHTML=""; return; }
   $("nvdaTitle").innerHTML=`NVDA market-implied tail <span class="sub" style="font-weight:400">&ndash; <a href="${nvda.url}" target="_blank" rel="noopener">${esc(nvda.title)}</a></span>`;
@@ -2260,7 +2321,7 @@ function renderAll(){
   computeSignals();
   renderGauge(); renderTiles(); renderRegime(); renderStack(); renderMomentum();
   renderVol(); renderCredit(); renderBreadth(); renderInsiders();
-  renderNvda(); renderH100(); renderB200(); renderKalshiGpu(); renderValuations(); renderLeaps(); renderFundamentals(); renderMacro(); renderDepreciation(); renderAiCredit(); renderPower(); renderCrossVenue(); renderClaims();
+  renderCrown(); renderNvda(); renderH100(); renderB200(); renderKalshiGpu(); renderValuations(); renderLeaps(); renderFundamentals(); renderMacro(); renderDepreciation(); renderAiCredit(); renderPower(); renderCrossVenue(); renderClaims();
   renderMainChart(); renderEquity(); renderLeadLag();
   for(const s of SIDES) renderTable(s);
   renderWhatChanged(); renderNavCards();
@@ -2314,7 +2375,7 @@ scrollToHash();
 (async()=>{
   try{
     await fetchMarkets();
-    await Promise.all([fetchHistories(false), fetchNvda(), fetchH100(), fetchB200(), fetchValuations(), fetchGdp(), fetchMkt(), fetchSnapshots(), fetchBook()]);
+    await Promise.all([fetchHistories(false), fetchNvda(), fetchH100(), fetchB200(), fetchValuations(), fetchCrown(), fetchGdp(), fetchMkt(), fetchSnapshots(), fetchBook()]);
     if(coverage.excluded.length) await findSuccessors();
     computeLeadLagCache();
     gaugeHistCache=computeGaugeHistory(90);
@@ -2324,7 +2385,7 @@ scrollToHash();
     $("status").textContent="Updated "+new Date().toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
     setInterval(refreshPrices,60_000);
     setInterval(refreshHeavy,600_000);
-    setInterval(()=>{ fetchNvda(); fetchH100(); fetchB200(); fetchValuations(); fetchGdp(); },3_600_000);
+    setInterval(()=>{ fetchNvda(); fetchH100(); fetchB200(); fetchValuations(); fetchCrown(); fetchGdp(); },3_600_000);
   }catch(e){ $("err").textContent="Initialization failed: "+e.message; $("err").style.display="block"; }
 })();
 </script>
