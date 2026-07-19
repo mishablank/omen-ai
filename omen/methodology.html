@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OMEN — Methodology</title>
+<meta name="description" content="How OMEN is built: index curation and pricing, the five-family crash-pressure gauge, the verdict rule that maps direction × stress to five states, and the honesty section.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="favicon.svg">
+<meta name="theme-color" content="#0b0a08">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="OMEN">
+<meta property="og:title" content="OMEN — Methodology">
+<meta property="og:description" content="Index curation and pricing, the crash-pressure gauge, the verdict rule, and the honesty section.">
+<meta property="og:image" content="og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="OMEN — Methodology">
+<meta name="twitter:description" content="Index curation and pricing, the crash-pressure gauge, the verdict rule, and the honesty section.">
+<meta name="twitter:image" content="og-image.png">
+<style>
+:root{
+  --bg:#0b0a08; --bg2:#0f0d0a; --panel:#13110c; --panel2:#181510;
+  --line:#262117; --line2:#3a3222;
+  --ink:#ece7db; --mut:#a59c88; --dim:#6e6656;
+  --acc:#e3a63c; --accT:#f2c977; --accD:#8a6420;
+  --bull:#79c99a; --bullT:#a1e0bb; --bullD:#2c5c43;
+  --bear:#e2685a;
+  --reg:#8fa8d8; --regT:#b0c4e9; --regD:#37456b;
+  --pos:#79c99a; --neg:#e2685a;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --serif:Georgia,"Iowan Old Style","Palatino Linotype","Times New Roman",serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);overflow-x:hidden;
+  background-image:radial-gradient(1100px 480px at 78% -120px,rgba(227,166,60,.07),transparent 70%)}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--acc);color:#141005}
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 28px}
+section{padding:72px 0}
+.kick{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--acc);font-weight:600;display:flex;align-items:center;gap:10px}
+.kick::before{content:"";width:22px;height:1px;background:var(--acc);display:inline-block}
+
+/* ---------- nav ---------- */
+nav{position:sticky;top:0;z-index:50;background:rgba(11,10,8,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:34px;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-weight:700;font-size:21px;letter-spacing:.02em}
+.logo svg{width:26px;height:26px}
+nav .links{display:flex;gap:28px;margin-left:auto}
+nav .links a{font-size:13px;color:var(--mut);transition:color .2s}
+nav .links a:hover{color:var(--accT)}
+nav .links a.here{color:var(--accT);font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:600;
+  background:var(--acc);color:#181204;padding:11px 20px;border:0;border-radius:6px;cursor:pointer;transition:background .15s,transform .15s}
+.btn:hover{background:var(--accT);transform:translateY(-1px)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line2)}
+.btn.ghost:hover{border-color:var(--acc);color:var(--accT);background:transparent}
+nav .btn{padding:9px 16px;margin-left:6px}
+@media(max-width:760px){nav .links{display:none}}
+
+/* ---------- section headers ---------- */
+.shead{margin-bottom:56px}
+.shead h1{font-family:var(--serif);font-size:clamp(30px,4.2vw,46px);font-weight:700;letter-spacing:-.01em;line-height:1.1;margin-top:18px}
+.shead h2{font-family:var(--serif);font-size:clamp(26px,3.4vw,38px);font-weight:700;letter-spacing:-.01em;line-height:1.1;margin-top:18px}
+.shead p{color:var(--mut);margin-top:14px;max-width:560px;line-height:1.65;font-size:15px}
+
+/* ---------- how / method ---------- */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+@media(max-width:900px){.steps{grid-template-columns:1fr}}
+.step{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:30px 28px;transition:border-color .2s}
+.step:hover{border-color:var(--line2)}
+.step .rom{font-family:var(--serif);font-style:italic;color:var(--acc);font-size:17px;display:block;margin-bottom:18px}
+.step h3{font-family:var(--serif);font-size:21px;font-weight:700;margin-bottom:12px}
+.step p{color:var(--mut);font-size:14px;line-height:1.65}
+.step .go{display:inline-flex;gap:8px;margin-top:20px;font-size:12px;letter-spacing:.08em;color:var(--accT);text-transform:uppercase;font-weight:600}
+.mlist{border-top:1px solid var(--line2)}
+.mrow{display:grid;grid-template-columns:90px 240px 1fr;gap:30px;padding:36px 0;border-bottom:1px solid var(--line)}
+@media(max-width:800px){.mrow{grid-template-columns:60px 1fr}.mrow p{grid-column:2}}
+.mrow .rom{font-family:var(--serif);font-style:italic;color:var(--acc);font-size:18px}
+.mrow h3{font-family:var(--serif);font-size:23px;font-weight:700}
+.mrow p{color:var(--mut);font-size:14.5px;line-height:1.7}
+.mrow code{font-family:var(--mono);font-size:12px;color:var(--accT);background:rgba(227,166,60,.08);border-radius:4px;padding:2px 6px}
+.mrow b{color:var(--ink)}
+.ranges{margin-top:32px;font-size:12px;color:var(--dim);line-height:2}
+.ranges b{color:var(--mut);font-weight:700;letter-spacing:.08em}
+
+/* ---------- verdict matrix ---------- */
+.matrix{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:28px;overflow-x:auto;margin-top:8px}
+.matrix table{width:100%;border-collapse:collapse;min-width:560px}
+.matrix th{font-size:9.5px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;text-align:left;padding:10px 12px;font-weight:600}
+.matrix td{border:1px solid var(--line);padding:14px 12px;color:var(--mut);font-family:var(--mono);font-size:12px}
+.matrix .foot{font-size:11.5px;color:var(--dim);margin-top:16px;line-height:1.8}
+.matrix .foot b{color:var(--mut)}
+
+/* ---------- run-it cta ---------- */
+.runbox{max-width:780px;margin:0 auto;border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,var(--panel2),var(--panel));padding:52px 48px;text-align:center;box-shadow:0 30px 90px rgba(0,0,0,.5)}
+@media(max-width:640px){.runbox{padding:36px 24px}}
+.runbox h2{font-family:var(--serif);font-size:clamp(28px,4vw,40px);font-weight:700;margin-bottom:14px}
+.runbox p{color:var(--mut);margin-bottom:30px;line-height:1.6}
+.runbox .code{font-family:var(--mono);font-size:12.5px;color:var(--ink);text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-bottom:34px;overflow-x:auto;line-height:2}
+.runbox .code .c{color:var(--dim)}
+.runbox .code .p{color:var(--acc)}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--line);padding:40px 0;background:var(--bg2)}
+.fbase{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;font-size:11px;letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="index.html">
+      <svg viewBox="0 0 32 32" fill="none"><path d="M3 16C7 9.2 11.4 6 16 6s9 3.2 13 10c-4 6.8-8.4 10-13 10S7 22.8 3 16z" stroke="#e3a63c" stroke-width="2"/><circle cx="16" cy="16" r="4.6" fill="#e3a63c"/><circle cx="16" cy="16" r="1.8" fill="#0b0a08"/></svg>
+      OMEN
+    </a>
+    <div class="links">
+      <a href="indexes.html">The Indexes</a>
+      <a href="gauge.html">The Gauge</a>
+      <a href="methodology.html" class="here">Methodology</a>
+      <a href="influencers.html">KOLs</a>
+      <a href="china-ai-monitor.html">China Watch</a>
+      <a href="ai-capex.html">AI CapEx</a>
+    </div>
+    <a class="btn" href="polymarket-ai-index.html">Open the monitor</a>
+  </div>
+</nav>
+
+<!-- ============ how it works ============ -->
+<section id="how" style="padding-bottom:36px">
+  <div class="wrap">
+    <div class="shead">
+      <span class="kick">How it works</span>
+      <h1>A managed basket of<br>prediction-market positions.</h1>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <span class="rom">i.</span>
+        <h3>Market discovery</h3>
+        <p>The index tracks a curated set of 20 Polymarket AI markets across three themes. Constituent ids, weights, and methodology are public.</p>
+        <a class="go" href="indexes.html">See the allocations →</a>
+      </div>
+      <div class="step">
+        <span class="rom">ii.</span>
+        <h3>Deadline-aware pricing</h3>
+        <p>One-time catalysts are annualized with a constant-hazard model so a December deadline and a July deadline compare fairly. Structural questions (†) are left raw.</p>
+        <a class="go" href="#method">Trace the math →</a>
+      </div>
+      <div class="step">
+        <span class="rom">iii.</span>
+        <h3>Chain-linked history</h3>
+        <p>The composite line is composition-neutral: a market entering or leaving the set never creates an artificial step. The trend stays whole.</p>
+        <a class="go" href="#method">Read methodology →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ verdict rule ============ -->
+<section id="verdict" style="padding-top:36px;padding-bottom:36px">
+  <div class="wrap">
+    <div class="shead">
+      <span class="kick">The verdict rule</span>
+      <h2>Direction × stress → five states.</h2>
+      <p>The landing page's verdict is deterministic – no judgment call sits between the data and the headline. Direction is the Bull side's share of the pair; stress is the crash-pressure regime. The full matrix:</p>
+    </div>
+    <div class="matrix">
+      <table>
+        <tr><th>Direction ↓ · Stress →</th><th>Calm</th><th>Elevated</th><th>Stressed</th></tr>
+        <tr><th>Bullish · bull share ≥ 55%</th><td>Risk-on</td><td>Constructive · hedged</td><td>Caution</td></tr>
+        <tr><th>Mixed · 45–55%</th><td>No edge</td><td>No edge</td><td>Caution</td></tr>
+        <tr><th>Bearish · bull share &lt; 45%</th><td>Risk-off</td><td>Risk-off</td><td>Risk-off</td></tr>
+      </table>
+      <div class="foot">
+        <b>Direction</b> – the Bull index's share of the pair (BULL + BEAR = 1), an equal-weight mean of raw YES midpoints across the live constituents.<br>
+        <b>Stress</b> – the crash-pressure regime: Stressed at blended gauge ≥ 55 or crash basket ≥ 40; Elevated at gauge ≥ 35, crash basket ≥ 25, or bubble-burst ≥ 15% (a single market can raise Elevated but never trips Stressed on its own).<br>
+        <b>What the states mean</b> – each state describes what markets are currently pricing, not what will happen. "Risk-on" means the priced odds lean with the AI trade; "Risk-off" means they lean against it; "Caution" means direction and stress disagree, the classic late-cycle reading. None of it is investment advice – see Honesty below.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ methodology ============ -->
+<section id="method" style="padding-top:36px">
+  <div class="wrap">
+    <div class="shead">
+      <span class="kick">Methodology</span>
+      <h2>How the index is built.</h2>
+    </div>
+    <div class="mlist">
+      <div class="mrow">
+        <span class="rom">i.</span>
+        <h3>Curation</h3>
+        <p>Twenty Polymarket markets – 11 Bull, 9 Bear (3 MKT, 6 GOV) – screened for theme relevance and tradability. Closed or resolved markets drop out of the live index automatically.</p>
+      </div>
+      <div class="mrow">
+        <span class="rom">ii.</span>
+        <h3>Pricing</h3>
+        <p>Each index is <code>100 × Σ(wᵢ·pᵢ) / Σwᵢ</code> over the constituents live at each timestamp, where <code>pᵢ</code> is the YES midpoint. Weights are equal or lifetime-volume. Deadline-adjusted basis annualizes event markets via <code>1−(1−p)^(365/days)</code>; structural markets (†) stay raw.</p>
+      </div>
+      <div class="mrow">
+        <span class="rom">iii.</span>
+        <h3>The gauge</h3>
+        <p>Equal-weighted mean of five families, each scored 0–100 against fixed calm→stress reference ranges. Families – not raw signals – are equally weighted, so no family dominates just by having more sub-signals. Live readings and per-family notes: <a href="gauge.html" style="color:var(--accT)">the gauge</a>.</p>
+      </div>
+      <div class="mrow" id="honesty">
+        <span class="rom">iv.</span>
+        <h3>Honesty</h3>
+        <p>The lead-lag study finds <b>no statistically significant lead</b> of the bear index (MKT sleeve) over NVDA/SOXX (right sign, p ≈ 0.14–0.19). The bubble-burst market is partly reflexive – it resolves on the very drawdowns it prices. Treat OMEN – the verdict included – as a market-pricing monitor, not a validated forecast.</p>
+      </div>
+      <div class="mrow">
+        <span class="rom">v.</span>
+        <h3>Scope</h3>
+        <p>“Popping” and “bubble” are different questions. OMEN’s markets and gauges answer <b>how much stress is priced</b> – they cannot say the market is <em>wrong</em>, which is what “bubble” means. For that the monitor carries two non-sentiment anchors: audited <b>capex vs operating cash flow</b> for the AI-capex filers (SEC XBRL), and <b>LEAPS-implied 1-year tail odds</b> from the far deeper options market as a cross-check on thin prediction books. Everything else here can be collectively euphoric or collectively scared at the same time.</p>
+      </div>
+    </div>
+    <div class="ranges">
+      <b>REFERENCE RANGES (CALM → STRESS)</b> – prediction markets: bubble-burst 0–40% · NVDA deep tail 0–25% · H100&lt;$2 0–30% &nbsp;/&nbsp; options skew: NVDA 25Δ RR 1–10 pt · SOXX 4–15 pt &nbsp;/&nbsp; volatility: VIX/VIX3M 0.82–1.05 · VXN 18–40 · SKEW 115–160 · VVIX 90–130 &nbsp;/&nbsp; credit: HYG drawdown 0 to −8% · HY/IG 0 to −6% &nbsp;/&nbsp; equity: NVDA 0 → −50% · SOXX 0 → −40%
+    </div>
+  </div>
+</section>
+
+<!-- ============ run-it cta ============ -->
+<section id="run">
+  <div class="wrap">
+    <div class="runbox">
+      <div class="kick" style="justify-content:center;margin-bottom:20px">Run it yourself</div>
+      <h2>Pick the cycle you see coming.</h2>
+      <p>Bull or Bear. The full monitor runs locally – one HTML file, one Python script, no dependencies.</p>
+      <div class="code">
+        <span class="c"># pull the equity / vol / skew / credit feeds, then serve</span><br>
+        <span class="p">$</span> python3 update-market-data.py --watch 600 --snapshot<br>
+        <span class="p">$</span> python3 -m http.server 8742<br>
+        <span class="c">→ http://localhost:8742/polymarket-ai-index.html</span>
+      </div>
+      <a class="btn" href="polymarket-ai-index.html">Open the monitor →</a>
+      <a class="btn ghost" href="https://polymarket.com/markets/ai" target="_blank" rel="noopener">Explore the markets</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap fbase">
+    <span>© 2026 – OMEN · Not investment advice · No proven predictive edge · Bubble market is reflexive</span>
+    <span><a href="index.html" style="color:var(--mut)">← Back to the verdict</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
