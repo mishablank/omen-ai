@@ -269,8 +269,7 @@ const SNAP = {
     score: 20, asof: "2026-01",
     note: "Qwen app >200M MAU, Doubao >100M DAU, DeepSeek ~82M WAU - overwhelmingly domestic; no sustained Western top-chart presence."
   },
-  github_stars_per_day: null,          // computed from local baseline after first visit
-  equity_extra: null                    // updater can add BABA/KWEB series here
+  github_stars_per_day: null           // computed from local baseline after first visit
 };
 /* ---------------- config ---------------- */
 const CN_AUTHORS = new Set(["deepseek","qwen","z-ai","thudm","moonshotai","minimax","xiaomi","tencent","stepfun","baidu","bytedance-seed","baai","inclusionai","01-ai","internlm","openbmb","openbuddy","nex-agi"]);
@@ -532,17 +531,15 @@ function renderEQ(){
   const g = $("eqGrid");
   if(!S.eq?.equity){ g.innerHTML = '<div class="note">Equity feed not reachable from this origin - on the live site this loads automatically.</div>'; return; }
   $("eqAsof").textContent = "– vs 6-month high, as of " + S.eq.updated_date;
-  const card = (sym, ser, cnSide) => {
+  const card = (sym, ser) => {
     const last = ser.at(-1).c; const hi = Math.max(...ser.map(p=>p.c));
     const dd = last/hi - 1;
     const min = Math.min(...ser.map(p=>p.c)), rng = hi-min || 1;
     const pts = ser.map((p,i)=>`${(i/(ser.length-1)*100).toFixed(1)},${(28-(p.c-min)/rng*26).toFixed(1)}`).join(" ");
-    return `<div class="eq"><span class="sym">${sym}${cnSide?' <span class="tag cn">CN</span>':""}</span><span class="dd ${dd<-0.15?'down':''}">${(dd*100).toFixed(1)}%</span><div class="px">$${last.toFixed(2)}</div><svg viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${cnSide?'var(--cn)':dd<-0.15?'var(--crit)':'var(--us)'}" stroke-width="1.6"/></svg></div>`;
+    return `<div class="eq"><span class="sym">${sym}</span><span class="dd ${dd<-0.15?'down':''}">${(dd*100).toFixed(1)}%</span><div class="px">$${last.toFixed(2)}</div><svg viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${dd<-0.15?'var(--crit)':'var(--us)'}" stroke-width="1.6"/></svg></div>`;
   };
   const syms = EQ_SYMS.filter(s => S.eq.equity[s]);
-  let h = syms.map(sym => card(sym, S.eq.equity[sym], false)).join("");
-  if(snap.equity_extra) for(const [sym, ser] of Object.entries(snap.equity_extra)) if(ser?.length) h += card(sym, ser, true);
-  g.innerHTML = h;
+  g.innerHTML = syms.map(sym => card(sym, S.eq.equity[sym])).join("");
 }
 function renderSnapshotPanels(){
   const lb = snap.lmarena, aa = snap.artificial_analysis;
