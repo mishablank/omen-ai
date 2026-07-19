@@ -32,6 +32,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: Fetch market data + append snapshot + evaluate alert
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -44,10 +48,20 @@ jobs:
         if: ${{ env.XAI_API_KEY != '' }}
         run: python3 omen/update-influencers.py
 
+      - name: Fetch Android app charts (best-effort; feeds the consumer-app family)
+        # Play has no key-free charts API, so google-play-scraper writes app-charts.json,
+        # which update-china-data.py folds into the "apps" signal (iOS it fetches itself).
+        # Best-effort: a scraper break must not fail the refresh — the Python step then
+        # carries the previous computed value or the manual snapshot.
+        run: |
+          cd omen
+          npm install --no-save --silent google-play-scraper@10 && node update-app-charts.mjs \
+            || echo "app-charts fetch failed — china-data will fall back"
+
       - name: Refresh China AI monitor snapshot data
         # Slow-moving fields for china-ai-monitor.html (leaderboard ranks, GitHub star
-        # velocity, BABA/KWEB, OpenRouter weekly share). The page fetches the fast data
-        # live in-browser; this only regenerates the bundled china-data.json.
+        # velocity, BABA/KWEB, OpenRouter weekly share, consumer-app chart presence). The
+        # page fetches the fast data live in-browser; this only regenerates china-data.json.
         run: python3 omen/update-china-data.py
 
       - name: Refresh China AI event timeline (optional; needs XAI_API_KEY)
@@ -81,7 +95,8 @@ jobs:
           git config user.name "ai-crash-monitor bot"
           git config user.email "actions@github.com"
           for f in omen/market-data.json omen/snapshots.csv omen/alert-state.json omen/influencers.json \
-                   omen/china-data.json omen/china-history.json omen/china-snapshots.csv omen/china-events.json; do
+                   omen/china-data.json omen/china-history.json omen/china-snapshots.csv omen/china-events.json \
+                   omen/app-charts.json; do
             [ -f "$f" ] && git add -f "$f"
           done
           if git diff --cached --quiet; then
