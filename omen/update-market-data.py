@@ -9,6 +9,7 @@ Sources (all free / unauthenticated unless noted):
   - Credit proxies (Yahoo chart): HYG, LQD, JNK
   - Credit spreads (FRED, keyless CSV): HY OAS, CCC OAS, NFCI
   - Hyperscaler capex fundamentals (SEC XBRL companyconcept): MSFT, GOOGL, AMZN, META, ORCL
+  - Contracted backlog / RPO (same API, instant facts): MSFT, GOOGL, ORCL, CRWV
   - Cross-venue (Kalshi public API + Manifold public API + Metaculus, token optional)
   - Insider activity (SEC EDGAR Form 4): NVDA, AVGO, ORCL, CRWV
   - Realized GPU spot rent (vast.ai public bundles API): H100 SXM $/GPU-hr
@@ -82,6 +83,14 @@ FUND_TAGS = {"capex": ["PaymentsToAcquirePropertyPlantAndEquipment",
                      "DepreciationAmortizationAndAccretionNet",
                      "DepreciationAmortizationAndImpairment",
                      "DepreciationAndAmortization", "Depreciation"]}
+# Remaining performance obligation: contracted revenue not yet recognised — the
+# backlog the capex is being built against. Only the filers below report it
+# non-dimensionally via the XBRL API: AMZN stopped after 2020-06-30 and META has
+# never tagged it, so both are absent by design, not by oversight. CRWV is here
+# though it is not a capex filer — neocloud backlog concentration is the point.
+RPO_TAG = "RevenueRemainingPerformanceObligation"
+RPO_CIKS = {"MSFT": "0000789019", "GOOGL": "0001652044",
+            "ORCL": "0001341439", "CRWV": "0001769628"}
 METACULUS_TERMS = ["AI bubble", "AI winter", "artificial general intelligence"]
 KALSHI_SERIES = {
     "KXACQUIREMISTRAL": "AI lab acquisition (Mistral)",
@@ -324,6 +333,80 @@ def quarterlize(entries):
                 out[q] = val - prev_val
             prev_end, prev_val = end, val
     return out
+
+
+def instantize(entries):
+    """Instant (point-in-time) XBRL facts -> {calendar 'YYYYQn' of the instant: value}.
+
+    RPO is a *balance*, not a flow, so it must never go through quarterlize()'s
+    cumulative differencing — that would subtract one quarter's backlog from the
+    next and report growth as if it were the level. Instant facts carry an `end`
+    and no `start`; anything with a `start` is a duration fact and is skipped.
+    Restatements of the same instant resolve to the latest-filed value."""
+    best = {}
+    for e in entries:
+        if e.get("start") or e.get("end") is None or e.get("val") is None:
+            continue
+        try:
+            d = datetime.date.fromisoformat(e["end"])
+        except ValueError:
+            continue
+        q = f"{d.year}Q{(d.month - 1) // 3 + 1}"
+        filed = e.get("filed") or ""
+        if q not in best or filed >= best[q][0]:
+            best[q] = (filed, e["val"])
+    return {q: v for q, (_, v) in best.items()}
+
+
+def sec_instant(cik, tags):
+    """instantize() counterpart to sec_concept, for point-in-time concepts."""
+    out = {}
+    for tag in tags:
+        try:
+            j = json.loads(get(f"https://data.sec.gov/api/xbrl/companyconcept/CIK{cik}/us-gaap/{tag}.json",
+                               headers=SEC_UA))
+            entries = j.get("units", {}).get("USD", [])
+            if entries:
+                out.update(instantize(entries))
+        except Exception:
+            continue
+    return out
+
+
+def backlog():
+    """Remaining performance obligation (contracted, not-yet-recognised revenue) for
+    the filers that disclose it. RPO is the bull case in one number: it is the demand
+    the capex is being built against. Capex accelerating while RPO flattens is the
+    thesis breaking; the panel exists to catch that divergence early.
+
+    Reported per firm, never summed into an aligned series — fiscal calendars differ
+    (ORCL's quarters end Feb/May/Aug/Nov), so a combined per-quarter total would be
+    lumpy fiction. The headline is an explicit sum of each firm's latest report."""
+    per, names = {}, []
+    for sym, cik in RPO_CIKS.items():
+        vals = sec_instant(cik, [RPO_TAG])
+        time.sleep(0.15)
+        if not vals:
+            continue
+        quarters = sorted(vals)
+        last = quarters[-1]
+        yr, qn = int(last[:4]), last[-1]
+        prior = f"{yr - 1}Q{qn}"
+        base = vals.get(prior)
+        per[sym] = {
+            "series": [[q, round(vals[q] / 1e9, 2)] for q in quarters[-12:]],
+            "latest_q": last,
+            "latest_b": round(vals[last] / 1e9, 2),
+            "yoy_pct": round((vals[last] / base - 1) * 100, 1) if base else None,
+        }
+        names.append(sym)
+        print(f"backlog {sym}: {len(quarters)} quarters, latest {last} "
+              f"${per[sym]['latest_b']:.1f}B")
+    if not per:
+        return None
+    return {"names": names, "per": per,
+            "total_latest_b": round(sum(p["latest_b"] for p in per.values()), 2),
+            "asof": datetime.date.today().isoformat()}
 
 
 def sec_concept(cik, tags):
@@ -944,7 +1027,8 @@ def build():
             "basket": BASKET, "bench": "SPY",
             "equity": {}, "vol": {}, "skew": {}, "term": {}, "tail": {}, "credit": {},
             "fred": {}, "kalshi": {}, "kalshi_gpu": None, "manifold": [], "metaculus": None,
-            "fundamentals": None, "macro": None, "insiders": {}, "gpu": None}
+            "fundamentals": None, "backlog": None, "macro": None,
+            "insiders": {}, "gpu": None}
 
     for sym in EQUITY + POWER_PROXY:
         try:
@@ -1056,6 +1140,14 @@ def build():
             print(f"fundamentals: {len(f['quarters'])} quarters, latest capex ${f['capex_b'][-1]}B")
     except Exception as e:
         print(f"fundamentals: FAIL {e}")
+
+    try:
+        data["backlog"] = backlog()
+        if data["backlog"]:
+            b = data["backlog"]
+            print(f"backlog: {len(b['names'])} filers, ${b['total_latest_b']:.0f}B combined")
+    except Exception as e:
+        print(f"backlog: FAIL {e}")
 
     try:
         gdp = (data["fred"].get("GDP") or {}).get("series")

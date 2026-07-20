@@ -294,3 +294,64 @@ def test_snapshot_header_is_bear_plus_legacy_columns():
     assert umd.SNAP_HEADER == ["date", "bull", "bull_n", "bear", "bear_n",
                                "crash", "crash_n", "reg", "reg_n",
                                "gauge", "lead", "conf", "comp"]
+
+
+# ---- RPO (remaining performance obligation) — instant XBRL facts ----
+
+RPO_ENTRIES = [
+    {"end": "2025-03-31", "val": 315.0e9, "form": "10-Q", "filed": "2025-04-25"},
+    {"end": "2025-06-30", "val": 368.0e9, "form": "10-Q", "filed": "2025-07-29"},
+    {"end": "2026-03-31", "val": 633.0e9, "form": "10-Q", "filed": "2026-04-24"},
+    # restatement of the same instant, filed later -> must win
+    {"end": "2026-03-31", "val": 999.0e9, "form": "10-K", "filed": "2026-06-01"},
+]
+
+
+def test_instantize_maps_instants_to_calendar_quarters():
+    out = umd.instantize(RPO_ENTRIES)
+    assert out["2025Q1"] == 315.0e9
+    assert out["2025Q2"] == 368.0e9
+    assert out["2026Q1"] == 999.0e9          # latest-filed restatement wins
+
+
+def test_instantize_ignores_duration_facts_and_junk():
+    # a flow fact (has start) is not an instant balance — must be skipped, since
+    # summing/differencing it as a balance would be silently wrong
+    entries = [
+        {"start": "2026-01-01", "end": "2026-03-31", "val": 1.0, "filed": "2026-04-01"},
+        {"end": "2026-03-31", "filed": "2026-04-01"},           # no val
+        {"val": 5.0, "filed": "2026-04-01"},                     # no end
+        {"end": "not-a-date", "val": 5.0, "filed": "2026-04-01"},
+    ]
+    assert umd.instantize(entries) == {}
+
+
+def test_instantize_handles_missing_filed_date():
+    entries = [{"end": "2026-03-31", "val": 100.0}, {"end": "2026-03-31", "val": 200.0}]
+    assert umd.instantize(entries)["2026Q1"] == 200.0   # last wins when filed absent
+
+
+def test_backlog_shapes_per_firm_series_with_yoy(monkeypatch):
+    fake = {
+        "ORCL": {"2025Q2": 138.0e9, "2025Q3": 455.0e9, "2026Q1": 552.6e9, "2026Q2": 638.0e9},
+        "MSFT": {"2025Q2": 368.0e9, "2026Q1": 633.0e9},
+    }
+    monkeypatch.setattr(umd, "RPO_CIKS", {"ORCL": "1", "MSFT": "2"})
+    monkeypatch.setattr(umd, "sec_instant", lambda cik, tags:
+                        fake["ORCL"] if cik == "1" else fake["MSFT"])
+    out = umd.backlog()
+    assert out["names"] == ["ORCL", "MSFT"]
+    o = out["per"]["ORCL"]
+    assert o["latest_q"] == "2026Q2" and o["latest_b"] == 638.0
+    # YoY against the same quarter one year back: 638.0 / 138.0 - 1 = +362%
+    assert round(o["yoy_pct"]) == 362
+    assert o["series"][-1] == ["2026Q2", 638.0]
+    assert out["per"]["MSFT"]["yoy_pct"] is None      # no 2025Q1 comparator
+    # headline is the sum of each firm's most recent report, not a fake aligned total
+    assert out["total_latest_b"] == round(638.0 + 633.0, 2)
+
+
+def test_backlog_returns_none_when_no_filer_reports(monkeypatch):
+    monkeypatch.setattr(umd, "RPO_CIKS", {"ORCL": "1"})
+    monkeypatch.setattr(umd, "sec_instant", lambda cik, tags: {})
+    assert umd.backlog() is None
