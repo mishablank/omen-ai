@@ -39,7 +39,7 @@ const ok = (name, cond, detail) => {
   console.error(`  FAIL ${name}${detail ? " — " + detail : ""}`);
 };
 
-console.log("pure helpers — mnum / xlink / fetcherStale / viewFromPath / claims watch\n");
+console.log("pure helpers — mnum / xlink / fetcherStale / viewFromPath / claims watch / backlog\n");
 
 /* ---------- mnum: prose needs a real minus sign, not toFixed()'s hyphen ---------- */
 {
@@ -208,6 +208,50 @@ console.log("pure helpers — mnum / xlink / fetcherStale / viewFromPath / claim
   for (const r of claimReads({})) eq(`claimReads/${r.key} dark -> null band`, r.band, null);
   console.log("  claims watch");
 }
+
+
+/* ---------- backlog: backlogSignal (RPO vs capex divergence) ---------- */
+{
+  const code = slice("/* ================= Backlog: pure helpers",
+                     "/* ================= Index math");
+  const { backlogSignal } = build(code, ["backlogSignal"]);
+
+  const B = {
+    names: ["MSFT", "GOOGL", "ORCL", "CRWV"],
+    total_latest_b: 1837.4,
+    per: {
+      MSFT:  { latest_q: "2026Q1", latest_b: 633.0, yoy_pct: 97.2 },
+      GOOGL: { latest_q: "2026Q1", latest_b: 467.6, yoy_pct: 406.1 },
+      ORCL:  { latest_q: "2026Q2", latest_b: 638.0, yoy_pct: 362.3 },
+      CRWV:  { latest_q: "2026Q1", latest_b: 98.8,  yoy_pct: null },
+    },
+  };
+
+  eq("backlogSignal/null when no data", backlogSignal(null, 50), null);
+  eq("backlogSignal/null when names empty", backlogSignal({ names: [], per: {} }, 50), null);
+
+  const s = backlogSignal(B, 60);
+  eq("backlogSignal/total passes through", s.totalB, 1837.4);
+  eq("backlogSignal/keeps every filer", s.firms.length, 4);
+  // median of [97.2, 362.3, 406.1] = 362.3 — the +406 outlier must not drag it like a mean would
+  eq("backlogSignal/median ignores outlier", s.medYoy, 362.3);
+  eq("backlogSignal/gap is backlog minus capex growth", Math.round(s.gap), 302);
+  eq("backlogSignal/demand-led regime", s.regime, "demand-led");
+
+  // capex growing faster than backlog is the bear regime the panel exists to catch
+  eq("backlogSignal/spend-led when capex outruns", backlogSignal(B, 500).regime, "spend-led");
+  // even median across two values, and a filer with no YoY is still counted in firms
+  const two = { names: ["A", "B"], total_latest_b: 30,
+                per: { A: { latest_b: 10, yoy_pct: 10 }, B: { latest_b: 20, yoy_pct: 30 } } };
+  eq("backlogSignal/even median averages", backlogSignal(two, 0).medYoy, 20);
+  eq("backlogSignal/unknown regime without capex", backlogSignal(two, null).regime, "unknown");
+  // a filer with no reported level is dropped, not rendered as a zero bar
+  eq("backlogSignal/drops filers with no level",
+     backlogSignal({ names: ["A", "B"], total_latest_b: 10,
+                     per: { A: { latest_b: 10, yoy_pct: 5 }, B: {} } }, 0).firms.length, 1);
+  console.log("  backlog");
+}
+
 
 console.log(failures ? `\n${failures} assertion(s) FAILED` : "\nall assertions passed");
 process.exit(failures ? 1 : 0);

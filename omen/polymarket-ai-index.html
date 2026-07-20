@@ -413,6 +413,16 @@
       <div class="note" id="depNote"></div>
     </details>
   </div>
+  <div class="card" id="p-backlog" data-view="gpu">
+    <h2>Contracted backlog <span class="sub" style="font-weight:400">&ndash; the bull case, audited</span></h2>
+    <div class="vline" id="backVerdict"></div>
+    <div class="statrow" id="backStats"></div>
+    <div id="backBars"></div>
+    <details class="howto"><summary>How to read this</summary>
+      <div class="cap">Every other fundamentals panel here measures the <em>spend</em>. This one measures the <em>demand it was signed against</em>: remaining performance obligation, the contracted revenue a filer has booked but not yet recognized. The bear thesis needs capex to outrun backlog. While backlog grows faster, the buildout is being financed against demand that already exists on paper &ndash; and the honest reading is that it currently does.</div>
+      <div class="note" id="backNote"></div>
+    </details>
+  </div>
 </div>
 
 <div class="card" id="p-kgpu" data-view="gpu">
@@ -960,6 +970,26 @@ async function findSuccessors(){
     }catch(e){}
   }
 }
+
+/* ================= Backlog: pure helpers ================= */
+// Remaining performance obligation = contracted revenue not yet recognised: the demand
+// the capex is being built against, and the strongest thing the bull side has that is
+// audited rather than asserted. The signal is not the level but the DIVERGENCE: capex
+// growing faster than backlog means spend is running ahead of contracted demand.
+// Median (not mean) across filers — one firm booking a single mega-contract can put a
+// +400% outlier in the set, and the mean would read that as sector-wide demand.
+const backlogSignal = (B, capexYoyPct) => {
+  if(!B || !Array.isArray(B.names) || !B.names.length) return null;
+  const firms = B.names.map(s => Object.assign({sym:s}, (B.per||{})[s]))
+                       .filter(f => f && f.latest_b != null);
+  if(!firms.length) return null;
+  const ys = firms.map(f => f.yoy_pct).filter(v => v != null).sort((a,b) => a-b);
+  const mid = ys.length ? (ys.length % 2 ? ys[(ys.length-1)/2]
+                          : (ys[ys.length/2-1] + ys[ys.length/2])/2) : null;
+  const gap = (mid != null && capexYoyPct != null) ? mid - capexYoyPct : null;
+  return { totalB: B.total_latest_b, firms, medYoy: mid, gap,
+           regime: gap == null ? "unknown" : gap >= 0 ? "demand-led" : "spend-led" };
+};
 
 /* ================= Index math (chain-linked, membership-aware) ================= */
 const weightOf = id => weighting==="equal" ? 1 : Math.max(markets.get(id)?.volume??0, 1);
@@ -1937,6 +1967,30 @@ function renderDepreciation(){
     : `Cost recognition is <strong>${trend<-5?"lagging the spend":trend>5?"catching up with the spend":"keeping pace with the spend"}</strong> &ndash; depreciation is ${last.r.toFixed(0)}% of capex, ${trend<0?"down":"up"} ${Math.abs(trend).toFixed(0)} pts across the window.`;
   $("depNote").innerHTML=`Combined D&amp;A addback vs. cash capex, same filers as the fundamentals panel. GPUs depreciate in ~3&ndash;5 years but hyperscalers extended disclosed server useful-life assumptions (Microsoft, Google, Meta all lengthened them since 2020), which slows depreciation and lifts reported earnings even as cash goes out the door. A ratio drifting <em>down</em> while capex climbs is that gap widening &ndash; the same capitalization dynamic that flattered dot-com telecom before the writedowns. As of ${esc(F.asof)}.`;
 }
+function renderBacklog(){
+  const B=mkt?.backlog, F=mkt?.fundamentals, cell=(l,v,x="")=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}${x}</div></div>`;
+  // capex YoY from the fundamentals panel, so both sides of the divergence use one source
+  const capexYoy=(()=>{ if(!F?.quarters?.length) return null;
+    const n=F.quarters.length, i=F.quarters.indexOf(F.quarters[n-1].replace(/^(\d{4})/,(m,y)=>+y-1));
+    return i>=0&&F.capex_b[i]?(F.capex_b[n-1]/F.capex_b[i]-1)*100:null; })();
+  const S=backlogSignal(B,capexYoy);
+  if(!S){ $("backStats").innerHTML='<div class="sub">Run the fetcher to enable the backlog panel (SEC RPO tags).</div>'; $("backBars").innerHTML=""; $("backNote").innerHTML=""; $("backVerdict").innerHTML=""; return; }
+  $("backStats").innerHTML=[
+    cell("Combined backlog", "$"+(S.totalB/1000).toFixed(2)+"T", ` <small>${S.firms.length} filers</small>`),
+    S.medYoy!=null?cell("Median backlog YoY", snum(S.medYoy,0)+"%", ` <small>vs capex ${capexYoy!=null?snum(capexYoy,0)+"%":"n/a"}</small>`):"",
+    S.gap!=null?cell("Demand &minus; spend", snum(S.gap,0)+" pt", ` <small>${S.regime}</small>`):"",
+  ].join("");
+  const maxB=Math.max(...S.firms.map(f=>f.latest_b));
+  $("backBars").innerHTML='<div class="note" style="margin-top:10px"><strong>Contracted backlog by filer</strong> &ndash; latest reported quarter</div>'+
+    S.firms.slice().sort((a,b)=>b.latest_b-a.latest_b).map(f=>
+      `<div class="hbar"><span class="k">${esc(f.sym)} <span class="sub">${esc(f.latest_q)}</span></span><span class="track"><i style="width:${(f.latest_b/maxB*100).toFixed(0)}%;background:var(--bull)"></i></span><span class="v">$${f.latest_b>=1000?(f.latest_b/1000).toFixed(2)+"T":f.latest_b.toFixed(0)+"B"}${f.yoy_pct!=null?" · "+snum(f.yoy_pct,0)+"%":""}</span></div>`).join("");
+  $("backVerdict").innerHTML = S.gap==null
+    ? `Contracted backlog is <strong>$${(S.totalB/1000).toFixed(2)}T</strong> across ${S.firms.length} filers.`
+    : S.gap>=0
+      ? `Backlog is growing <strong>faster than capex</strong> &ndash; contracted demand is ${snum(S.gap,0)} pts ahead of the spend. This is the bull case with an auditor&rsquo;s signature on it, and it currently holds.`
+      : `Capex is outrunning contracted demand by <strong>${mnum(Math.abs(S.gap),0)} pts</strong> &ndash; the buildout is being financed against demand that has not been signed yet.`;
+  $("backNote").innerHTML=`Remaining performance obligation (RPO) &ndash; contracted revenue not yet recognised &ndash; from SEC XBRL, per filer at its own fiscal quarter end. Reported per firm and never summed into one aligned series: fiscal calendars differ (Oracle&rsquo;s quarters end Feb/May/Aug/Nov), so a combined per-quarter total would be lumpy fiction; the headline is the sum of each filer&rsquo;s most recent report. AMZN stopped tagging RPO without dimensions after 2020 and META never has, so both are absent. Growth is median across filers, not mean, so one mega-contract cannot read as sector-wide demand. Disclosed server useful-life assumptions &ndash; the other half of this thesis &ndash; are dimensional in XBRL and not machine-readable, so they stay narrative in ${xlink("the depreciation panel","gpu","p-dep")}. As of ${esc(B.asof)}.`;
+}
 function renderAiCredit(){
   const F=mkt?.fred||{}, C=mkt?.credit||{}, E=mkt?.equity||{}, cell=(l,v,x="")=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}${x}</div></div>`;
   const ccc=F.CCC_OAS?.last, bizdDD=drawdown(C.BIZD);
@@ -2114,7 +2168,7 @@ function fetcherStale(){
 }
 // every panel whose numbers come out of market-data.json rather than the live Polymarket feed
 const FETCHER_PANELS=["p-vol","p-credit","p-breadth","p-insiders","p-leaps","p-fund",
-                      "p-capex","p-dep","p-kgpu","p-aicredit","p-power","p-crown"];
+                      "p-capex","p-dep","p-backlog","p-kgpu","p-aicredit","p-power","p-crown"];
 function renderStatuses(){
   const st=fetcherStale();
   for(const id of FETCHER_PANELS) setPanelStatus(id, st?"stale":"ok", st?st.label:"");
@@ -2440,7 +2494,7 @@ function renderAll(){
   computeSignals();
   renderGauge(); renderTiles(); renderRegime(); renderStack(); renderMomentum();
   renderVol(); renderCredit(); renderBreadth(); renderInsiders();
-  renderCrown(); renderNvda(); renderH100(); renderB200(); renderKalshiGpu(); renderValuations(); renderLeaps(); renderFundamentals(); renderMacro(); renderDepreciation(); renderAiCredit(); renderPower(); renderCrossVenue(); renderClaims();
+  renderCrown(); renderNvda(); renderH100(); renderB200(); renderKalshiGpu(); renderValuations(); renderLeaps(); renderFundamentals(); renderMacro(); renderDepreciation(); renderBacklog(); renderAiCredit(); renderPower(); renderCrossVenue(); renderClaims();
   renderMainChart(); renderEquity(); renderLeadLag();
   for(const s of SIDES) renderTable(s);
   renderWhatChanged(); renderNavCards();
@@ -2479,7 +2533,7 @@ $("foot").innerHTML=`<p style="margin-top:8px"><strong>Composite.</strong> 100×
 <p style="margin-top:8px"><strong>Bull split.</strong> Bull constituents are tagged TECH (model releases, benchmarks, hardware – technology-progress odds) or CAP (IPOs, valuation flips – capital-markets odds). Technology progress historically survives financial unwinds (railways, dot-com), so the capital-only sub-reading is the cleaner cycle signal; the tech side mostly tells you the release calendar is intact.</p>
 <p style="margin-top:8px"><strong>LEAPS tail.</strong> From the same CBOE chains: the expiry nearest 365d (min 250d), the listed put nearest each drawdown level, and P(S<sub>T</sub>&lt;K)=N(&minus;d2) at that strike&rsquo;s IV with r=4%. Risk-neutral, so it overstates real-world odds by the variance risk premium – use it as a deep-market ceiling to sanity-check the thin Polymarket bubble book, not as a forecast.</p>
 <p style="margin-top:8px"><strong>Fundamentals.</strong> SEC XBRL companyconcept quarterlies for MSFT/GOOGL/AMZN/META/ORCL (cumulative cash-flow lines differenced into single quarters, fiscal periods mapped to calendar quarters by end date; AMZN&rsquo;s post-2017 capex tag handled). Capex/OCF is the metric that actually distinguishes &ldquo;bubble&rdquo; (price vs fundamentals) from &ldquo;popping&rdquo; (price vs price) – everything else on this page is market-priced and can be collectively wrong.</p>
-<p style="margin-top:8px"><strong>Kedrosky panels.</strong> Four non-price or real-economy signals from Paul Kedrosky&rsquo;s bubble thesis. <em>AI capex vs. the economy</em>: combined filer capex (SEC), annualized, over nominal GDP (FRED GDP, SAAR); &ldquo;share of GDP growth&rdquo; is Δ(annualized capex)/Δ(GDP), noisy but the scale argument. <em>GPU depreciation gap</em>: combined D&amp;A addback vs. cash capex; a falling ratio while capex climbs flags cost recognition lagging the spend (the extended-useful-life earnings flatter). <em>AI &amp; private-credit stress</em>: BIZD (BDC/private-credit proxy) + CCC OAS + drawdown of the levered-AI names (CRWV/ORCL/NBIS/IREN) &ndash; no free issuer-level spread exists for neocloud debt, so equity stands in. <em>Power &amp; electricity</em>: residential electricity CPI (FRED) plus XLU and merchant-power equities (VST/CEG). All are slow-moving or proxied by design; read them as context, not triggers.</p>
+<p style="margin-top:8px"><strong>Kedrosky panels.</strong> Four non-price or real-economy signals from Paul Kedrosky&rsquo;s bubble thesis. <em>AI capex vs. the economy</em>: combined filer capex (SEC), annualized, over nominal GDP (FRED GDP, SAAR); &ldquo;share of GDP growth&rdquo; is Δ(annualized capex)/Δ(GDP), noisy but the scale argument. <em>GPU depreciation gap</em>: combined D&amp;A addback vs. cash capex; a falling ratio while capex climbs flags cost recognition lagging the spend (the extended-useful-life earnings flatter). <em>Contracted backlog</em>: remaining performance obligation (SEC XBRL instant facts) for the filers that tag it without dimensions (MSFT/GOOGL/ORCL/CRWV; AMZN stopped in 2020, META never has) &ndash; per filer at its own fiscal quarter end, never summed into an aligned series, with growth taken as the median across filers so a single mega-contract cannot read as sector-wide demand. It is the one panel that can falsify the bear case rather than support it. <em>AI &amp; private-credit stress</em>: BIZD (BDC/private-credit proxy) + CCC OAS + drawdown of the levered-AI names (CRWV/ORCL/NBIS/IREN) &ndash; no free issuer-level spread exists for neocloud debt, so equity stands in. <em>Power &amp; electricity</em>: residential electricity CPI (FRED) plus XLU and merchant-power equities (VST/CEG). All are slow-moving or proxied by design; read them as context, not triggers.</p>
 <p style="margin-top:8px"><strong>Lead-lag.</strong> Non-overlapping windows, 2,000-shuffle permutation test, recomputed on history refresh only. The bubble market is reflexive with NVDA/SOXX so the ex-bubble row is the cleaner read – treat all of it as descriptive.</p>
 <p style="margin-top:8px"><strong>Cadence &amp; sources.</strong> Live Polymarket data (Gamma + CLOB, incl. bubble-market order-book depth) refreshes every 60s; histories, market-data.json and cached studies every 10min; NVDA/H100 events re-discovered hourly. market-data.json is produced by <code>update-market-data.py</code> (GitHub Action, ~30min cadence): Yahoo Finance (equity/vol/credit proxies), CBOE delayed quotes (25Δ risk reversals, single-name IV term structure, LEAPS tail), FRED keyless CSV (HY OAS, CCC OAS, NFCI, nominal GDP, electricity CPI), SEC EDGAR Form 4 (open-market S/P only, recent-filings sample), SEC XBRL companyconcept (capex/OCF/depreciation fundamentals), vast.ai public asks (realized H100 $/GPU-hr), Kalshi public API (cross-venue themes <em>and</em> the GPU compute markets: H100/H200/B200/A100 weekly + monthly, quotes unauthenticated, settled on the Ornn index), Metaculus (optional token), Manifold public API (play-money). Constituents curated 2026-07-10; not investment advice.</p>
 <p style="margin-top:8px"><strong>Singularity claims watch.</strong> Five falsifiable claims from Raoul Pal&rsquo;s economic-singularity thesis (&ldquo;AI Revolution: How to Invest&rdquo;, Real Vision, Jul 2026), read against the tape. AGI-by-2027 and Chatbot-Arena odds reuse existing bull constituents; Optimus-release and California-robotaxi odds are pinned Polymarket markets tracked <em>outside</em> the indexes, so they move no composite; the quarterly US-GDP bracket event is re-discovered like the NVDA/H100 events. Core goods CPI (CUSR0000SACL1E), residential electricity CPI, unemployment (UNRATE), prime-age participation (LNS11300060) and realized real GDP growth (A191RL1Q225SBEA) come from FRED via the fetcher. Bands: market odds &ge;50% = the claim is priced, &ge;20% = live; goods CPI &le; &minus;0.5% YoY = deflation validating; unemployment +0.3pt/6mo while prime-age participation holds = displacement signature. The panel feeds no gauge family &ndash; it is context: euphoria broadening toward the narrative, or the labor/backlash channel arming, both of which the crash gauge would only see later.</p>
