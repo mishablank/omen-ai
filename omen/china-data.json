@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-20T11:53:06Z",
+ "updated": "2026-07-20T14:24:54Z",
  "snapshot_date": "2026-07-20",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -32,19 +32,19 @@
   "note": "Google Trends US, 90-day avg: 8 Chinese AI terms = 3.3% of AI-assistant search interest vs ChatGPT+Gemini+Claude+Llama AI+Meta AI."
  },
  "apps": {
-  "score": 8,
+  "score": 6,
   "asof": "2026-07-20",
   "source": "app-charts",
   "best": [
    {
     "label": "Kimi",
-    "rank": 60,
+    "rank": 73,
     "store": "android",
     "country": "ca"
    },
    {
     "label": "MiniMax",
-    "rank": 118,
+    "rank": 109,
     "store": "android",
     "country": "br"
    }
@@ -61,7 +61,7 @@
    "au",
    "kr"
   ],
-  "detail": "Kimi #60 (CA Play); basket-mean Western top-100 presence 8/100 across 10 markets",
+  "detail": "Kimi #73 (CA Play); basket-mean Western top-100 presence 6/100 across 10 markets",
   "note": "iOS Apple RSS top-100 + Android Play top-200 across 10 markets; presence = basket-mean of best top-100 chart rank (DeepSeek/Qwen/Doubao/Kimi/MiniMax), #1=100 #100=1; ranks past top-100 score 0."
  },
  "lmarena": {
@@ -142,16 +142,16 @@
  },
  "openrouter_week": {
   "week": "2026-07-20",
-  "cn_share": 0.6133,
-  "us_share": 0.2918,
-  "spi": 2.102,
-  "total_tokens": 3099870409922
+  "cn_share": 0.6094,
+  "us_share": 0.2949,
+  "spi": 2.066,
+  "total_tokens": 3560134022354
  },
  "vercel_gateway": {
   "asof": "2026-07-20",
-  "cn_share": 50.82,
-  "us_share": 49.05,
-  "spi": 1.036,
+  "cn_share": 51.58,
+  "us_share": 48.3,
+  "spi": 1.068,
   "top_cn": [
    {
     "lab": "deepseek",
@@ -159,7 +159,7 @@
    },
    {
     "lab": "stepfun",
-    "share": 13.25
+    "share": 14.16
    },
    {
     "lab": "zai",
@@ -167,15 +167,15 @@
    },
    {
     "lab": "moonshotai",
-    "share": 3.32
+    "share": 3.3
    },
    {
     "lab": "minimax",
-    "share": 1.56
+    "share": 1.6
    },
    {
     "lab": "xiaomi",
-    "share": 1.22
+    "share": 1.09
    }
   ],
   "series": [
@@ -481,15 +481,15 @@
    },
    {
     "d": "2026-07-20",
-    "cn": 50.82,
-    "us": 49.05
+    "cn": 51.58,
+    "us": 48.3
    }
   ],
   "license": "AI Gateway Leaderboard Data (c) Vercel, CC BY 4.0"
  },
  "ollama": {
-  "cn": 269759300,
-  "us": 442088311,
+  "cn": 269762400,
+  "us": 442091531,
   "cn_top": [
    {
     "name": "deepseek-r1",
@@ -544,13 +544,13 @@
    },
    {
     "label": "Best AI at end of 2026: Kimi",
-    "p": 0.03,
+    "p": 0.05,
     "ticker": "KXLLM1-26DEC31-MOON",
     "series": "kxllm1"
    },
    {
     "label": "Best AI at end of 2026: Ernie",
-    "p": 0.003,
+    "p": 0.004,
     "ticker": "KXLLM1-26DEC31-BAID",
     "series": "kxllm1"
    },
@@ -562,7 +562,7 @@
    },
    {
     "label": "Best AI at end of 2026: Claude",
-    "p": 0.689,
+    "p": 0.672,
     "ticker": "KXLLM1-26DEC31-A",
     "series": "kxllm1"
    }
@@ -572,7 +572,7 @@
   "cn": [
    {
     "base": "Qwen/Qwen3-8B",
-    "n": 1957
+    "n": 1959
    },
    {
     "base": "deepseek-ai/DeepSeek-R1",
@@ -605,7 +605,7 @@
     "n": 101
    }
   ],
-  "cn_total": 2335,
+  "cn_total": 2337,
   "us_total": 2447,
   "asof": "2026-07-20"
  },
