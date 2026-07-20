@@ -1,0 +1,173 @@
+{
+ "updated": "2026-07-20T07:35:54Z",
+ "tsmc": {
+  "asof": "2026-06",
+  "rev_ntd_b": 442.7,
+  "mom_pct": 6.2,
+  "yoy_pct": 67.9,
+  "ytd_yoy_pct": 35.6,
+  "note": "因先進製程產品需求增加所致。"
+ },
+ "issuance": {
+  "days": 90,
+  "cur": {
+   "from": "2026-04-22",
+   "to": "2026-07-20",
+   "debt": 29,
+   "s1_ai": 379,
+   "formd_ai": 7
+  },
+  "prev": {
+   "from": "2026-01-22",
+   "to": "2026-04-21",
+   "debt": 21,
+   "s1_ai": 361,
+   "formd_ai": 3
+  }
+ },
+ "ramp": {
+  "asof": "2026-06",
+  "adoption_pct": 55.0,
+  "mom_pp": 0.8,
+  "yoy_pp": 12.2,
+  "btos_pct": 20.6,
+  "btos_asof": "2026-06",
+  "series": [
+   [
+    "2024-07",
+    33.9
+   ],
+   [
+    "2024-08",
+    34.2
+   ],
+   [
+    "2024-09",
+    35.2
+   ],
+   [
+    "2024-10",
+    35.8
+   ],
+   [
+    "2024-11",
+    36.4
+   ],
+   [
+    "2024-12",
+    36.6
+   ],
+   [
+    "2025-01",
+    37.7
+   ],
+   [
+    "2025-02",
+    38.7
+   ],
+   [
+    "2025-03",
+    39.2
+   ],
+   [
+    "2025-04",
+    40.8
+   ],
+   [
+    "2025-05",
+    41.9
+   ],
+   [
+    "2025-06",
+    42.7
+   ],
+   [
+    "2025-07",
+    44.1
+   ],
+   [
+    "2025-08",
+    45.0
+   ],
+   [
+    "2025-09",
+    45.2
+   ],
+   [
+    "2025-10",
+    45.1
+   ],
+   [
+    "2025-11",
+    45.9
+   ],
+   [
+    "2025-12",
+    45.9
+   ],
+   [
+    "2026-01",
+    47.0
+   ],
+   [
+    "2026-02",
+    49.1
+   ],
+   [
+    "2026-03",
+    51.3
+   ],
+   [
+    "2026-04",
+    53.0
+   ],
+   [
+    "2026-05",
+    54.2
+   ],
+   [
+    "2026-06",
+    55.0
+   ]
+  ]
+ },
+ "aei": {
+  "last_modified": "2026-06-26",
+  "latest_release": "2026-06-26"
+ },
+ "eia": null,
+ "manual": {
+  "korea": {
+   "chip_exports_yoy_pct": null,
+   "asof": null,
+   "note": "Korea Customs 20-day export release (~1st/11th/21st); no keyless API - update by hand from the release coverage.",
+   "src": "https://www.customs.go.kr"
+  },
+  "moea_orders": {
+   "asof": null,
+   "note": "Taiwan MOEA export orders - manual; stats site blocks bots.",
+   "src": "https://www.moea.gov.tw"
+  },
+  "queues": {
+   "lbnl_active_gw": 2600,
+   "asof": "2023-12",
+   "note": "LBNL Queued Up: active US interconnection requests, all fuels.",
+   "src": "https://emp.lbl.gov/queues"
+  },
+  "pjm_capacity_auction": {
+   "clears_usd_mw_day": {
+    "2025/26": 269.92,
+    "2026/27": 329.17
+   },
+   "asof": "2025-07",
+   "note": "PJM base residual auction clearing prices.",
+   "src": "https://www.pjm.com"
+  },
+  "aei_headline": {
+   "aug_pct": 57,
+   "auto_pct": 43,
+   "asof": "2025-02",
+   "note": "Anthropic Economic Index first report: augmentation vs automation share of Claude usage."
+  }
+ }
+}

@@ -27,6 +27,7 @@ const DATA_FILES = {
   "/snapshots.csv":    { key: "snapshots.csv",    type: "text/csv" },
   "/influencers.json": { key: "influencers.json", type: "application/json" },
   "/china-events.json": { key: "china-events.json", type: "application/json" },
+  "/capex-data.json":  { key: "capex-data.json",  type: "application/json" },
 };
 
 // Edge-cache briefly: data refreshes on the order of tens of minutes, so ~60s keeps

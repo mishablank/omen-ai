@@ -70,6 +70,15 @@ jobs:
           CF_RADAR_TOKEN: ${{ secrets.CF_RADAR_TOKEN }}
         run: python3 omen/update-china-data.py
 
+      - name: Refresh AI CapEx live tape
+        # TSMC monthly revenue (TWSE), EDGAR issuance counts, Ramp AI Index,
+        # Anthropic Economic Index freshness -> capex-data.json for ai-capex.html.
+        # EIA_API_KEY (free, eia.gov/opendata) additionally unlocks the EIA-860M
+        # generator pipeline; without it that block is null and the page says so.
+        env:
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+        run: python3 omen/update-capex-data.py
+
       - name: Refresh China AI event timeline (optional; needs XAI_API_KEY)
         # Recent Chinese-model catalysts via Grok Live Search -> china-events.json, which
         # the China monitor merges on top of its curated timeline. Self-gated to run the
@@ -95,6 +104,7 @@ jobs:
           put snapshots.csv    "text/csv"
           put influencers.json "application/json"
           put china-events.json "application/json"
+          put capex-data.json  "application/json"
 
       - name: Commit refreshed data
         run: |
@@ -102,7 +112,7 @@ jobs:
           git config user.email "actions@github.com"
           for f in omen/market-data.json omen/snapshots.csv omen/alert-state.json omen/influencers.json \
                    omen/china-data.json omen/china-history.json omen/china-snapshots.csv omen/china-events.json \
-                   omen/app-charts.json; do
+                   omen/app-charts.json omen/capex-data.json omen/capex-snapshots.csv; do
             [ -f "$f" ] && git add -f "$f"
           done
           if git diff --cached --quiet; then

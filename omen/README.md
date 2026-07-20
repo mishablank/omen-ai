@@ -62,6 +62,7 @@ Tests: `python3 -m pytest` (covers FRED parsing, Form 4 parsing, and the server-
 | Insider net-selling | SEC EDGAR Form 4 (open-market S/P only) |
 | Realized H100 spot rent | vast.ai public bundles API |
 | Cross-venue | Kalshi public API, Manifold public API, Metaculus (needs free `METACULUS_TOKEN`) |
+| AI CapEx live tape (`ai-capex.html`) | `update-capex-data.py` → `capex-data.json`: TSMC monthly revenue (TWSE OpenAPI), EDGAR full-text issuance counts, Ramp AI Index CSV, Anthropic Economic Index freshness (HF API); EIA-860M generator pipeline needs free `EIA_API_KEY`. Korea 20-day exports, LBNL queues, PJM auction clears stay hand-updated in its `MANUAL` dict |
 
 ## Hosting: Cloudflare Worker + R2
 

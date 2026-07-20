@@ -193,10 +193,73 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;background:var(--bg2
     <div class="kick">Fundamentals · Financing stress</div>
     <h1>The bill for the buildout arrives <em>before</em> the crash tape does.</h1>
     <p class="sub">OMEN's indexes and gauge read what markets are <b>pricing</b>. This page reads the <b>plumbing</b>: who is lending, who is quietly switching to equity, how much of the economy the capex has eaten, and how many announced gigawatts actually get energized. Eight theses, each with the metric that would confirm or kill it – five from Paul Kedrosky's ROI teardown, three from Jim Chanos's telecom-collapse analogy. The structural risk underneath them is the same one: <b>deflating token prices funding 10–15-year fixed-payment debt</b> – a classic duration mismatch.</p>
-    <div class="snapline"><span class="dot"></span>Curated snapshot · 2026-07-18 · refreshed by hand, not live</div>
+    <div class="snapline"><span class="dot"></span>Curated theses · 2026-07-18 · <span id="ltUpdated">live tape loading…</span></div>
     <p class="credit">Frameworks: Paul Kedrosky on <a href="https://www.youtube.com/watch?v=wGZboZcSGDY" target="_blank" rel="noopener">Better Offline – "Why AI Has No ROI"</a> (Jun 2026) and Jim Chanos, <a href="https://www.youtube.com/watch?v=oM7VevsftrY" target="_blank" rel="noopener">"The AI Bubble Is Much Worse Than Dot-Com"</a> (2026), plus the reference series cited under each panel.</p>
   </div>
 </header>
+
+<!-- ============ 0. live tape ============ -->
+<section id="tape">
+  <div class="wrap">
+    <div class="shead rv">
+      <div class="toprow"><span class="rom">0.</span><span class="kick" style="color:var(--dim)">Live tape · auto-refreshed</span></div>
+      <h2>The live tape.</h2>
+      <div class="claim">The rest of this page is a hand-curated snapshot. This section is not: it refreshes from primary sources on the data cadence, and each row says when its number was printed.</div>
+      <p class="exp">Four feeds the eight theses kept pointing at but never measured: <b>realized hardware demand</b> (TSMC's monthly tape, upstream of every hyperscaler press release), <b>issuance velocity</b> (EDGAR full-text counts of the actual debt and equity paperwork), <b>paid adoption</b> (Ramp's transaction data – the revenue-side answer to "does the capex earn its cost"), and the <b>generator pipeline</b> behind the stranded-GW thesis.</p>
+    </div>
+    <div class="tiles rv">
+      <div class="tile"><div class="v" id="ltTsmcYoy">–</div><div class="t">TSMC revenue, YoY</div><p>Monthly revenue growth (TWSE filing, <span id="ltTsmcAsof">–</span>). The buildout is real only while this number is.</p></div>
+      <div class="tile"><div class="v" id="ltRampAdopt">–</div><div class="t">US businesses paying for AI</div><p>Ramp AI Index (<span id="ltRampAsof">–</span>) – share of ~70k firms with a paid AI transaction that month.</p></div>
+      <div class="tile"><div class="v" id="ltDebt">–</div><div class="t">Debt-issuance events, 90d</div><p>FWP + 424B filings by the six AI-capex issuers, trailing 90 days vs the 90 before (<span id="ltDebtPrev">–</span>).</p></div>
+    </div>
+    <div class="panel rv">
+      <h3>Hardware demand pulse</h3>
+      <span class="cap">Upstream of the capex – what the fabs actually billed</span>
+      <table class="dt">
+        <tr><th>Series</th><th>Reads on</th><th class="num">Latest</th><th class="num">Δ</th></tr>
+        <tr><td>TSMC monthly revenue (<span class="ltAsof" id="ltTsmcAsof2">–</span>)</td><td>Realized AI-silicon demand, ~10-day lag</td><td class="num" id="ltTsmcRev">–</td><td class="num" id="ltTsmcDelta">–</td></tr>
+        <tr><td>TSMC revenue, YTD vs prior year</td><td>Trend, strips the monthly noise</td><td class="num" id="ltTsmcYtd">–</td><td class="num"></td></tr>
+        <tr><td>Korea semiconductor exports, 20-day</td><td>HBM/memory pulse every ~10 days – the classic cycle canary</td><td class="num" id="ltKorea">manual</td><td class="num"></td></tr>
+      </table>
+      <div class="srcline"><b>METRIC</b> – monthly and YTD revenue growth at the fab that makes every AI accelerator; a Korea 20-day print that rolls over flags memory demand cracking before any earnings call. &nbsp;<b>SOURCE</b> – <a href="https://openapi.twse.com.tw/" target="_blank" rel="noopener">TWSE OpenAPI</a> (live) · <a href="https://www.customs.go.kr" target="_blank" rel="noopener">Korea Customs 20-day release</a> (hand-updated; no keyless API)</div>
+    </div>
+    <div class="panel rv">
+      <h3>Issuance velocity</h3>
+      <span class="cap">EDGAR full-text search counts · trailing 90 days vs the 90 before</span>
+      <table class="dt">
+        <tr><th>Paperwork</th><th>Reads on</th><th class="num">90d</th><th class="num">Prior 90d</th></tr>
+        <tr><td>FWP + 424B, six AI-capex issuers</td><td>Thesis i in filing counts – the debt wave, mechanically</td><td class="num" id="ltDebt2">–</td><td class="num" id="ltDebtPrev2">–</td></tr>
+        <tr><td>S-1s mentioning "artificial intelligence"</td><td>IPO pipeline – Kedrosky's "gonging of the bell"</td><td class="num" id="ltS1">–</td><td class="num" id="ltS1Prev">–</td></tr>
+        <tr><td>Form Ds mentioning "artificial intelligence"</td><td>Private raises – the pre-IPO froth layer</td><td class="num" id="ltFormD">–</td><td class="num" id="ltFormDPrev">–</td></tr>
+      </table>
+      <div class="srcline"><b>METRIC</b> – acceleration, not level: each count vs its own prior window. Issuers: MSFT · GOOGL · AMZN · META · ORCL · CRWV. &nbsp;<b>SOURCE</b> – <a href="https://efts.sec.gov/LATEST/search-index?q=%22artificial+intelligence%22&forms=S-1" target="_blank" rel="noopener">SEC EDGAR full-text search API</a> (live) · <a href="#debt">thesis i</a> · <a href="#equity">thesis iii</a></div>
+    </div>
+    <div class="panel rv">
+      <h3>Paid adoption – the revenue side</h3>
+      <span class="cap">Does the capex earn its cost? The only live demand-side series on this page</span>
+      <table class="dt">
+        <tr><th>Series</th><th>Reads on</th><th class="num">Latest</th><th class="num">Δ</th></tr>
+        <tr><td>Ramp AI Index (<span id="ltRampAsof2">–</span>)</td><td>Share of US businesses with paid AI subscriptions – transaction data, not surveys</td><td class="num" id="ltRamp2">–</td><td class="num" id="ltRampDelta">–</td></tr>
+        <tr><td>Census BTOS estimate (contrast)</td><td>The survey number Ramp's transaction data corrects</td><td class="num" id="ltBtos">–</td><td class="num"></td></tr>
+        <tr><td>Anthropic Economic Index, latest release</td><td>Usage composition (augmentation <span id="ltAeiSplit">57/43</span> automation, hand-updated) – freshness tracked live</td><td class="num" id="ltAei">–</td><td class="num"></td></tr>
+      </table>
+      <div class="srcline"><b>METRIC</b> – adoption level and momentum; a stall here while capex accelerates is the ROI thesis confirming in the one dataset that can't be talked up. &nbsp;<b>SOURCE</b> – <a href="https://ramp.com/data/ai-index" target="_blank" rel="noopener">Ramp AI Index CSV</a> (live) · <a href="https://huggingface.co/datasets/Anthropic/EconomicIndex" target="_blank" rel="noopener">Anthropic Economic Index</a> (freshness live, split manual)</div>
+    </div>
+    <div class="panel rv">
+      <h3>Generator pipeline</h3>
+      <span class="cap">The stranded-GW thesis in federal data · EIA-860M inventory by status</span>
+      <table class="dt">
+        <tr><th>Status</th><th>Reads on</th><th class="num">Nameplate GW</th></tr>
+        <tr><td>Operating</td><td>What the grid actually has</td><td class="num" id="ltEiaOp">–</td></tr>
+        <tr><td>Under construction</td><td>Steel in the ground</td><td class="num" id="ltEiaUc">–</td></tr>
+        <tr><td>Planned / approvals pending</td><td>The press-release layer</td><td class="num" id="ltEiaPlan">–</td></tr>
+        <tr><td>US interconnection queue (LBNL, <span id="ltLbnlAsof">2023-12</span>)</td><td>Requests, most of which never build</td><td class="num" id="ltLbnl">≈2,600</td></tr>
+        <tr><td>PJM capacity clears (2025/26 → 2026/27)</td><td>Scarcity pricing the AI load already caused</td><td class="num" id="ltPjm">$269.92 → $329.17/MW-day</td></tr>
+      </table>
+      <div class="srcline" id="ltEiaSrc"><b>METRIC</b> – planned vs under-construction vs operating GW; a widening planned-minus-built gap is the stranded-asset pipeline forming. &nbsp;<b>SOURCE</b> – <a href="https://www.eia.gov/opendata/" target="_blank" rel="noopener">EIA-860M via API v2</a> (<span id="ltEiaState">needs EIA_API_KEY – free registration</span>) · <a href="https://emp.lbl.gov/queues" target="_blank" rel="noopener">LBNL queues</a> + <a href="https://www.pjm.com" target="_blank" rel="noopener">PJM auctions</a> (hand-updated) · <a href="#stranded">thesis v</a></div>
+    </div>
+  </div>
+</section>
 
 <!-- ============ i. debt saturation ============ -->
 <section id="debt">
@@ -224,7 +287,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;background:var(--bg2
         <tr><td>Dec 2025</td><td>Amazon</td><td>IG bonds – first issuance since 2022</td><td class="num">$15.0B</td></tr>
         <tr><td>H1 2026</td><td>Complex-wide</td><td>Follow-on IG + SPV/private-credit vehicles</td><td class="num">≈$100B+</td></tr>
       </table>
-      <div class="srcline"><b>METRIC</b> – TTM IG issuance by hyperscalers vs banks; new-issue concession; share of book taken by insurers and sovereign wealth. &nbsp;<b>SOURCE</b> – <a href="https://efts.sec.gov/LATEST/search-index?q=%22free%20writing%20prospectus%22&dateRange=custom&forms=FWP" target="_blank" rel="noopener">SEC EDGAR 424B/FWP filings</a> · <a href="https://www.finra.org/finra-data/fixed-income" target="_blank" rel="noopener">FINRA TRACE</a> · <a href="https://www.sifma.org/resources/research/statistics/" target="_blank" rel="noopener">SIFMA issuance statistics</a></div>
+      <div class="srcline"><b>METRIC</b> – TTM IG issuance by hyperscalers vs banks; new-issue concession; share of book taken by insurers and sovereign wealth. &nbsp;<b>SOURCE</b> – <a href="https://efts.sec.gov/LATEST/search-index?q=%22free%20writing%20prospectus%22&dateRange=custom&forms=FWP" target="_blank" rel="noopener">SEC EDGAR 424B/FWP filings</a> · <a href="https://www.finra.org/finra-data/fixed-income" target="_blank" rel="noopener">FINRA TRACE</a> · <a href="https://www.sifma.org/resources/research/statistics/" target="_blank" rel="noopener">SIFMA issuance statistics</a> · live filing counts in <a href="#tape">the tape</a></div>
     </div>
   </div>
 </section>
@@ -363,7 +426,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;background:var(--bg2
         <div class="q">"Counties pre-budget the tax revenue – new playgrounds, water, schools. When the data center doesn't get finished, they're worse off than before it was announced."</div>
         <div class="who">The second-order casualty · <b>regional fiscal exposure</b> · watch county bond issuance against unfinished sites</div>
       </div>
-      <div class="srcline"><b>METRIC</b> – announced vs under-construction vs energized GW; cancellations and pauses; gas-turbine order backlog (sold out through ≈2029); state moratorium odds (already a Bear-index constituent). &nbsp;<b>SOURCE</b> – <a href="https://www.eia.gov/electricity/data/eia860m/" target="_blank" rel="noopener">EIA 860M</a> · <a href="https://emp.lbl.gov/queues" target="_blank" rel="noopener">LBNL interconnection queues</a> · <a href="https://kalshi.com" target="_blank" rel="noopener">Kalshi</a> · <a href="indexes.html">OMEN Bear index (moratorium market)</a></div>
+      <div class="srcline"><b>METRIC</b> – announced vs under-construction vs energized GW; cancellations and pauses; gas-turbine order backlog (sold out through ≈2029); state moratorium odds (already a Bear-index constituent). &nbsp;<b>SOURCE</b> – <a href="https://www.eia.gov/electricity/data/eia860m/" target="_blank" rel="noopener">EIA 860M</a> · <a href="https://emp.lbl.gov/queues" target="_blank" rel="noopener">LBNL interconnection queues</a> · <a href="https://kalshi.com" target="_blank" rel="noopener">Kalshi</a> · <a href="indexes.html">OMEN Bear index (moratorium market)</a> · live generator pipeline in <a href="#tape">the tape</a></div>
     </div>
   </div>
 </section>
@@ -473,7 +536,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;background:var(--bg2
   <div class="wrap">
     <div class="honesty rv">
       <h3>Honesty.</h3>
-      <p>Everything on this page is a <b>curated snapshot, refreshed by hand</b> – not a live feed. Levels marked ≈ are approximations assembled from filings, TRACE prints, and press, and can be stale or wrong; treat them as a reading list with numbers, not data. Unlike the indexes and the gauge, these are <b>fundamentals, not market prices</b> – they can't tell you when, only how much has been borrowed against the answer. The eight theses come from two aligned bearish worldviews – Kedrosky's ROI teardown and Chanos's telecom analogy; the bull rebuttal – that inference demand outruns the depreciation schedule – is exactly what the <a href="indexes.html" style="color:var(--accT)">Bull index</a> prices on the other side of the pair.</p>
+      <p>The eight theses on this page are a <b>curated snapshot, refreshed by hand</b> – not a live feed. The exception is <a href="#tape" style="color:var(--accT)">the live tape</a>, which refreshes from primary sources (TWSE, EDGAR full-text, Ramp, Hugging Face, optionally EIA) on the data cadence and labels every number with its as-of date; rows marked "manual" there are still hand-updated. Levels marked ≈ are approximations assembled from filings, TRACE prints, and press, and can be stale or wrong; treat them as a reading list with numbers, not data. Unlike the indexes and the gauge, these are <b>fundamentals, not market prices</b> – they can't tell you when, only how much has been borrowed against the answer. The eight theses come from two aligned bearish worldviews – Kedrosky's ROI teardown and Chanos's telecom analogy; the bull rebuttal – that inference demand outruns the depreciation schedule – is exactly what the <a href="indexes.html" style="color:var(--accT)">Bull index</a> prices on the other side of the pair.</p>
     </div>
   </div>
 </section>
@@ -490,6 +553,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;background:var(--bg2
       </div>
       <div>
         <h4>Theses</h4>
+        <a href="#tape">0. The live tape</a>
         <a href="#debt">i. Debt saturation</a>
         <a href="#credit">ii. AI credit stress</a>
         <a href="#equity">iii. Equity raises</a>
@@ -508,6 +572,9 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;background:var(--bg2
         <a href="https://emp.lbl.gov/queues" target="_blank" rel="noopener">LBNL queues</a>
         <a href="https://www.cbre.com/insights/figures" target="_blank" rel="noopener">CBRE data centers</a>
         <a href="https://fred.stlouisfed.org" target="_blank" rel="noopener">FRED</a>
+        <a href="https://openapi.twse.com.tw/" target="_blank" rel="noopener">TWSE OpenAPI</a>
+        <a href="https://ramp.com/data/ai-index" target="_blank" rel="noopener">Ramp AI Index</a>
+        <a href="https://huggingface.co/datasets/Anthropic/EconomicIndex" target="_blank" rel="noopener">Anthropic Economic Index</a>
       </div>
       <div>
         <h4>Fine print</h4>
@@ -535,6 +602,70 @@ const io=new IntersectionObserver(es=>{
   }
 },{threshold:.12});
 document.querySelectorAll(".rv").forEach(el=>io.observe(el));
+
+// ---- live tape (section 0): populate from capex-data.json ----
+// Everything below degrades to the "–" placeholders if the fetch fails
+// (file://, stale worker, adblock), so the curated page never breaks.
+const $=id=>document.getElementById(id);
+const MINUS="−";
+function sn(x,nd,unit){ // signed number, typographic minus
+  if(x==null||!isFinite(x)) return null;
+  const a=Math.abs(x).toFixed(nd);
+  return (x<0?MINUS:"+")+a+(unit||"");
+}
+function put(id,txt,cls){ const el=$(id); if(el&&txt!=null){ el.textContent=txt; if(cls) el.classList.add(cls); } }
+function hot(cur,prev){ return cur!=null&&prev!=null ? (cur>prev?"down":cur<prev?"up":null) : null; }
+async function liveTape(){
+  let d;
+  try{ const r=await fetch("capex-data.json",{cache:"no-store"}); if(!r.ok) return; d=await r.json(); }
+  catch(e){ return; }
+  const t=d.tsmc, rp=d.ramp, iz=d.issuance, aei=d.aei, eia=d.eia, man=d.manual||{};
+  if(t){
+    put("ltTsmcYoy",sn(t.yoy_pct,1,"%"),t.yoy_pct>=0?"up":"down");
+    put("ltTsmcAsof",t.asof); put("ltTsmcAsof2",t.asof);
+    put("ltTsmcRev","NT$"+t.rev_ntd_b+"B");
+    put("ltTsmcDelta",[sn(t.mom_pct,1,"% MoM"),sn(t.yoy_pct,1,"% YoY")].filter(Boolean).join(" · "));
+    put("ltTsmcYtd",sn(t.ytd_yoy_pct,1,"%"));
+  }
+  const kor=(man.korea||{});
+  put("ltKorea",kor.chip_exports_yoy_pct!=null?sn(kor.chip_exports_yoy_pct,1,"% ("+kor.asof+")"):"manual – pending");
+  if(rp){
+    put("ltRampAdopt",rp.adoption_pct.toFixed(1)+"%",rp.mom_pp==null||rp.mom_pp>=0?"up":"down");
+    put("ltRampAsof",rp.asof); put("ltRampAsof2",rp.asof);
+    put("ltRamp2",rp.adoption_pct.toFixed(1)+"%");
+    put("ltRampDelta",[sn(rp.mom_pp,1,"pp MoM"),sn(rp.yoy_pp,1,"pp YoY")].filter(Boolean).join(" · "));
+    if(rp.btos_pct!=null) put("ltBtos",rp.btos_pct.toFixed(1)+"%");
+  }
+  const s=v=>v==null?null:String(v); // a null count must stay "–", not render "null"
+  if(iz&&iz.cur&&iz.prev){
+    put("ltDebt",s(iz.cur.debt),hot(iz.cur.debt,iz.prev.debt));
+    put("ltDebtPrev",iz.prev.debt==null?null:iz.prev.debt+" prior");
+    put("ltDebt2",s(iz.cur.debt),hot(iz.cur.debt,iz.prev.debt));
+    put("ltDebtPrev2",s(iz.prev.debt));
+    put("ltS1",s(iz.cur.s1_ai),hot(iz.cur.s1_ai,iz.prev.s1_ai));
+    put("ltS1Prev",s(iz.prev.s1_ai));
+    put("ltFormD",s(iz.cur.formd_ai),hot(iz.cur.formd_ai,iz.prev.formd_ai));
+    put("ltFormDPrev",s(iz.prev.formd_ai));
+  }
+  if(aei){
+    put("ltAei",aei.latest_release||aei.last_modified||"–");
+    const h=man.aei_headline; if(h&&h.aug_pct!=null) put("ltAeiSplit",h.aug_pct+"/"+h.auto_pct);
+  }
+  const q=man.queues, pa=man.pjm_capacity_auction; // MANUAL dict is the single owner of these
+  if(q&&q.lbnl_active_gw!=null){ put("ltLbnl","≈"+q.lbnl_active_gw.toLocaleString("en-US")); put("ltLbnlAsof",q.asof); }
+  if(pa&&pa.clears_usd_mw_day){
+    const ks=Object.keys(pa.clears_usd_mw_day).sort();
+    if(ks.length) put("ltPjm",ks.map(k=>"$"+pa.clears_usd_mw_day[k].toFixed(2)).join(" → ")+"/MW-day");
+  }
+  if(eia){
+    put("ltEiaOp",eia.operating_gw!=null?eia.operating_gw.toLocaleString("en-US"):"–");
+    put("ltEiaUc",eia.under_construction_gw!=null?eia.under_construction_gw.toLocaleString("en-US"):"–");
+    put("ltEiaPlan",eia.planned_gw!=null?eia.planned_gw.toLocaleString("en-US"):"–");
+    put("ltEiaState","live · "+eia.asof);
+  }
+  const upd=$("ltUpdated"); if(upd&&d.updated) upd.textContent="live tape "+d.updated.slice(0,16).replace("T"," ")+"Z";
+}
+liveTape();
 </script>
 
 </body>
