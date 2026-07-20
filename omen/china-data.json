@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-20T19:00:37Z",
+ "updated": "2026-07-20T20:37:55Z",
  "snapshot_date": "2026-07-20",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -44,7 +44,7 @@
    },
    {
     "label": "MiniMax",
-    "rank": 135,
+    "rank": 136,
     "store": "android",
     "country": "br"
    }
@@ -142,40 +142,40 @@
  },
  "openrouter_week": {
   "week": "2026-07-20",
-  "cn_share": 0.618,
-  "us_share": 0.2881,
-  "spi": 2.145,
-  "total_tokens": 6455260850616
+  "cn_share": 0.6145,
+  "us_share": 0.289,
+  "spi": 2.126,
+  "total_tokens": 7399355838134
  },
  "vercel_gateway": {
   "asof": "2026-07-20",
-  "cn_share": 50.75,
-  "us_share": 49.14,
-  "spi": 1.033,
+  "cn_share": 50.2,
+  "us_share": 49.7,
+  "spi": 1.01,
   "top_cn": [
    {
     "lab": "deepseek",
-    "share": 25.86
+    "share": 25.54
    },
    {
     "lab": "stepfun",
-    "share": 14.32
+    "share": 14.15
    },
    {
     "lab": "zai",
-    "share": 3.97
+    "share": 4.08
    },
    {
     "lab": "moonshotai",
-    "share": 3.04
+    "share": 2.96
    },
    {
     "lab": "minimax",
-    "share": 1.59
+    "share": 1.55
    },
    {
     "lab": "alibaba",
-    "share": 1.04
+    "share": 1.02
    }
   ],
   "series": [
@@ -481,15 +481,15 @@
    },
    {
     "d": "2026-07-20",
-    "cn": 50.75,
-    "us": 49.14
+    "cn": 50.2,
+    "us": 49.7
    }
   ],
   "license": "AI Gateway Leaderboard Data (c) Vercel, CC BY 4.0"
  },
  "ollama": {
-  "cn": 269769100,
-  "us": 442296951,
+  "cn": 269871000,
+  "us": 442398260,
   "cn_top": [
    {
     "name": "deepseek-r1",
@@ -497,7 +497,7 @@
    },
    {
     "name": "qwen2.5",
-    "pulls": 35000000
+    "pulls": 35100000
    },
    {
     "name": "qwen3",
@@ -562,7 +562,7 @@
    },
    {
     "label": "Best AI at end of 2026: Claude",
-    "p": 0.664,
+    "p": 0.663,
     "ticker": "KXLLM1-26DEC31-A",
     "series": "kxllm1"
    }
@@ -572,7 +572,7 @@
   "cn": [
    {
     "base": "Qwen/Qwen3-8B",
-    "n": 1960
+    "n": 1961
    },
    {
     "base": "deepseek-ai/DeepSeek-R1",
@@ -605,7 +605,7 @@
     "n": 101
    }
   ],
-  "cn_total": 2338,
+  "cn_total": 2339,
   "us_total": 2445,
   "asof": "2026-07-20"
  },
@@ -628,6 +628,10 @@
    {
     "pkg": "openai",
     "wk": 86406672
+   },
+   {
+    "pkg": "anthropic",
+    "wk": 41682749
    },
    {
     "pkg": "google-genai",
