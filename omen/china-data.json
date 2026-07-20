@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-20T22:03:54Z",
+ "updated": "2026-07-20T23:06:57Z",
  "snapshot_date": "2026-07-20",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -38,7 +38,7 @@
   "best": [
    {
     "label": "Kimi",
-    "rank": 49,
+    "rank": 51,
     "store": "android",
     "country": "ca"
    },
@@ -61,7 +61,7 @@
    "au",
    "kr"
   ],
-  "detail": "Kimi #49 (CA Play); basket-mean Western top-100 presence 10/100 across 10 markets",
+  "detail": "Kimi #51 (CA Play); basket-mean Western top-100 presence 10/100 across 10 markets",
   "note": "iOS Apple RSS top-100 + Android Play top-200 across 10 markets; presence = basket-mean of best top-100 chart rank (DeepSeek/Qwen/Doubao/Kimi/MiniMax), #1=100 #100=1; ranks past top-100 score 0."
  },
  "lmarena": {
@@ -142,10 +142,10 @@
  },
  "openrouter_week": {
   "week": "2026-07-20",
-  "cn_share": 0.6122,
-  "us_share": 0.2893,
-  "spi": 2.116,
-  "total_tokens": 7868755507293
+  "cn_share": 0.6104,
+  "us_share": 0.2895,
+  "spi": 2.109,
+  "total_tokens": 8155828441240
  },
  "vercel_gateway": {
   "asof": "2026-07-20",
@@ -488,8 +488,8 @@
   "license": "AI Gateway Leaderboard Data (c) Vercel, CC BY 4.0"
  },
  "ollama": {
-  "cn": 269872400,
-  "us": 442399267,
+  "cn": 269873600,
+  "us": 442400972,
   "cn_top": [
    {
     "name": "deepseek-r1",
@@ -562,7 +562,7 @@
    },
    {
     "label": "Best AI at end of 2026: Claude",
-    "p": 0.665,
+    "p": 0.659,
     "ticker": "KXLLM1-26DEC31-A",
     "series": "kxllm1"
    }
@@ -621,14 +621,6 @@
    }
   ],
   "us": [
-   {
-    "pkg": "openai",
-    "wk": 86406672
-   },
-   {
-    "pkg": "anthropic",
-    "wk": 41682749
-   },
    {
     "pkg": "google-genai",
     "wk": 65104923

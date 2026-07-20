@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-20T22:03:54Z",
+ "updated": "2026-07-20T23:06:57Z",
  "source": "google-play-scraper",
  "store": "android",
  "depth": 200,
@@ -9,7 +9,7 @@
    "label": "Kimi",
    "store": "android",
    "country": "us",
-   "rank": 168,
+   "rank": 170,
    "appId": "com.moonshot.kimichat",
    "title": "Kimi"
   },
@@ -25,7 +25,7 @@
    "label": "Kimi",
    "store": "android",
    "country": "de",
-   "rank": 135,
+   "rank": 136,
    "appId": "com.moonshot.kimichat",
    "title": "Kimi"
   },
@@ -33,7 +33,7 @@
    "label": "Kimi",
    "store": "android",
    "country": "fr",
-   "rank": 151,
+   "rank": 152,
    "appId": "com.moonshot.kimichat",
    "title": "Kimi"
   },
@@ -49,7 +49,7 @@
    "label": "Kimi",
    "store": "android",
    "country": "ca",
-   "rank": 49,
+   "rank": 51,
    "appId": "com.moonshot.kimichat",
    "title": "Kimi"
   },
@@ -57,7 +57,7 @@
    "label": "Kimi",
    "store": "android",
    "country": "au",
-   "rank": 80,
+   "rank": 81,
    "appId": "com.moonshot.kimichat",
    "title": "Kimi"
   },
