@@ -1,6 +1,6 @@
 {
- "updated": "2026-07-19T13:41:06Z",
- "snapshot_date": "2026-07-19",
+ "updated": "2026-07-20T04:41:51Z",
+ "snapshot_date": "2026-07-20",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
   "cn_score": 51,
@@ -9,7 +9,7 @@
   "asof": "2026-07-12"
  },
  "search_consumer": {
-  "western_share_pct": 3.2,
+  "western_share_pct": 3.3,
   "asof": "2026-07",
   "source": "google-trends",
   "terms_us": [
@@ -29,22 +29,22 @@
    "Seed 1.6",
    "Seed 2.0"
   ],
-  "note": "Google Trends US, 90-day avg: 8 Chinese AI terms = 3.2% of AI-assistant search interest vs ChatGPT+Gemini+Claude+Llama AI+Meta AI."
+  "note": "Google Trends US, 90-day avg: 8 Chinese AI terms = 3.3% of AI-assistant search interest vs ChatGPT+Gemini+Claude+Llama AI+Meta AI."
  },
  "apps": {
-  "score": 6,
-  "asof": "2026-07-19",
+  "score": 9,
+  "asof": "2026-07-20",
   "source": "app-charts",
   "best": [
    {
     "label": "Kimi",
-    "rank": 69,
+    "rank": 56,
     "store": "android",
     "country": "ca"
    },
    {
     "label": "MiniMax",
-    "rank": 111,
+    "rank": 117,
     "store": "android",
     "country": "br"
    }
@@ -61,19 +61,20 @@
    "au",
    "kr"
   ],
-  "detail": "Kimi #69 (CA Play); basket-mean Western top-100 presence 6/100 across 10 markets",
+  "detail": "Kimi #56 (CA Play); basket-mean Western top-100 presence 9/100 across 10 markets",
   "note": "iOS Apple RSS top-100 + Android Play top-200 across 10 markets; presence = basket-mean of best top-100 chart rank (DeepSeek/Qwen/Doubao/Kimi/MiniMax), #1=100 #100=1; ranks past top-100 score 0."
  },
  "lmarena": {
   "best_model": "kimi-k3",
-  "best_org": "Moonshot",
-  "best_rank": 9,
+  "best_org": "moonshot",
+  "best_rank": 10,
   "best_score": 1486,
   "us_leader": "claude-fable-5",
   "us_leader_score": 1507,
   "top10": 1,
   "top20": 2,
-  "asof": "2026-07-19"
+  "asof": "2026-07-16",
+  "source": "lmarena-dataset"
  },
  "hf": {
   "cnOrgs": [
@@ -140,10 +141,503 @@
   "us": 144826481
  },
  "openrouter_week": {
-  "week": "2026-07-13",
-  "cn_share": 0.6091,
-  "us_share": 0.3125,
-  "spi": 1.949,
-  "total_tokens": 58682558896382
+  "week": "2026-07-20",
+  "cn_share": 0.6194,
+  "us_share": 0.281,
+  "spi": 2.205,
+  "total_tokens": 1156472829294
+ },
+ "vercel_gateway": {
+  "asof": "2026-07-20",
+  "cn_share": 43.58,
+  "us_share": 56.32,
+  "spi": 0.774,
+  "top_cn": [
+   {
+    "lab": "deepseek",
+    "share": 22.71
+   },
+   {
+    "lab": "stepfun",
+    "share": 9.25
+   },
+   {
+    "lab": "zai",
+    "share": 4.95
+   },
+   {
+    "lab": "moonshotai",
+    "share": 2.69
+   },
+   {
+    "lab": "minimax",
+    "share": 1.94
+   },
+   {
+    "lab": "alibaba",
+    "share": 1.18
+   }
+  ],
+  "series": [
+   {
+    "d": "2026-05-21",
+    "cn": 24.73,
+    "us": 74.53
+   },
+   {
+    "d": "2026-05-22",
+    "cn": 26.44,
+    "us": 71.14
+   },
+   {
+    "d": "2026-05-23",
+    "cn": 27.87,
+    "us": 69.16
+   },
+   {
+    "d": "2026-05-24",
+    "cn": 26.49,
+    "us": 70.35
+   },
+   {
+    "d": "2026-05-25",
+    "cn": 25.73,
+    "us": 71.84
+   },
+   {
+    "d": "2026-05-26",
+    "cn": 23.71,
+    "us": 74.64
+   },
+   {
+    "d": "2026-05-27",
+    "cn": 24.43,
+    "us": 75.14
+   },
+   {
+    "d": "2026-05-28",
+    "cn": 27.84,
+    "us": 71.72
+   },
+   {
+    "d": "2026-05-29",
+    "cn": 32.13,
+    "us": 66.9
+   },
+   {
+    "d": "2026-05-30",
+    "cn": 32.95,
+    "us": 66.24
+   },
+   {
+    "d": "2026-05-31",
+    "cn": 33.38,
+    "us": 65.91
+   },
+   {
+    "d": "2026-06-01",
+    "cn": 26.45,
+    "us": 73.09
+   },
+   {
+    "d": "2026-06-02",
+    "cn": 29.17,
+    "us": 70.28
+   },
+   {
+    "d": "2026-06-03",
+    "cn": 30.26,
+    "us": 69.3
+   },
+   {
+    "d": "2026-06-04",
+    "cn": 31.79,
+    "us": 67.74
+   },
+   {
+    "d": "2026-06-05",
+    "cn": 30.22,
+    "us": 69.37
+   },
+   {
+    "d": "2026-06-06",
+    "cn": 41.62,
+    "us": 57.96
+   },
+   {
+    "d": "2026-06-07",
+    "cn": 40.44,
+    "us": 59.23
+   },
+   {
+    "d": "2026-06-08",
+    "cn": 34.2,
+    "us": 65.47
+   },
+   {
+    "d": "2026-06-09",
+    "cn": 35.2,
+    "us": 64.49
+   },
+   {
+    "d": "2026-06-10",
+    "cn": 32.31,
+    "us": 67.08
+   },
+   {
+    "d": "2026-06-11",
+    "cn": 33.5,
+    "us": 66.19
+   },
+   {
+    "d": "2026-06-12",
+    "cn": 35.77,
+    "us": 63.96
+   },
+   {
+    "d": "2026-06-13",
+    "cn": 44.23,
+    "us": 55.53
+   },
+   {
+    "d": "2026-06-14",
+    "cn": 35.57,
+    "us": 64.07
+   },
+   {
+    "d": "2026-06-15",
+    "cn": 32.88,
+    "us": 66.81
+   },
+   {
+    "d": "2026-06-16",
+    "cn": 37.54,
+    "us": 62.28
+   },
+   {
+    "d": "2026-06-17",
+    "cn": 38.31,
+    "us": 61.5
+   },
+   {
+    "d": "2026-06-18",
+    "cn": 29.9,
+    "us": 69.9
+   },
+   {
+    "d": "2026-06-19",
+    "cn": 26.6,
+    "us": 73.25
+   },
+   {
+    "d": "2026-06-20",
+    "cn": 30.14,
+    "us": 69.7
+   },
+   {
+    "d": "2026-06-21",
+    "cn": 29.35,
+    "us": 70.47
+   },
+   {
+    "d": "2026-06-22",
+    "cn": 30.01,
+    "us": 69.79
+   },
+   {
+    "d": "2026-06-23",
+    "cn": 30.01,
+    "us": 69.82
+   },
+   {
+    "d": "2026-06-24",
+    "cn": 27.37,
+    "us": 72.48
+   },
+   {
+    "d": "2026-06-25",
+    "cn": 29.71,
+    "us": 70.1
+   },
+   {
+    "d": "2026-06-26",
+    "cn": 32.49,
+    "us": 67.34
+   },
+   {
+    "d": "2026-06-27",
+    "cn": 37.96,
+    "us": 61.91
+   },
+   {
+    "d": "2026-06-28",
+    "cn": 35.37,
+    "us": 64.46
+   },
+   {
+    "d": "2026-06-29",
+    "cn": 34.22,
+    "us": 65.62
+   },
+   {
+    "d": "2026-06-30",
+    "cn": 33.65,
+    "us": 66.21
+   },
+   {
+    "d": "2026-07-01",
+    "cn": 26.92,
+    "us": 72.94
+   },
+   {
+    "d": "2026-07-02",
+    "cn": 30.71,
+    "us": 69.19
+   },
+   {
+    "d": "2026-07-03",
+    "cn": 41.13,
+    "us": 58.75
+   },
+   {
+    "d": "2026-07-04",
+    "cn": 43.04,
+    "us": 56.86
+   },
+   {
+    "d": "2026-07-05",
+    "cn": 46.6,
+    "us": 53.27
+   },
+   {
+    "d": "2026-07-06",
+    "cn": 44.22,
+    "us": 55.67
+   },
+   {
+    "d": "2026-07-07",
+    "cn": 46.45,
+    "us": 53.46
+   },
+   {
+    "d": "2026-07-08",
+    "cn": 43.69,
+    "us": 56.21
+   },
+   {
+    "d": "2026-07-09",
+    "cn": 45.83,
+    "us": 54.05
+   },
+   {
+    "d": "2026-07-10",
+    "cn": 46.12,
+    "us": 53.78
+   },
+   {
+    "d": "2026-07-11",
+    "cn": 50.65,
+    "us": 49.26
+   },
+   {
+    "d": "2026-07-12",
+    "cn": 49.74,
+    "us": 50.12
+   },
+   {
+    "d": "2026-07-13",
+    "cn": 46.03,
+    "us": 53.86
+   },
+   {
+    "d": "2026-07-14",
+    "cn": 49.08,
+    "us": 50.8
+   },
+   {
+    "d": "2026-07-15",
+    "cn": 45.37,
+    "us": 54.54
+   },
+   {
+    "d": "2026-07-16",
+    "cn": 45.03,
+    "us": 54.89
+   },
+   {
+    "d": "2026-07-17",
+    "cn": 42.82,
+    "us": 57.06
+   },
+   {
+    "d": "2026-07-18",
+    "cn": 46.17,
+    "us": 53.72
+   },
+   {
+    "d": "2026-07-19",
+    "cn": 49.61,
+    "us": 50.26
+   },
+   {
+    "d": "2026-07-20",
+    "cn": 43.58,
+    "us": 56.32
+   }
+  ],
+  "license": "AI Gateway Leaderboard Data (c) Vercel, CC BY 4.0"
+ },
+ "ollama": {
+  "cn": 269650000,
+  "us": 441880355,
+  "cn_top": [
+   {
+    "name": "deepseek-r1",
+    "pulls": 90100000
+   },
+   {
+    "name": "qwen2.5",
+    "pulls": 35000000
+   },
+   {
+    "name": "qwen3",
+    "pulls": 32500000
+   },
+   {
+    "name": "qwen2.5-coder",
+    "pulls": 18600000
+   },
+   {
+    "name": "qwen3.5",
+    "pulls": 15800000
+   },
+   {
+    "name": "qwen3-coder",
+    "pulls": 7400000
+   }
+  ],
+  "us_top": [
+   {
+    "name": "llama3.1",
+    "pulls": 117300000
+   },
+   {
+    "name": "llama3.2",
+    "pulls": 77100000
+   },
+   {
+    "name": "gemma3",
+    "pulls": 38700000
+   }
+  ],
+  "n_models": 232,
+  "asof": "2026-07-20"
+ },
+ "kalshi": {
+  "asof": "2026-07-20",
+  "markets": [
+   {
+    "label": "Will a Chinese AI model be #1 this year?",
+    "p": 0.17,
+    "ticker": "KXBESTLLMCHINA-27",
+    "series": "kxbestllmchina"
+   },
+   {
+    "label": "Best AI at end of 2026: Kimi",
+    "p": 0.03,
+    "ticker": "KXLLM1-26DEC31-MOON",
+    "series": "kxllm1"
+   },
+   {
+    "label": "Best AI at end of 2026: Ernie",
+    "p": 0.003,
+    "ticker": "KXLLM1-26DEC31-BAID",
+    "series": "kxllm1"
+   },
+   {
+    "label": "Best AI at end of 2026: Qwen",
+    "p": 0.006,
+    "ticker": "KXLLM1-26DEC31-ALI",
+    "series": "kxllm1"
+   },
+   {
+    "label": "Best AI at end of 2026: Claude",
+    "p": 0.671,
+    "ticker": "KXLLM1-26DEC31-A",
+    "series": "kxllm1"
+   }
+  ]
+ },
+ "hf_finetunes": {
+  "cn": [
+   {
+    "base": "Qwen/Qwen3-8B",
+    "n": 1954
+   },
+   {
+    "base": "deepseek-ai/DeepSeek-R1",
+    "n": 323
+   },
+   {
+    "base": "zai-org/GLM-4.5-Air",
+    "n": 38
+   },
+   {
+    "base": "moonshotai/Kimi-K2-Instruct",
+    "n": 17
+   }
+  ],
+  "us": [
+   {
+    "base": "meta-llama/Llama-3.1-8B",
+    "n": 1441
+   },
+   {
+    "base": "google/gemma-3-12b-it",
+    "n": 365
+   },
+   {
+    "base": "openai/gpt-oss-20b",
+    "n": 540
+   },
+   {
+    "base": "microsoft/phi-4",
+    "n": 101
+   }
+  ],
+  "cn_total": 2332,
+  "us_total": 2447,
+  "asof": "2026-07-20"
+ },
+ "sdk": {
+  "cn": [
+   {
+    "pkg": "dashscope",
+    "wk": 919754
+   },
+   {
+    "pkg": "zhipuai",
+    "wk": 64991
+   },
+   {
+    "pkg": "zai-sdk",
+    "wk": 28553
+   }
+  ],
+  "us": [
+   {
+    "pkg": "openai",
+    "wk": 86406672
+   },
+   {
+    "pkg": "anthropic",
+    "wk": 41682749
+   },
+   {
+    "pkg": "google-genai",
+    "wk": 65104923
+   }
+  ],
+  "asof": "2026-07-20"
  }
 }

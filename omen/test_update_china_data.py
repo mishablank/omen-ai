@@ -156,3 +156,147 @@ def test_pick_apps_falls_back_to_manual():
     prev = {"apps": {"score": 20, "asof": "2026-01"}}
     got = ucd.pick_apps(None, prev, ucd.MANUAL["apps"])
     assert got == ucd.MANUAL["apps"]
+
+
+# ---- new source families (2026-07-20) --------------------------------------------
+
+def test_parse_count_handles_suffixes_and_commas():
+    assert ucd.parse_count("117.3M") == 117300000
+    assert ucd.parse_count("2.1K") == 2100
+    assert ucd.parse_count("5,000") == 5000
+    assert ucd.parse_count("1B") == 1000000000
+
+
+def test_ollama_side_classifies_named_families_only():
+    assert ucd.ollama_side("deepseek-r1") == "cn"
+    assert ucd.ollama_side("qwen2.5-coder") == "cn"
+    assert ucd.ollama_side("llama3.1") == "us"
+    assert ucd.ollama_side("gpt-oss") == "us"
+    assert ucd.ollama_side("mistral") is None       # FR - outside both baskets
+    assert ucd.ollama_side("llava") is None          # academic community model
+
+
+def test_ollama_models_parses_library_chunks():
+    page = ('<a href="/library/deepseek-r1" class="group">'
+            '<span >90M</span>\n<span class="hidden sm:flex">&nbsp;Pulls</span></a>'
+            '<a href="/library/llama3.1"><span>117.3M</span> <span>&nbsp;Pulls</span></a>')
+    got = ucd.ollama_models(page)
+    assert got == [{"name": "deepseek-r1", "pulls": 90000000},
+                   {"name": "llama3.1", "pulls": 117300000}]
+
+
+def test_ollama_models_rejects_pageful_of_nothing():
+    with pytest.raises(ValueError):
+        ucd.ollama_models("<html>redesigned page</html>")
+
+
+def test_vercel_days_aggregates_token_share_by_date():
+    rows = [
+        {"date": "2026-07-18", "name": "deepseek", "metric": "tokens", "share_percent": 20.0},
+        {"date": "2026-07-18", "name": "anthropic", "metric": "tokens", "share_percent": 30.0},
+        {"date": "2026-07-18", "name": "deepseek", "metric": "requests", "share_percent": 99.0},
+        {"date": "2026-07-19", "name": "zai", "metric": "tokens", "share_percent": 5.0},
+        {"date": "2026-07-19", "name": "somelab", "metric": "tokens", "share_percent": 4.0},
+    ]
+    got = ucd.vercel_days(rows)
+    assert got == [{"d": "2026-07-18", "cn": 20.0, "us": 30.0},
+                   {"d": "2026-07-19", "cn": 5.0, "us": 0.0}]
+
+
+def test_vercel_days_rejects_export_without_token_rows():
+    with pytest.raises(ValueError):
+        ucd.vercel_days([{"date": "2026-07-18", "name": "x", "metric": "spend", "share_percent": 1}])
+
+
+def test_arena_summary_counts_cn_orgs_case_insensitively():
+    rows = [
+        {"model": "claude-fable-5", "org": "anthropic", "rank": 1, "elo": 1507},
+        {"model": "kimi-k3", "org": "moonshot", "rank": 10, "elo": 1486},
+        {"model": "qwen-max", "org": "Alibaba", "rank": 15, "elo": 1470},
+    ]
+    got = ucd.arena_summary(rows)
+    assert got["best_model"] == "kimi-k3"
+    assert got["us_leader"] == "claude-fable-5"
+    assert (got["top10"], got["top20"]) == (1, 2)
+
+
+def test_arena_summary_strips_ai_suffix_from_org():
+    rows = [
+        {"model": "us", "org": "OpenAI", "rank": 1, "elo": 1500},
+        {"model": "k2", "org": "Moonshot AI", "rank": 5, "elo": 1480},
+    ]
+    assert ucd.arena_summary(rows)["best_org"] == "Moonshot AI"
+
+
+def test_arena_summary_rejects_all_us_board():
+    with pytest.raises(ValueError):
+        ucd.arena_summary([{"model": "m", "org": "openai", "rank": 1, "elo": 1500}])
+
+
+def test_kalshi_price_prefers_dollars_string():
+    assert ucd.kalshi_price({"last_price_dollars": "0.1900"}) == 0.19
+    assert ucd.kalshi_price({"last_price_dollars": None}) is None
+    assert ucd.kalshi_price({}) is None
+
+
+def test_kalshi_pick_yearend_cn_brands_plus_top_us_reference():
+    mkts = [
+        {"event_ticker": "KXLLM1-26DEC31", "yes_sub_title": "Kimi", "last_price_dollars": "0.02"},
+        {"event_ticker": "KXLLM1-26DEC31", "yes_sub_title": "Qwen", "last_price_dollars": "0.009"},
+        {"event_ticker": "KXLLM1-26DEC31", "yes_sub_title": "Claude", "last_price_dollars": "0.61"},
+        {"event_ticker": "KXLLM1-26DEC31", "yes_sub_title": "ChatGPT", "last_price_dollars": "0.15"},
+        {"event_ticker": "KXLLM1-26JUL20", "yes_sub_title": "Kimi", "last_price_dollars": "0.01"},
+    ]
+    cn, us_ref = ucd.kalshi_pick(mkts)
+    assert [m["yes_sub_title"] for m in cn] == ["Kimi", "Qwen"]
+    assert [m["yes_sub_title"] for m in us_ref] == ["Claude"]
+
+
+def test_parse_finetune_count_reads_model_tree_link():
+    page = ('... <a class="x" href="/models?other=base_model:finetune:Qwen/Qwen3-8B">'
+            "1,951 models</a> ...")
+    assert ucd.parse_finetune_count(page, "Qwen/Qwen3-8B") == 1951
+    with pytest.raises(ValueError):
+        ucd.parse_finetune_count(page, "meta-llama/Llama-3.1-8B")
+
+
+def test_aa_best_picks_top_intelligence_index_per_side():
+    models = [
+        {"name": "GLM-5.2", "model_creator": {"name": "Zhipu AI"},
+         "evaluations": {"artificial_analysis_intelligence_index": 51.2}},
+        {"name": "DeepSeek V4", "model_creator": {"name": "DeepSeek"},
+         "evaluations": {"artificial_analysis_intelligence_index": 49.0}},
+        {"name": "Claude Fable 5", "model_creator": {"name": "Anthropic"},
+         "evaluations": {"artificial_analysis_intelligence_index": 60.1}},
+        {"name": "noscore", "model_creator": {"name": "OpenAI"}, "evaluations": {}},
+    ]
+    got = ucd.aa_best(models)
+    assert (got["cn_best"], got["cn_score"]) == ("GLM-5.2", 51)
+    assert (got["us_best"], got["us_score"]) == ("Claude Fable 5", 60)
+    assert got["source"] == "aa-api"
+
+
+def test_aa_best_rejects_one_sided_data():
+    with pytest.raises(ValueError):
+        ucd.aa_best([{"name": "m", "model_creator": {"name": "Anthropic"},
+                      "evaluations": {"artificial_analysis_intelligence_index": 60}}])
+
+
+def test_pick_aa_carries_forward_api_value_only():
+    api_prev = {"artificial_analysis": {"cn_score": 52, "source": "aa-api"}}
+    manual_prev = {"artificial_analysis": {"cn_score": 51}}
+    fresh = {"cn_score": 55, "source": "aa-api"}
+    assert ucd.pick_aa(fresh, api_prev, ucd.MANUAL["artificial_analysis"]) == fresh
+    assert ucd.pick_aa(None, api_prev, ucd.MANUAL["artificial_analysis"]) == api_prev["artificial_analysis"]
+    assert ucd.pick_aa(None, manual_prev, ucd.MANUAL["artificial_analysis"]) == ucd.MANUAL["artificial_analysis"]
+
+
+def test_radar_rows_marks_cn_services_and_tolerates_shapes():
+    got = ucd.radar_rows({"top_0": [{"rank": 1, "service": "ChatGPT"},
+                                    {"rank": 9, "service": "DeepSeek"}]})
+    assert got == [{"rank": 1, "name": "ChatGPT", "cn": False},
+                   {"rank": 9, "name": "DeepSeek", "cn": True}]
+    got2 = ucd.radar_rows({"serviceTop": [{"name": "Kimi"}]})
+    assert got2[0]["cn"] is True and got2[0]["rank"] == 1
+    with pytest.raises(ValueError):
+        ucd.radar_rows({})
