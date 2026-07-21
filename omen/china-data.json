@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-21T14:10:46Z",
+ "updated": "2026-07-21T15:06:40Z",
  "snapshot_date": "2026-07-21",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -38,13 +38,13 @@
   "best": [
    {
     "label": "Kimi",
-    "rank": 56,
+    "rank": 57,
     "store": "android",
     "country": "ca"
    },
    {
     "label": "MiniMax",
-    "rank": 126,
+    "rank": 128,
     "store": "android",
     "country": "br"
    }
@@ -61,7 +61,7 @@
    "au",
    "kr"
   ],
-  "detail": "Kimi #56 (CA Play); basket-mean Western top-100 presence 9/100 across 10 markets",
+  "detail": "Kimi #57 (CA Play); basket-mean Western top-100 presence 9/100 across 10 markets",
   "note": "iOS Apple RSS top-100 + Android Play top-200 across 10 markets; presence = basket-mean of best top-100 chart rank (DeepSeek/Qwen/Doubao/Kimi/MiniMax), #1=100 #100=1; ranks past top-100 score 0."
  },
  "lmarena": {
@@ -142,10 +142,10 @@
  },
  "openrouter_week": {
   "week": "2026-07-20",
-  "cn_share": 0.5892,
-  "us_share": 0.3054,
-  "spi": 1.929,
-  "total_tokens": 13350860727417
+  "cn_share": 0.5883,
+  "us_share": 0.3061,
+  "spi": 1.922,
+  "total_tokens": 13701767591685
  },
  "vercel_gateway": {
   "asof": "2026-07-21",
@@ -488,12 +488,12 @@
   "license": "AI Gateway Leaderboard Data (c) Vercel, CC BY 4.0"
  },
  "ollama": {
-  "cn": 269891500,
-  "us": 442818074,
+  "cn": 269992700,
+  "us": 442819078,
   "cn_top": [
    {
     "name": "deepseek-r1",
-    "pulls": 90100000
+    "pulls": 90200000
    },
    {
     "name": "qwen2.5",
@@ -538,13 +538,13 @@
   "markets": [
    {
     "label": "Will a Chinese AI model be #1 this year?",
-    "p": 0.05,
+    "p": 0.09,
     "ticker": "KXBESTLLMCHINA-27",
     "series": "kxbestllmchina"
    },
    {
     "label": "Best AI at end of 2026: Kimi",
-    "p": 0.05,
+    "p": 0.04,
     "ticker": "KXLLM1-26DEC31-MOON",
     "series": "kxllm1"
    },
@@ -562,7 +562,7 @@
    },
    {
     "label": "Best AI at end of 2026: Claude",
-    "p": 0.639,
+    "p": 0.636,
     "ticker": "KXLLM1-26DEC31-A",
     "series": "kxllm1"
    }
@@ -612,12 +612,8 @@
  "sdk": {
   "cn": [
    {
-    "pkg": "zhipuai",
-    "wk": 64669
-   },
-   {
-    "pkg": "zai-sdk",
-    "wk": 28164
+    "pkg": "dashscope",
+    "wk": 912749
    }
   ],
   "us": [
@@ -628,10 +624,6 @@
    {
     "pkg": "anthropic",
     "wk": 42186040
-   },
-   {
-    "pkg": "google-genai",
-    "wk": 65409205
    }
   ],
   "asof": "2026-07-21"
