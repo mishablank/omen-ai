@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-21T14:04:51Z",
+ "updated": "2026-07-21T19:16:33Z",
  "snapshot_date": "2026-07-21",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -9,7 +9,7 @@
   "asof": "2026-07-12"
  },
  "search_consumer": {
-  "western_share_pct": 3.3,
+  "western_share_pct": 3.2,
   "asof": "2026-07",
   "source": "google-trends",
   "terms_us": [
@@ -29,24 +29,24 @@
    "Seed 1.6",
    "Seed 2.0"
   ],
-  "note": "Google Trends US, 90-day avg: 8 Chinese AI terms = 3.3% of AI-assistant search interest vs ChatGPT+Gemini+Claude+Llama AI+Meta AI."
+  "note": "Google Trends US, 90-day avg: 8 Chinese AI terms = 3.2% of AI-assistant search interest vs ChatGPT+Gemini+Claude+Llama AI+Meta AI."
  },
  "apps": {
-  "score": 9,
+  "score": 3,
   "asof": "2026-07-21",
   "source": "app-charts",
   "best": [
    {
     "label": "Kimi",
-    "rank": 56,
+    "rank": 86,
     "store": "android",
-    "country": "ca"
+    "country": "kr"
    },
    {
     "label": "MiniMax",
-    "rank": 126,
+    "rank": 152,
     "store": "android",
-    "country": "br"
+    "country": "us"
    }
   ],
   "markets": [
@@ -61,7 +61,7 @@
    "au",
    "kr"
   ],
-  "detail": "Kimi #56 (CA Play); basket-mean Western top-100 presence 9/100 across 10 markets",
+  "detail": "Kimi #86 (KR Play); basket-mean Western top-100 presence 3/100 across 10 markets",
   "note": "iOS Apple RSS top-100 + Android Play top-200 across 10 markets; presence = basket-mean of best top-100 chart rank (DeepSeek/Qwen/Doubao/Kimi/MiniMax), #1=100 #100=1; ranks past top-100 score 0."
  },
  "lmarena": {
@@ -142,40 +142,40 @@
  },
  "openrouter_week": {
   "week": "2026-07-20",
-  "cn_share": 0.5897,
-  "us_share": 0.305,
-  "spi": 1.933,
-  "total_tokens": 13209186597164
+  "cn_share": 0.584,
+  "us_share": 0.307,
+  "spi": 1.902,
+  "total_tokens": 15016290970760
  },
  "vercel_gateway": {
   "asof": "2026-07-21",
-  "cn_share": 56.6,
-  "us_share": 43.31,
-  "spi": 1.307,
+  "cn_share": 54.67,
+  "us_share": 45.24,
+  "spi": 1.208,
   "top_cn": [
    {
     "lab": "deepseek",
-    "share": 26.77
+    "share": 26.41
    },
    {
     "lab": "stepfun",
-    "share": 17.58
+    "share": 14.84
    },
    {
     "lab": "moonshotai",
-    "share": 4.73
+    "share": 5.06
    },
    {
     "lab": "zai",
-    "share": 3.79
+    "share": 4.32
    },
    {
     "lab": "minimax",
-    "share": 1.71
+    "share": 1.62
    },
    {
-    "lab": "xiaomi",
-    "share": 1.08
+    "lab": "alibaba",
+    "share": 1.38
    }
   ],
   "series": [
@@ -481,19 +481,19 @@
    },
    {
     "d": "2026-07-21",
-    "cn": 56.6,
-    "us": 43.31
+    "cn": 54.67,
+    "us": 45.24
    }
   ],
   "license": "AI Gateway Leaderboard Data (c) Vercel, CC BY 4.0"
  },
  "ollama": {
-  "cn": 269891300,
-  "us": 442817974,
+  "cn": 270098099,
+  "us": 443023098,
   "cn_top": [
    {
     "name": "deepseek-r1",
-    "pulls": 90100000
+    "pulls": 90200000
    },
    {
     "name": "qwen2.5",
@@ -519,7 +519,7 @@
   "us_top": [
    {
     "name": "llama3.1",
-    "pulls": 117400000
+    "pulls": 117500000
    },
    {
     "name": "llama3.2",
@@ -530,7 +530,7 @@
     "pulls": 38800000
    }
   ],
-  "n_models": 232,
+  "n_models": 233,
   "asof": "2026-07-21"
  },
  "kalshi": {
@@ -538,13 +538,13 @@
   "markets": [
    {
     "label": "Will a Chinese AI model be #1 this year?",
-    "p": 0.05,
+    "p": 0.12,
     "ticker": "KXBESTLLMCHINA-27",
     "series": "kxbestllmchina"
    },
    {
     "label": "Best AI at end of 2026: Kimi",
-    "p": 0.05,
+    "p": 0.04,
     "ticker": "KXLLM1-26DEC31-MOON",
     "series": "kxllm1"
    },
@@ -556,13 +556,13 @@
    },
    {
     "label": "Best AI at end of 2026: Qwen",
-    "p": 0.02,
+    "p": 0.01,
     "ticker": "KXLLM1-26DEC31-ALI",
     "series": "kxllm1"
    },
    {
     "label": "Best AI at end of 2026: Claude",
-    "p": 0.639,
+    "p": 0.635,
     "ticker": "KXLLM1-26DEC31-A",
     "series": "kxllm1"
    }
@@ -572,7 +572,7 @@
   "cn": [
    {
     "base": "Qwen/Qwen3-8B",
-    "n": 1964
+    "n": 1967
    },
    {
     "base": "deepseek-ai/DeepSeek-R1",
@@ -594,7 +594,7 @@
    },
    {
     "base": "google/gemma-3-12b-it",
-    "n": 365
+    "n": 366
    },
    {
     "base": "openai/gpt-oss-20b",
@@ -605,8 +605,8 @@
     "n": 101
    }
   ],
-  "cn_total": 2342,
-  "us_total": 2446,
+  "cn_total": 2345,
+  "us_total": 2447,
   "asof": "2026-07-21"
  },
  "sdk": {
@@ -624,10 +624,6 @@
    {
     "pkg": "openai",
     "wk": 85978229
-   },
-   {
-    "pkg": "anthropic",
-    "wk": 42186040
    },
    {
     "pkg": "google-genai",
