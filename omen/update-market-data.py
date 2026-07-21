@@ -116,6 +116,29 @@ KALSHI_GPU = {
 }
 # a ladder strike wider than this is a quote, not a price
 KALSHI_MAX_SPREAD = 0.15
+# CFTC Commitments of Traders (legacy futures-only, weekly: Tuesday positions,
+# Friday release). Non-commercial = large speculators; their net (long minus
+# short) as a share of open interest is the positioning/crowding read the rest of
+# the site lacks — it prices leverage, not just level or vol. VIX net-short is the
+# crowded short-vol trade whose forced unwind is the mechanical accelerant that
+# turns a vol spike into a crash. Filtered by the stable contract-market code, not
+# the display name (which the CFTC has renamed before).
+COT_URL = "https://publicreporting.cftc.gov/resource/6dca-aqww.json"
+COT_WEEKS = 156          # ~3y window for the positioning percentile / z-score
+COT_CONTRACTS = {
+    "ndx": {"code": "209742", "label": "E-mini Nasdaq-100", "venue": "CME"},
+    "spx": {"code": "13874A", "label": "E-mini S&P 500", "venue": "CME"},
+    "vix": {"code": "1170E1", "label": "VIX futures", "venue": "CFE"},
+}
+# FINRA consolidated short interest (bi-monthly settlement: mid-month and month-end),
+# the single-name companion to the index-level COT above. FINRA's own distribution
+# (cdn.finra.org) and Nasdaq Trader are both WAF-blocked to a stdlib client, but
+# api.nasdaq.com — the host the caps card already uses — redistributes the same
+# FINRA-collected figures for Nasdaq-listed names (NYSE-listed ORCL/VST are not
+# covered here). Focus is the levered AI-infra / neocloud names, where a rising short
+# and a lengthening days-to-cover is the financing-risk bet expressed in cash equity.
+SHORT_INTEREST = ["NVDA", "CRWV", "NBIS", "IREN", "SMCI"]
+NASDAQ_SI_URL = "https://api.nasdaq.com/api/quote/{sym}/short-interest?assetClass=stocks"
 # Bear (OMN-X) is the short side: the union of two sleeves, priced as one flat
 # equal-weight basket of 9. The sleeves are series-identical to the indexes Bear
 # replaced – MKT to the old AI-Crash, GOV to the old AI-Regulation – which is what
@@ -960,6 +983,150 @@ def append_snapshot(data=None):
           f"(mkt {row['crash']} · gov {row['reg']}) gauge {gauge} -> {SNAP}")
 
 
+# ---------- CFTC Commitments of Traders (speculator positioning) ----------
+def _inty(x):
+    """Socrata returns numbers as strings (sometimes decimals); coerce or None."""
+    try:
+        return int(float(x))
+    except (TypeError, ValueError):
+        return None
+
+
+def pctile_rank(vals, x):
+    """Percentile of x within vals, 0..100, counting values <= x (ties as below)."""
+    if not vals:
+        return None
+    return round(100.0 * sum(v <= x for v in vals) / len(vals), 1)
+
+
+def zscore(vals, x):
+    """Standard score of x against the sample. None below 2 points; 0 at zero
+    variance (a flat series has no scale, not an infinite one)."""
+    n = len(vals)
+    if n < 2:
+        return None
+    m = sum(vals) / n
+    sd = math.sqrt(sum((v - m) ** 2 for v in vals) / n)
+    return 0.0 if sd == 0 else round((x - m) / sd, 2)
+
+
+def cot_reduce(label, venue, rows):
+    """Socrata COT rows (any order) -> non-commercial net positioning + percentile.
+
+    net = noncomm long - noncomm short, reported as a share of open interest so
+    contracts of different size compare on one axis. Percentile and z-score locate
+    the latest week's net%OI inside the returned ~3y window. Rows missing a leg or
+    with zero open interest are dropped rather than guessed."""
+    hist = []
+    for r in rows:
+        oi = _inty(r.get("open_interest_all"))
+        lng = _inty(r.get("noncomm_positions_long_all"))
+        sht = _inty(r.get("noncomm_positions_short_all"))
+        date = (r.get("report_date_as_yyyy_mm_dd") or "")[:10]
+        if not date or oi is None or lng is None or sht is None or oi <= 0:
+            continue
+        net = lng - sht
+        hist.append({"date": date, "net": net, "net_pct_oi": round(100.0 * net / oi, 2)})
+    if not hist:
+        return None
+    hist.sort(key=lambda h: h["date"])            # oldest -> newest
+    latest = hist[-1]
+    vals = [h["net_pct_oi"] for h in hist]
+    return {"label": label, "venue": venue, "date": latest["date"],
+            "net": latest["net"], "net_pct_oi": latest["net_pct_oi"],
+            "pctile": pctile_rank(vals, latest["net_pct_oi"]),
+            "z": zscore(vals, latest["net_pct_oi"]), "n_weeks": len(hist),
+            "history": [{"d": h["date"], "v": h["net_pct_oi"]} for h in hist[-104:]]}
+
+
+def cot_fetch(code, weeks=COT_WEEKS):
+    q = urllib.parse.urlencode({
+        "$select": "report_date_as_yyyy_mm_dd,open_interest_all,"
+                   "noncomm_positions_long_all,noncomm_positions_short_all",
+        "$where": f"cftc_contract_market_code='{code}'",
+        "$order": "report_date_as_yyyy_mm_dd DESC", "$limit": str(weeks)})
+    return json.loads(get(COT_URL + "?" + q, timeout=30))
+
+
+def cot():
+    out = {"source": "CFTC Commitments of Traders — legacy futures-only, weekly "
+                     "(Tue positions, Fri release)", "contracts": []}
+    for key, cfg in COT_CONTRACTS.items():
+        try:
+            red = cot_reduce(cfg["label"], cfg["venue"], cot_fetch(cfg["code"]))
+        except Exception as e:
+            print(f"  cot {key}: FAIL {e}")
+            continue
+        if red:
+            red["key"] = key
+            out["contracts"].append(red)
+    return out if out["contracts"] else None
+
+
+# ---------- FINRA short interest (single-name short crowding, via api.nasdaq.com) ----------
+def nasdaq_json(url, timeout=30):
+    """GET api.nasdaq.com JSON, decompressing gzip (the endpoint gzips by default)."""
+    import gzip
+    req = urllib.request.Request(url, headers={**UA, "Accept": "application/json",
+                                               "Accept-Encoding": "gzip"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        raw = r.read()
+        if r.headers.get("Content-Encoding") == "gzip" or raw[:2] == b"\x1f\x8b":
+            raw = gzip.decompress(raw)
+    return json.loads(raw)
+
+
+def si_num(x):
+    """'80,963,200' / '$12.30' -> float; None on junk or empty."""
+    if x is None:
+        return None
+    try:
+        return float(str(x).replace(",", "").replace("$", ""))
+    except ValueError:
+        return None
+
+
+def short_interest_reduce(sym, rows):
+    """api.nasdaq.com short-interest rows (newest settlement first) -> latest short
+    interest and days-to-cover, the change since the prior settlement, and a short
+    trend history. Days-to-cover = shares short / avg daily volume: how many normal
+    sessions it would take to buy the short back — squeeze fuel and the depth of
+    bearish conviction in one number. Rows without a date or a level are dropped."""
+    hist = []
+    for r in rows:
+        si = si_num(r.get("interest"))
+        date = r.get("settlementDate")
+        if si is None or not date:
+            continue
+        hist.append({"date": date, "si": si, "dtc": si_num(r.get("daysToCover"))})
+    if not hist:
+        return None
+    latest, prev = hist[0], (hist[1] if len(hist) > 1 else None)
+    chg = (latest["si"] / prev["si"] - 1) * 100 if prev and prev["si"] else None
+    return {"sym": sym, "date": latest["date"], "si": latest["si"], "dtc": latest["dtc"],
+            "chg_pct": round(chg, 1) if chg is not None else None,
+            "history": [{"d": h["date"], "si": h["si"], "dtc": h["dtc"]} for h in hist[:13]][::-1]}
+
+
+def short_interest():
+    out = {"source": "FINRA consolidated short interest (bi-monthly), via api.nasdaq.com",
+           "names": []}
+    for sym in SHORT_INTEREST:
+        try:
+            j = nasdaq_json(NASDAQ_SI_URL.format(sym=sym))
+            rows = ((j.get("data") or {}).get("shortInterestTable") or {}).get("rows") or []
+            red = short_interest_reduce(sym, rows)
+        except Exception as e:
+            print(f"  short_interest {sym}: FAIL {e}")
+            continue
+        if red:
+            out["names"].append(red)
+    if not out["names"]:
+        return None
+    out["asof"] = out["names"][0]["date"]     # settlements align across names
+    return out
+
+
 # ---------- alerting ----------
 def send_alert(title, body):
     tok, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
@@ -1028,7 +1195,7 @@ def build():
             "equity": {}, "vol": {}, "skew": {}, "term": {}, "tail": {}, "credit": {},
             "fred": {}, "kalshi": {}, "kalshi_gpu": None, "manifold": [], "metaculus": None,
             "fundamentals": None, "backlog": None, "macro": None,
-            "insiders": {}, "gpu": None}
+            "insiders": {}, "gpu": None, "cot": None, "short_interest": None}
 
     for sym in EQUITY + POWER_PROXY:
         try:
@@ -1169,6 +1336,26 @@ def build():
         data["insiders"] = edgar_insiders()
     except Exception as e:
         print(f"insiders: FAIL {e}")
+
+    try:
+        data["cot"] = cot() or prev.get("cot")
+        if data.get("cot"):
+            for c in data["cot"]["contracts"]:
+                print(f"cot {c['key']}: net {c['net']:+d} ({c['net_pct_oi']:+.1f}% OI) "
+                      f"pctile {c['pctile']} z {c['z']} [{c['n_weeks']}w]")
+    except Exception as e:
+        print(f"cot: FAIL {e}")
+        data["cot"] = prev.get("cot")
+
+    try:
+        data["short_interest"] = short_interest() or prev.get("short_interest")
+        if data.get("short_interest"):
+            for n in data["short_interest"]["names"]:
+                print(f"short_interest {n['sym']}: {n['si'] / 1e6:.0f}M sh "
+                      f"dtc {n['dtc']} chg {n['chg_pct']}% ({n['date']})")
+    except Exception as e:
+        print(f"short_interest: FAIL {e}")
+        data["short_interest"] = prev.get("short_interest")
 
     # server-side gauge + regime, embedded so the landing page and the monitor
     # can never disagree about the headline regime

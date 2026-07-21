@@ -355,3 +355,116 @@ def test_backlog_returns_none_when_no_filer_reports(monkeypatch):
     monkeypatch.setattr(umd, "RPO_CIKS", {"ORCL": "1"})
     monkeypatch.setattr(umd, "sec_instant", lambda cik, tags: {})
     assert umd.backlog() is None
+
+
+# ---------- CFTC Commitments of Traders (positioning) ----------
+def test_inty_coerces_strings_and_guards_junk():
+    assert umd._inty("300") == 300
+    assert umd._inty("300.0") == 300      # Socrata sometimes returns decimals
+    assert umd._inty(5) == 5
+    assert umd._inty(None) is None
+    assert umd._inty("") is None
+    assert umd._inty("n/a") is None
+
+
+def test_pctile_rank_counts_values_at_or_below():
+    assert umd.pctile_rank([10, 20, 30], 20) == 66.7
+    assert umd.pctile_rank([10, 20, 30], 30) == 100.0
+    assert umd.pctile_rank([10, 20, 30], 5) == 0.0
+    assert umd.pctile_rank([], 5) is None
+
+
+def test_zscore_basic_and_degenerate():
+    assert umd.zscore([2, 4, 6], 4) == 0.0        # x at the mean
+    assert umd.zscore([2, 4, 6], 6) == 1.22       # (6-4)/1.633
+    assert umd.zscore([5, 5, 5], 5) == 0.0        # zero variance -> 0, not a divide error
+    assert umd.zscore([5], 5) is None             # need >=2 points
+
+
+# Socrata returns newest-first strings; reduce must be order-independent and coerce.
+COT_ROWS = [
+    {"report_date_as_yyyy_mm_dd": "2026-07-14T00:00:00.000",
+     "open_interest_all": "1000", "noncomm_positions_long_all": "300",
+     "noncomm_positions_short_all": "100"},                        # net +200, +20%
+    {"report_date_as_yyyy_mm_dd": "2026-07-07T00:00:00.000",
+     "open_interest_all": "1000", "noncomm_positions_long_all": "100",
+     "noncomm_positions_short_all": "300"},                        # net -200, -20%
+    {"report_date_as_yyyy_mm_dd": "2026-06-30T00:00:00.000",
+     "open_interest_all": "1000", "noncomm_positions_long_all": "200",
+     "noncomm_positions_short_all": "200"},                        # net 0, 0%
+    {"report_date_as_yyyy_mm_dd": "2026-06-23T00:00:00.000",
+     "open_interest_all": "0", "noncomm_positions_long_all": "5",
+     "noncomm_positions_short_all": "5"},                          # OI 0 -> dropped
+    {"report_date_as_yyyy_mm_dd": "2026-06-16T00:00:00.000",
+     "open_interest_all": "1000", "noncomm_positions_long_all": None,
+     "noncomm_positions_short_all": "5"},                          # missing leg -> dropped
+]
+
+
+def test_cot_reduce_computes_net_percentile_and_latest():
+    out = umd.cot_reduce("E-mini Nasdaq-100", "CME", COT_ROWS)
+    assert out["label"] == "E-mini Nasdaq-100" and out["venue"] == "CME"
+    assert out["date"] == "2026-07-14"       # latest by date, not by input order
+    assert out["net"] == 200
+    assert out["net_pct_oi"] == 20.0
+    assert out["n_weeks"] == 3               # the two malformed rows are dropped
+    # window net%OI = [0, -20, 20]; latest 20 is the max -> 100th pctile
+    assert out["pctile"] == 100.0
+    assert out["z"] == 1.22                  # (20 - 0) / 16.33
+    # sparkline history is oldest -> newest, compact {d, v}
+    assert out["history"][0] == {"d": "2026-06-30", "v": 0.0}
+    assert out["history"][-1] == {"d": "2026-07-14", "v": 20.0}
+
+
+def test_cot_reduce_returns_none_when_all_rows_unusable():
+    bad = [{"report_date_as_yyyy_mm_dd": "2026-07-14", "open_interest_all": "0",
+            "noncomm_positions_long_all": "1", "noncomm_positions_short_all": "1"}]
+    assert umd.cot_reduce("x", "y", bad) is None
+    assert umd.cot_reduce("x", "y", []) is None
+
+
+# ---------- FINRA short interest (single-name short crowding, via api.nasdaq.com) ----------
+def test_si_num_strips_commas_and_dollar():
+    assert umd.si_num("80,963,200") == 80963200.0
+    assert umd.si_num("$12.30") == 12.30
+    assert umd.si_num(2.5) == 2.5
+    assert umd.si_num(None) is None
+    assert umd.si_num("") is None
+    assert umd.si_num("n/a") is None
+
+
+# api.nasdaq.com returns settlements newest-first; interest is a comma string.
+SI_ROWS = [
+    {"settlementDate": "06/30/2026", "interest": "80,963,200",
+     "avgDailyShareVolume": "31,763,241", "daysToCover": 2.548959},
+    {"settlementDate": "06/15/2026", "interest": "69,012,019",
+     "avgDailyShareVolume": "29,288,664", "daysToCover": 2.356271},
+    {"settlementDate": "05/29/2026", "interest": "54,604,588",
+     "avgDailyShareVolume": "26,064,506", "daysToCover": 2.094979},
+    {"settlementDate": "", "interest": "1,000", "daysToCover": 1.0},        # no date -> dropped
+    {"settlementDate": "05/15/2026", "interest": None, "daysToCover": 1.0},  # no SI  -> dropped
+]
+
+
+def test_short_interest_reduce_latest_change_and_trend():
+    out = umd.short_interest_reduce("CRWV", SI_ROWS)
+    assert out["sym"] == "CRWV"
+    assert out["date"] == "06/30/2026"          # newest settlement, input order preserved
+    assert out["si"] == 80963200.0
+    assert out["dtc"] == 2.548959
+    # change vs the prior settlement: 80,963,200 / 69,012,019 - 1 = +17.3%
+    assert out["chg_pct"] == 17.3
+    # the two malformed rows are dropped; history is oldest -> newest, compact
+    assert [h["d"] for h in out["history"]] == ["05/29/2026", "06/15/2026", "06/30/2026"]
+    assert out["history"][-1] == {"d": "06/30/2026", "si": 80963200.0, "dtc": 2.548959}
+
+
+def test_short_interest_reduce_single_row_has_no_change():
+    out = umd.short_interest_reduce("NBIS", [SI_ROWS[0]])
+    assert out["chg_pct"] is None               # nothing to compare against
+    assert out["si"] == 80963200.0
+
+
+def test_short_interest_reduce_returns_none_when_empty():
+    assert umd.short_interest_reduce("X", []) is None
+    assert umd.short_interest_reduce("X", [{"settlementDate": "", "interest": None}]) is None

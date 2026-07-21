@@ -252,6 +252,80 @@ console.log("pure helpers — mnum / xlink / fetcherStale / viewFromPath / claim
   console.log("  backlog");
 }
 
+/* ---------- COT: cotSignal (speculator positioning extremes) ---------- */
+{
+  const code = slice("/* ================= COT positioning: pure helpers",
+                     "/* ================= Index math");
+  const { cotSignal } = build(code, ["cotSignal"]);
+  eq("cotSignal/null when no data", cotSignal(null), null);
+  eq("cotSignal/null when contracts empty", cotSignal({ contracts: [] }), null);
+  // rows missing the computed fields are dropped, not guessed
+  eq("cotSignal/null when every row unusable",
+     cotSignal({ contracts: [{ key: "x", net_pct_oi: null, pctile: null }] }), null);
+
+  const C = { contracts: [
+    { key: "ndx", label: "E-mini Nasdaq-100", net: 2721, net_pct_oi: 0.95, pctile: 19.2, z: -0.95, date: "2026-07-14" },
+    { key: "spx", label: "E-mini S&P 500", net: -38938, net_pct_oi: -2.01, pctile: 76.9, z: 0.71, date: "2026-07-14" },
+    { key: "vix", label: "VIX futures", net: -65783, net_pct_oi: -16.91, pctile: 18.6, z: -0.95, date: "2026-07-14" },
+  ] };
+  const s = cotSignal(C);
+  eq("cotSignal/keeps every usable contract", s.rows.length, 3);
+  eq("cotSignal/asof is the latest report date", s.asof, "2026-07-14");
+  // VIX net-short at an 18.6th percentile (<=20) is the crowded short-vol flag
+  ok("cotSignal/flags crowded short vol", s.vixCrowded === true);
+  eq("cotSignal/finds the vix row", s.vix.key, "vix");
+  // none of these sit in the top/bottom decile, so no positioning extreme
+  eq("cotSignal/no decile extreme here", s.extreme.length, 0);
+
+  // a net-long index in the top decile counts as an extreme; a net-short VIX at a
+  // high percentile (specs LESS short than usual) is not crowded
+  const C2 = { contracts: [
+    { key: "ndx", label: "E-mini Nasdaq-100", net: 90000, net_pct_oi: 30, pctile: 96, z: 2.1, date: "2026-07-14" },
+    { key: "vix", label: "VIX futures", net: -1000, net_pct_oi: -0.5, pctile: 85, z: 0.2, date: "2026-07-07" },
+  ] };
+  const s2 = cotSignal(C2);
+  eq("cotSignal/decile extreme detected", s2.extreme.length, 1);
+  ok("cotSignal/not crowded when vix short is shallow", s2.vixCrowded === false);
+  eq("cotSignal/asof takes the max date", s2.asof, "2026-07-14");
+  console.log("  cot");
+}
+
+/* ---------- short interest: shortInterestSignal (single-name short crowding) ---------- */
+{
+  const code = slice("/* ================= Short interest: pure helpers",
+                     "/* ================= Index math");
+  const { shortInterestSignal } = build(code, ["shortInterestSignal"]);
+  eq("shortInterestSignal/null when no data", shortInterestSignal(null), null);
+  eq("shortInterestSignal/null when names empty", shortInterestSignal({ names: [] }), null);
+  eq("shortInterestSignal/null when every name lacks fields",
+     shortInterestSignal({ names: [{ sym: "X", si: null, dtc: null }] }), null);
+
+  const SI = { asof: "06/30/2026", names: [
+    { sym: "NVDA", si: 310e6, dtc: 1.99, chg_pct: 3.5 },
+    { sym: "CRWV", si: 81e6,  dtc: 2.55, chg_pct: 17.3 },
+    { sym: "NBIS", si: 61e6,  dtc: 3.46, chg_pct: 19.8 },   // deepest short
+    { sym: "IREN", si: 76e6,  dtc: 2.12, chg_pct: 18.0 },
+    { sym: "SMCI", si: 103e6, dtc: 1.58, chg_pct: -2.0 },   // the one easing
+  ] };
+  const s = shortInterestSignal(SI);
+  eq("shortInterestSignal/keeps every usable name", s.names.length, 5);
+  eq("shortInterestSignal/asof passes through", s.asof, "06/30/2026");
+  eq("shortInterestSignal/deepest short by days-to-cover", s.topDtc.sym, "NBIS");
+  eq("shortInterestSignal/fastest-rising short", s.topRise.sym, "NBIS");
+  eq("shortInterestSignal/counts only rising shorts", s.risingCount, 4);
+  eq("shortInterestSignal/total usable", s.total, 5);
+
+  // a name missing chg_pct is still counted for dtc but never as a riser
+  const s2 = shortInterestSignal({ names: [
+    { sym: "A", si: 1e6, dtc: 5, chg_pct: null },
+    { sym: "B", si: 2e6, dtc: 1, chg_pct: null },
+  ] });
+  eq("shortInterestSignal/no risers when all chg null", s2.risingCount, 0);
+  eq("shortInterestSignal/topRise null when no chg data", s2.topRise, null);
+  eq("shortInterestSignal/topDtc still resolves", s2.topDtc.sym, "A");
+  console.log("  short interest");
+}
+
 
 console.log(failures ? `\n${failures} assertion(s) FAILED` : "\nall assertions passed");
 process.exit(failures ? 1 : 0);
