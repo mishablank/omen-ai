@@ -255,6 +255,27 @@ def test_fetch_eia_paginates_until_short_page(monkeypatch):
     assert out["planned_gw"] == 1.5
 
 
+def test_eia_start_period_is_lookback_months_back():
+    import datetime as dt
+    # a recent window keeps EIA from sorting its full multi-year table (the timeout cause)
+    assert ucd.eia_start_period(dt.date(2026, 7, 15)) == "2025-07"
+    assert ucd.eia_start_period(dt.date(2026, 1, 31)) == "2025-01"   # crosses the year
+
+
+def test_fetch_eia_bounds_the_server_sort_and_lifts_timeout(monkeypatch):
+    seen = {}
+    def fake_jget(url, **kw):
+        seen["url"], seen["timeout"] = url, kw.get("timeout")
+        return {"response": {"data": [{"period": "2026-05", "status": "OP",
+                                       "nameplate-capacity-mw": "10"}]}}   # short -> one call
+    monkeypatch.setattr(ucd, "jget", fake_jget)
+    ucd.fetch_eia("k")
+    # the recent 'start' filter is what stops EIA sorting every month back to 2015
+    assert "start=" in seen["url"]
+    # timeout lifted above the 30s default that was tripping on the heavy query
+    assert seen["timeout"] is not None and seen["timeout"] >= 60
+
+
 def test_refresh_carries_forward_prev_on_failure(tmp_path, monkeypatch):
     out = tmp_path / "capex-data.json"
     import json
