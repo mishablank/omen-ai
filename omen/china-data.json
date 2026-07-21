@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-21T03:29:17Z",
+ "updated": "2026-07-21T06:36:37Z",
  "snapshot_date": "2026-07-21",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -44,7 +44,7 @@
    },
    {
     "label": "MiniMax",
-    "rank": 114,
+    "rank": 118,
     "store": "android",
     "country": "br"
    }
@@ -142,40 +142,40 @@
  },
  "openrouter_week": {
   "week": "2026-07-20",
-  "cn_share": 0.6037,
-  "us_share": 0.2918,
-  "spi": 2.069,
-  "total_tokens": 9491768514423
+  "cn_share": 0.598,
+  "us_share": 0.2962,
+  "spi": 2.019,
+  "total_tokens": 10473521471947
  },
  "vercel_gateway": {
   "asof": "2026-07-21",
-  "cn_share": 50.03,
-  "us_share": 49.9,
-  "spi": 1.003,
+  "cn_share": 52.13,
+  "us_share": 47.8,
+  "spi": 1.091,
   "top_cn": [
    {
     "lab": "deepseek",
-    "share": 26.77
+    "share": 26.91
    },
    {
     "lab": "stepfun",
-    "share": 13.13
+    "share": 14.79
    },
    {
     "lab": "zai",
-    "share": 4.52
+    "share": 3.78
    },
    {
     "lab": "moonshotai",
-    "share": 2.39
+    "share": 3.29
    },
    {
     "lab": "minimax",
-    "share": 1.59
+    "share": 1.49
    },
    {
     "lab": "alibaba",
-    "share": 0.85
+    "share": 0.95
    }
   ],
   "series": [
@@ -481,15 +481,15 @@
    },
    {
     "d": "2026-07-21",
-    "cn": 50.03,
-    "us": 49.9
+    "cn": 52.13,
+    "us": 47.8
    }
   ],
   "license": "AI Gateway Leaderboard Data (c) Vercel, CC BY 4.0"
  },
  "ollama": {
-  "cn": 269877700,
-  "us": 442504089,
+  "cn": 269881599,
+  "us": 442608303,
   "cn_top": [
    {
     "name": "deepseek-r1",
@@ -538,13 +538,13 @@
   "markets": [
    {
     "label": "Will a Chinese AI model be #1 this year?",
-    "p": 0.15,
+    "p": 0.05,
     "ticker": "KXBESTLLMCHINA-27",
     "series": "kxbestllmchina"
    },
    {
     "label": "Best AI at end of 2026: Kimi",
-    "p": 0.04,
+    "p": 0.05,
     "ticker": "KXLLM1-26DEC31-MOON",
     "series": "kxllm1"
    },
@@ -556,13 +556,13 @@
    },
    {
     "label": "Best AI at end of 2026: Qwen",
-    "p": 0.024,
+    "p": 0.019,
     "ticker": "KXLLM1-26DEC31-ALI",
     "series": "kxllm1"
    },
    {
     "label": "Best AI at end of 2026: Claude",
-    "p": 0.635,
+    "p": 0.618,
     "ticker": "KXLLM1-26DEC31-A",
     "series": "kxllm1"
    }
