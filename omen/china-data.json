@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-21T13:58:34Z",
+ "updated": "2026-07-21T14:04:51Z",
  "snapshot_date": "2026-07-21",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -76,7 +76,6 @@
   "asof": "2026-07-20",
   "source": "lmarena-dataset"
  },
- "github_stars_per_day": 36.6,
  "hf": {
   "cnOrgs": [
    {
@@ -490,7 +489,7 @@
  },
  "ollama": {
   "cn": 269891300,
-  "us": 442817973,
+  "us": 442817974,
   "cn_top": [
    {
     "name": "deepseek-r1",
@@ -532,9 +531,7 @@
    }
   ],
   "n_models": 232,
-  "asof": "2026-07-21",
-  "cn_per_day": 142722,
-  "us_per_day": 597433
+  "asof": "2026-07-21"
  },
  "kalshi": {
   "asof": "2026-07-21",
@@ -559,7 +556,7 @@
    },
    {
     "label": "Best AI at end of 2026: Qwen",
-    "p": 0.019,
+    "p": 0.02,
     "ticker": "KXLLM1-26DEC31-ALI",
     "series": "kxllm1"
    },
@@ -617,10 +614,6 @@
    {
     "pkg": "dashscope",
     "wk": 912749
-   },
-   {
-    "pkg": "zhipuai",
-    "wk": 64669
    },
    {
     "pkg": "zai-sdk",
