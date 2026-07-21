@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-21T20:01:48Z",
+ "updated": "2026-07-21T21:41:12Z",
  "source": "google-play-scraper",
  "store": "android",
  "depth": 200,
@@ -9,7 +9,7 @@
    "label": "MiniMax",
    "store": "android",
    "country": "us",
-   "rank": 151,
+   "rank": 147,
    "appId": "com.weaver.app.prod",
    "title": "Talkie: Creative AI Community"
   },
@@ -17,7 +17,7 @@
    "label": "Kimi",
    "store": "android",
    "country": "gb",
-   "rank": 195,
+   "rank": 172,
    "appId": "com.moonshot.kimichat",
    "title": "Kimi"
   },
@@ -25,7 +25,23 @@
    "label": "Kimi",
    "store": "android",
    "country": "de",
-   "rank": 191,
+   "rank": 168,
+   "appId": "com.moonshot.kimichat",
+   "title": "Kimi"
+  },
+  {
+   "label": "DeepSeek",
+   "store": "android",
+   "country": "de",
+   "rank": 200,
+   "appId": "com.deepseek.chat",
+   "title": "DeepSeek - AI Assistant"
+  },
+  {
+   "label": "Kimi",
+   "store": "android",
+   "country": "fr",
+   "rank": 185,
    "appId": "com.moonshot.kimichat",
    "title": "Kimi"
   },
@@ -33,7 +49,7 @@
    "label": "MiniMax",
    "store": "android",
    "country": "br",
-   "rank": 157,
+   "rank": 151,
    "appId": "ai.hailuo.video",
    "title": "Hailuo AI: Image&Video Maker"
   },
@@ -41,15 +57,23 @@
    "label": "Kimi",
    "store": "android",
    "country": "ca",
-   "rank": 105,
+   "rank": 89,
    "appId": "com.moonshot.kimichat",
    "title": "Kimi"
+  },
+  {
+   "label": "MiniMax",
+   "store": "android",
+   "country": "ca",
+   "rank": 199,
+   "appId": "com.weaver.app.prod",
+   "title": "Talkie: Creative AI Community"
   },
   {
    "label": "Kimi",
    "store": "android",
    "country": "au",
-   "rank": 114,
+   "rank": 95,
    "appId": "com.moonshot.kimichat",
    "title": "Kimi"
   },
@@ -57,7 +81,7 @@
    "label": "MiniMax",
    "store": "android",
    "country": "au",
-   "rank": 195,
+   "rank": 197,
    "appId": "com.weaver.app.prod",
    "title": "Talkie: Creative AI Community"
   },
@@ -65,7 +89,7 @@
    "label": "Kimi",
    "store": "android",
    "country": "kr",
-   "rank": 85,
+   "rank": 68,
    "appId": "com.moonshot.kimichat",
    "title": "Kimi"
   }
