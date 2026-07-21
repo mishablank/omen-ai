@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-21T09:33:04Z",
+ "updated": "2026-07-21T11:52:41Z",
  "snapshot_date": "2026-07-21",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -32,19 +32,19 @@
   "note": "Google Trends US, 90-day avg: 8 Chinese AI terms = 3.3% of AI-assistant search interest vs ChatGPT+Gemini+Claude+Llama AI+Meta AI."
  },
  "apps": {
-  "score": 9,
+  "score": 8,
   "asof": "2026-07-21",
   "source": "app-charts",
   "best": [
    {
     "label": "Kimi",
-    "rank": 54,
+    "rank": 59,
     "store": "android",
     "country": "ca"
    },
    {
     "label": "MiniMax",
-    "rank": 119,
+    "rank": 124,
     "store": "android",
     "country": "br"
    }
@@ -61,7 +61,7 @@
    "au",
    "kr"
   ],
-  "detail": "Kimi #54 (CA Play); basket-mean Western top-100 presence 9/100 across 10 markets",
+  "detail": "Kimi #59 (CA Play); basket-mean Western top-100 presence 8/100 across 10 markets",
   "note": "iOS Apple RSS top-100 + Android Play top-200 across 10 markets; presence = basket-mean of best top-100 chart rank (DeepSeek/Qwen/Doubao/Kimi/MiniMax), #1=100 #100=1; ranks past top-100 score 0."
  },
  "lmarena": {
@@ -142,10 +142,10 @@
  },
  "openrouter_week": {
   "week": "2026-07-20",
-  "cn_share": 0.5947,
-  "us_share": 0.3,
-  "spi": 1.983,
-  "total_tokens": 11370021023580
+  "cn_share": 0.5918,
+  "us_share": 0.3032,
+  "spi": 1.952,
+  "total_tokens": 12258058171779
  },
  "vercel_gateway": {
   "asof": "2026-07-21",
@@ -488,8 +488,8 @@
   "license": "AI Gateway Leaderboard Data (c) Vercel, CC BY 4.0"
  },
  "ollama": {
-  "cn": 269885600,
-  "us": 442711817,
+  "cn": 269888600,
+  "us": 442815742,
   "cn_top": [
    {
     "name": "deepseek-r1",
@@ -527,7 +527,7 @@
    },
    {
     "name": "gemma3",
-    "pulls": 38700000
+    "pulls": 38800000
    }
   ],
   "n_models": 232,
@@ -562,7 +562,7 @@
    },
    {
     "label": "Best AI at end of 2026: Claude",
-    "p": 0.629,
+    "p": 0.639,
     "ticker": "KXLLM1-26DEC31-A",
     "series": "kxllm1"
    }
@@ -590,7 +590,7 @@
   "us": [
    {
     "base": "meta-llama/Llama-3.1-8B",
-    "n": 1441
+    "n": 1442
    },
    {
     "base": "google/gemma-3-12b-it",
@@ -606,7 +606,7 @@
    }
   ],
   "cn_total": 2342,
-  "us_total": 2445,
+  "us_total": 2446,
   "asof": "2026-07-21"
  },
  "sdk": {
