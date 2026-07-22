@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-22T22:34:49Z",
+ "updated": "2026-07-22T23:11:09Z",
  "snapshot_date": "2026-07-22",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -9,7 +9,7 @@
   "asof": "2026-07-12"
  },
  "search_consumer": {
-  "western_share_pct": 3.2,
+  "western_share_pct": 3.3,
   "asof": "2026-07",
   "source": "google-trends",
   "terms_us": [
@@ -29,7 +29,7 @@
    "Seed 1.6",
    "Seed 2.0"
   ],
-  "note": "Google Trends US, 90-day avg: 8 Chinese AI terms = 3.2% of AI-assistant search interest vs ChatGPT+Gemini+Claude+Llama AI+Meta AI."
+  "note": "Google Trends US, 90-day avg: 8 Chinese AI terms = 3.3% of AI-assistant search interest vs ChatGPT+Gemini+Claude+Llama AI+Meta AI."
  },
  "apps": {
   "score": 3,
@@ -44,7 +44,7 @@
    },
    {
     "label": "MiniMax",
-    "rank": 143,
+    "rank": 142,
     "store": "android",
     "country": "us"
    }
@@ -142,10 +142,10 @@
  },
  "openrouter_week": {
   "week": "2026-07-20",
-  "cn_share": 0.5654,
+  "cn_share": 0.5652,
   "us_share": 0.3051,
-  "spi": 1.853,
-  "total_tokens": 25173221275361
+  "spi": 1.852,
+  "total_tokens": 25269224576154
  },
  "vercel_gateway": {
   "asof": "2026-07-22",
@@ -488,8 +488,8 @@
   "license": "AI Gateway Leaderboard Data (c) Vercel, CC BY 4.0"
  },
  "ollama": {
-  "cn": 271030300,
-  "us": 443653667,
+  "cn": 271030800,
+  "us": 443754170,
   "cn_top": [
    {
     "name": "deepseek-r1",
@@ -556,13 +556,13 @@
    },
    {
     "label": "Best AI at end of 2026: Qwen",
-    "p": 0.01,
+    "p": 0.012,
     "ticker": "KXLLM1-26DEC31-ALI",
     "series": "kxllm1"
    },
    {
     "label": "Best AI at end of 2026: Claude",
-    "p": 0.641,
+    "p": 0.642,
     "ticker": "KXLLM1-26DEC31-A",
     "series": "kxllm1"
    }
