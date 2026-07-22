@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-22T03:28:03Z",
+ "updated": "2026-07-22T06:37:34Z",
  "snapshot_date": "2026-07-22",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -44,7 +44,7 @@
    },
    {
     "label": "MiniMax",
-    "rank": 155,
+    "rank": 108,
     "store": "android",
     "country": "br"
    }
@@ -66,15 +66,15 @@
  },
  "lmarena": {
   "best_model": "kimi-k3",
-  "best_org": "Moonshot",
+  "best_org": "moonshot",
   "best_rank": 10,
   "best_score": 1486,
   "us_leader": "claude-fable-5",
   "us_leader_score": 1507,
   "top10": 1,
   "top20": 2,
-  "asof": "2026-07-22",
-  "source": "arena-scrape"
+  "asof": "2026-07-21",
+  "source": "lmarena-dataset"
  },
  "hf": {
   "cnOrgs": [
@@ -143,39 +143,39 @@
  "openrouter_week": {
   "week": "2026-07-20",
   "cn_share": 0.5738,
-  "us_share": 0.3071,
-  "spi": 1.869,
-  "total_tokens": 17770318742274
+  "us_share": 0.3057,
+  "spi": 1.877,
+  "total_tokens": 18881352334526
  },
  "vercel_gateway": {
   "asof": "2026-07-22",
-  "cn_share": 40.73,
-  "us_share": 59.19,
-  "spi": 0.688,
+  "cn_share": 40.29,
+  "us_share": 59.61,
+  "spi": 0.676,
   "top_cn": [
    {
     "lab": "deepseek",
-    "share": 24.98
+    "share": 26.81
    },
    {
     "lab": "moonshotai",
-    "share": 8.09
+    "share": 6.0
    },
    {
     "lab": "zai",
-    "share": 4.13
+    "share": 3.68
    },
    {
     "lab": "minimax",
-    "share": 1.61
+    "share": 1.66
    },
    {
     "lab": "alibaba",
-    "share": 1.13
+    "share": 1.11
    },
    {
     "lab": "xiaomi",
-    "share": 0.78
+    "share": 1.0
    }
   ],
   "series": [
@@ -481,15 +481,15 @@
    },
    {
     "d": "2026-07-22",
-    "cn": 40.73,
-    "us": 59.19
+    "cn": 40.29,
+    "us": 59.61
    }
   ],
   "license": "AI Gateway Leaderboard Data (c) Vercel, CC BY 4.0"
  },
  "ollama": {
-  "cn": 270407700,
-  "us": 443132440,
+  "cn": 270611300,
+  "us": 443235854,
   "cn_top": [
    {
     "name": "deepseek-r1",
@@ -501,7 +501,7 @@
    },
    {
     "name": "qwen3",
-    "pulls": 32500000
+    "pulls": 32600000
    },
    {
     "name": "qwen2.5-coder",
@@ -513,7 +513,7 @@
    },
    {
     "name": "qwen3-coder",
-    "pulls": 7400000
+    "pulls": 7500000
    }
   ],
   "us_top": [
@@ -523,7 +523,7 @@
    },
    {
     "name": "llama3.2",
-    "pulls": 77300000
+    "pulls": 77400000
    },
    {
     "name": "gemma3",
@@ -544,7 +544,7 @@
    },
    {
     "label": "Best AI at end of 2026: Kimi",
-    "p": 0.04,
+    "p": 0.03,
     "ticker": "KXLLM1-26DEC31-MOON",
     "series": "kxllm1"
    },
@@ -562,7 +562,7 @@
    },
    {
     "label": "Best AI at end of 2026: Claude",
-    "p": 0.62,
+    "p": 0.612,
     "ticker": "KXLLM1-26DEC31-A",
     "series": "kxllm1"
    }
@@ -616,8 +616,8 @@
     "wk": 909425
    },
    {
-    "pkg": "zai-sdk",
-    "wk": 27776
+    "pkg": "zhipuai",
+    "wk": 67915
    }
   ],
   "us": [
