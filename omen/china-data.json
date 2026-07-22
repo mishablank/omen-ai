@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-22T21:23:21Z",
+ "updated": "2026-07-22T22:34:49Z",
  "snapshot_date": "2026-07-22",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -38,13 +38,13 @@
   "best": [
    {
     "label": "Kimi",
-    "rank": 85,
+    "rank": 87,
     "store": "android",
     "country": "kr"
    },
    {
     "label": "MiniMax",
-    "rank": 146,
+    "rank": 143,
     "store": "android",
     "country": "us"
    }
@@ -61,7 +61,7 @@
    "au",
    "kr"
   ],
-  "detail": "Kimi #85 (KR Play); basket-mean Western top-100 presence 3/100 across 10 markets",
+  "detail": "Kimi #87 (KR Play); basket-mean Western top-100 presence 3/100 across 10 markets",
   "note": "iOS Apple RSS top-100 + Android Play top-200 across 10 markets; presence = basket-mean of best top-100 chart rank (DeepSeek/Qwen/Doubao/Kimi/MiniMax), #1=100 #100=1; ranks past top-100 score 0."
  },
  "lmarena": {
@@ -142,36 +142,36 @@
  },
  "openrouter_week": {
   "week": "2026-07-20",
-  "cn_share": 0.5658,
-  "us_share": 0.3052,
-  "spi": 1.854,
-  "total_tokens": 24908910173423
+  "cn_share": 0.5654,
+  "us_share": 0.3051,
+  "spi": 1.853,
+  "total_tokens": 25173221275361
  },
  "vercel_gateway": {
   "asof": "2026-07-22",
-  "cn_share": 41.64,
-  "us_share": 58.25,
-  "spi": 0.715,
+  "cn_share": 41.41,
+  "us_share": 58.49,
+  "spi": 0.708,
   "top_cn": [
    {
     "lab": "deepseek",
-    "share": 28.17
+    "share": 27.91
    },
    {
     "lab": "zai",
-    "share": 4.33
+    "share": 4.38
    },
    {
     "lab": "moonshotai",
-    "share": 4.24
+    "share": 4.15
    },
    {
     "lab": "alibaba",
-    "share": 1.86
+    "share": 1.93
    },
    {
     "lab": "minimax",
-    "share": 1.85
+    "share": 1.84
    },
    {
     "lab": "xiaomi",
@@ -481,15 +481,15 @@
    },
    {
     "d": "2026-07-22",
-    "cn": 41.64,
-    "us": 58.25
+    "cn": 41.41,
+    "us": 58.49
    }
   ],
   "license": "AI Gateway Leaderboard Data (c) Vercel, CC BY 4.0"
  },
  "ollama": {
-  "cn": 271029300,
-  "us": 443552857,
+  "cn": 271030300,
+  "us": 443653667,
   "cn_top": [
    {
     "name": "deepseek-r1",
@@ -562,7 +562,7 @@
    },
    {
     "label": "Best AI at end of 2026: Claude",
-    "p": 0.637,
+    "p": 0.641,
     "ticker": "KXLLM1-26DEC31-A",
     "series": "kxllm1"
    }
@@ -602,11 +602,11 @@
    },
    {
     "base": "microsoft/phi-4",
-    "n": 102
+    "n": 101
    }
   ],
   "cn_total": 2342,
-  "us_total": 2454,
+  "us_total": 2453,
   "asof": "2026-07-22"
  },
  "sdk": {
@@ -618,9 +618,17 @@
    {
     "pkg": "zhipuai",
     "wk": 67915
+   },
+   {
+    "pkg": "zai-sdk",
+    "wk": 27776
    }
   ],
   "us": [
+   {
+    "pkg": "openai",
+    "wk": 85969830
+   },
    {
     "pkg": "anthropic",
     "wk": 42801290
