@@ -1,7 +1,7 @@
 {
   // Cloudflare Worker for the OMEN site.
   // Static files live in omen/ and are served by the [assets] binding.
-  // worker.js runs first for the three data paths and streams them live from the
+  // worker.js runs first for the data paths and streams them live from the
   // R2 bucket the GitHub Action writes to, so market data is fresh with no redeploy.
   "name": "omen-ai",
   "compatibility_date": "2026-07-11",
@@ -15,7 +15,6 @@
       "/market-data.json",
       "/snapshots.csv",
       "/influencers.json",
-      "/china-events.json",
       "/capex-data.json"
     ]
   },
