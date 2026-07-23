@@ -328,6 +328,28 @@
   </div>
 </div>
 
+<div class="card" id="p-cot" data-view="markets">
+  <h2>Speculator positioning <span class="sub" style="font-weight:400">&ndash; CFTC Commitments of Traders, the leverage the price hides</span></h2>
+  <div class="vline" id="cotVerdict"></div>
+  <div class="statrow" id="cotStats"></div>
+  <div id="cotBars"></div>
+  <details class="howto"><summary>How to read this</summary>
+    <div class="cap">Every other panel here reads price or vol; this one reads <em>who is leaning which way, and how hard</em>. Non-commercial traders are the large speculators &ndash; hedge funds and CTAs. Their net position (long minus short) as a share of open interest, placed against its own three-year range, is a crowding gauge: a stretched net-long on the indexes is fuel for a downside unwind, and a stretched net-short on VIX is the complacent short-vol trade whose forced cover is what turns a wobble into a cascade. The bar shows where this week sits in that range; the fill colour is the side of the bet.</div>
+    <div class="note" id="cotNote"></div>
+  </details>
+</div>
+
+<div class="card" id="p-si" data-view="markets">
+  <h2>Short interest <span class="sub" style="font-weight:400">&ndash; FINRA settlement data, the bear bet on the AI-infra names</span></h2>
+  <div class="vline" id="siVerdict"></div>
+  <div class="statrow" id="siStats"></div>
+  <div id="siBars"></div>
+  <details class="howto"><summary>How to read this</summary>
+    <div class="cap">The single-name companion to the futures positioning above: the COT panel reads the crowd on the indexes, this one reads the shorts on the actual bubble stocks. <em>Days to cover</em> &ndash; shares sold short divided by average daily volume &ndash; is how many normal sessions it would take to buy the short back: both squeeze fuel and the depth of bearish conviction. A short interest rising into settlement across the neoclouds is the market betting the AI-infra financing thesis with real capital, not just words.</div>
+    <div class="note" id="siNote"></div>
+  </details>
+</div>
+
 <!-- §4.2: the four GPU panels tell one story; assembleGpuStory() moves them in here at boot
      so the narrative runs ladder -> current gen -> last gen -> the accounting mirror. -->
 <section id="gpuStory" data-view="gpu">
@@ -989,6 +1011,40 @@ const backlogSignal = (B, capexYoyPct) => {
   const gap = (mid != null && capexYoyPct != null) ? mid - capexYoyPct : null;
   return { totalB: B.total_latest_b, firms, medYoy: mid, gap,
            regime: gap == null ? "unknown" : gap >= 0 ? "demand-led" : "spend-led" };
+};
+
+/* ================= COT positioning: pure helpers ================= */
+// CFTC non-commercial (large-speculator) net position as a share of open interest,
+// located in its own 3y range. The signal the rest of the page lacks is leverage:
+// price and vol say how stretched, this says who is holding the stretch and whether
+// the crowd is already all-in. VIX is the one we weight hardest — a net-short at a
+// low percentile is the complacent short-vol trade, the mechanical crash accelerant.
+const cotSignal = (C) => {
+  if(!C || !Array.isArray(C.contracts)) return null;
+  const rows = C.contracts.filter(c => c && c.net_pct_oi != null && c.pctile != null);
+  if(!rows.length) return null;
+  const asof = rows.map(c => c.date).filter(Boolean).sort().slice(-1)[0] || null;
+  // top/bottom decile of a contract's own 3y range = a positioning extreme
+  const extreme = rows.filter(c => c.pctile >= 90 || c.pctile <= 10);
+  const vix = rows.find(c => c.key === "vix") || null;
+  const vixCrowded = !!(vix && vix.net < 0 && vix.pctile <= 20);
+  return { rows, asof, extreme, vix, vixCrowded };
+};
+
+/* ================= Short interest: pure helpers ================= */
+// FINRA consolidated short interest per name (bi-monthly). The single-name read on
+// short crowding: days-to-cover is the depth of the bet, and a short RISING into
+// settlement across the levered AI-infra names is the financing-risk thesis pressed
+// in cash equity — the counterpart to the index-level speculator positioning above.
+const shortInterestSignal = (SI) => {
+  if(!SI || !Array.isArray(SI.names)) return null;
+  const names = SI.names.filter(n => n && n.si != null && n.dtc != null);
+  if(!names.length) return null;
+  const topDtc = names.slice().sort((a,b) => b.dtc - a.dtc)[0];
+  const withChg = names.filter(n => n.chg_pct != null);
+  const topRise = withChg.length ? withChg.slice().sort((a,b) => b.chg_pct - a.chg_pct)[0] : null;
+  const risingCount = names.filter(n => n.chg_pct != null && n.chg_pct > 0).length;
+  return { names, asof: SI.asof || null, topDtc, topRise, risingCount, total: names.length };
 };
 
 /* ================= Index math (chain-linked, membership-aware) ================= */
@@ -1991,6 +2047,59 @@ function renderBacklog(){
       : `Capex is outrunning contracted demand by <strong>${mnum(Math.abs(S.gap),0)} pts</strong> &ndash; the buildout is being financed against demand that has not been signed yet.`;
   $("backNote").innerHTML=`Remaining performance obligation (RPO) &ndash; contracted revenue not yet recognised &ndash; from SEC XBRL, per filer at its own fiscal quarter end. Reported per firm and never summed into one aligned series: fiscal calendars differ (Oracle&rsquo;s quarters end Feb/May/Aug/Nov), so a combined per-quarter total would be lumpy fiction; the headline is the sum of each filer&rsquo;s most recent report. AMZN stopped tagging RPO without dimensions after 2020 and META never has, so both are absent. Growth is median across filers, not mean, so one mega-contract cannot read as sector-wide demand. Disclosed server useful-life assumptions &ndash; the other half of this thesis &ndash; are dimensional in XBRL and not machine-readable, so they stay narrative in ${xlink("the depreciation panel","gpu","p-dep")}. As of ${esc(B.asof)}.`;
 }
+function renderCot(){
+  const C=mkt?.cot, cell=(l,v,x="")=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}${x}</div></div>`;
+  const S=cotSignal(C);
+  if(!S){ $("cotStats").innerHTML='<div class="sub">Run the fetcher to enable the positioning panel (CFTC COT).</div>'; $("cotBars").innerHTML=""; $("cotNote").innerHTML=""; $("cotVerdict").innerHTML=""; return; }
+  const rangeWord=p=>p>=90?"3y-high lean":p<=10?"3y-low lean":p>=75?"upper range":p<=25?"lower range":"mid-range";
+  $("cotStats").innerHTML=S.rows.map(c=>
+    cell(esc(c.label), snum(c.net_pct_oi,1)+"% OI", ` <small>${c.pctile.toFixed(0)}th pctile &middot; ${rangeWord(c.pctile)}</small>`)
+  ).join("");
+  $("cotBars").innerHTML='<div class="note" style="margin-top:10px"><strong>Where this week sits in its 3-year range</strong> &ndash; net speculator position, % of open interest</div>'+
+    S.rows.map(c=>{
+      const col=c.net>=0?"var(--bull)":"var(--bear)", side=c.net>=0?"net long":"net short";
+      return `<div class="hbar"><span class="k">${esc(c.label)} <span class="sub">${side}</span></span><span class="track"><i style="width:${clamp(c.pctile,0,100).toFixed(0)}%;background:${col}"></i></span><span class="v">${snum(c.net_pct_oi,1)}% &middot; z ${snum(c.z,1)}</span></div>`;
+    }).join("");
+  let v;
+  if(S.vixCrowded){
+    v=`Speculators are <strong>crowded short volatility</strong> &ndash; VIX net short sits in the bottom ${Math.max(1,Math.round(S.vix.pctile))}% of its 3-year range. That is the complacent trade whose forced cover, in a vol spike, is what turns a drawdown into a cascade.`;
+  } else if(S.extreme.length){
+    const e=S.extreme.slice().sort((a,b)=>Math.abs(b.z)-Math.abs(a.z))[0];
+    v=`Positioning is <strong>stretched ${e.net>=0?"net long":"net short"} ${esc(e.label)}</strong> &ndash; ${e.pctile.toFixed(0)}th percentile of its 3-year range (z ${snum(e.z,1)}). A crowded book is fuel for a sharper unwind if the tape turns.`;
+  } else {
+    v=`Speculator positioning is <strong>mid-range</strong> across the tracked contracts &ndash; no crowded extreme to unwind right now.`;
+  }
+  $("cotVerdict").innerHTML=v;
+  $("cotNote").innerHTML=`CFTC Commitments of Traders, legacy futures-only (non-commercial = large speculators: hedge funds and CTAs). Net = long &minus; short as a share of open interest; percentile and z-score locate the latest weekly report inside a ~3-year window. Positions are Tuesday&rsquo;s, released the following Friday, so this lags the ${xlink("volatility complex","markets","p-vol")} by up to a week &ndash; the slow, structural read on leverage, not a same-day trigger. As of ${esc(S.asof)}.`;
+}
+function renderShortInterest(){
+  const SI=mkt?.short_interest, cell=(l,v,x="")=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}${x}</div></div>`;
+  const S=shortInterestSignal(SI);
+  if(!S){ $("siStats").innerHTML='<div class="sub">Run the fetcher to enable the short-interest panel (FINRA via Nasdaq).</div>'; $("siBars").innerHTML=""; $("siNote").innerHTML=""; $("siVerdict").innerHTML=""; return; }
+  const mSh=v=>v>=1e9?(v/1e9).toFixed(1)+"B":(v/1e6).toFixed(0)+"M";
+  $("siStats").innerHTML=[
+    cell("Deepest short", S.topDtc.dtc.toFixed(1)+"d", ` <small>${esc(S.topDtc.sym)} to cover</small>`),
+    S.topRise?cell("Fastest-rising", snum(S.topRise.chg_pct,0)+"%", ` <small>${esc(S.topRise.sym)} vs prior</small>`):"",
+    cell("Shorts rising", S.risingCount+"/"+S.total, ` <small>this settlement</small>`),
+  ].join("");
+  const maxDtc=Math.max(...S.names.map(n=>n.dtc))||1;
+  $("siBars").innerHTML='<div class="note" style="margin-top:10px"><strong>Days to cover by name</strong> &ndash; shares short &divide; average daily volume; bar colour = short rising (red) or easing (green) since the prior settlement</div>'+
+    S.names.slice().sort((a,b)=>b.dtc-a.dtc).map(n=>{
+      const up=n.chg_pct!=null&&n.chg_pct>0, col=up?"var(--bear)":"var(--bull)";
+      const chg=n.chg_pct!=null?" &middot; "+snum(n.chg_pct,0)+"%":"";
+      return `<div class="hbar"><span class="k">${esc(n.sym)} <span class="sub">${mSh(n.si)} sh</span></span><span class="track"><i style="width:${(n.dtc/maxDtc*100).toFixed(0)}%;background:${col}"></i></span><span class="v">${n.dtc.toFixed(1)}d${chg}</span></div>`;
+    }).join("");
+  let v;
+  if(S.risingCount>S.total/2){
+    v=`Single-name short crowding is <strong>building across the AI-infra names</strong> &ndash; ${S.risingCount} of ${S.total} rose this settlement${S.topRise?`, led by ${esc(S.topRise.sym)} ${snum(S.topRise.chg_pct,0)}%`:""}. ${esc(S.topDtc.sym)} carries the deepest short at <strong>${S.topDtc.dtc.toFixed(1)} days to cover</strong> &ndash; the financing-risk bet, pressed in cash equity.`;
+  } else if(S.topDtc.dtc>=3){
+    v=`${esc(S.topDtc.sym)} carries the crowd&rsquo;s deepest short at <strong>${S.topDtc.dtc.toFixed(1)} days to cover</strong>, but the shorts are not broadly building &ndash; ${S.risingCount} of ${S.total} names rose this settlement.`;
+  } else {
+    v=`Single-name short interest is <strong>mid-range</strong> &ndash; no crowded short to squeeze, ${S.risingCount} of ${S.total} names rising.`;
+  }
+  $("siVerdict").innerHTML=v;
+  $("siNote").innerHTML=`FINRA consolidated short interest &ndash; the regulator&rsquo;s bi-monthly settlement-date figures (mid-month and month-end) &ndash; read through api.nasdaq.com, because FINRA&rsquo;s own distribution (cdn.finra.org) is WAF-blocked to a scripted client. Days to cover = shares short &divide; average daily volume: sessions of normal turnover to buy the short back. Nasdaq-listed names only, so NYSE-listed AI names (ORCL, VST) are absent by coverage, not selection. The index-level counterpart &ndash; speculator futures positioning &ndash; is ${xlink("the positioning panel","markets","p-cot")}. As of ${esc(S.asof)}.`;
+}
 function renderAiCredit(){
   const F=mkt?.fred||{}, C=mkt?.credit||{}, E=mkt?.equity||{}, cell=(l,v,x="")=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}${x}</div></div>`;
   const ccc=F.CCC_OAS?.last, bizdDD=drawdown(C.BIZD);
@@ -2167,7 +2276,7 @@ function fetcherStale(){
   return age>=FRESH_MS ? {age, label:`data ${ageTxt(age)} old`} : null;
 }
 // every panel whose numbers come out of market-data.json rather than the live Polymarket feed
-const FETCHER_PANELS=["p-vol","p-credit","p-breadth","p-insiders","p-leaps","p-fund",
+const FETCHER_PANELS=["p-vol","p-credit","p-breadth","p-insiders","p-cot","p-si","p-leaps","p-fund",
                       "p-capex","p-dep","p-backlog","p-kgpu","p-aicredit","p-power","p-crown"];
 function renderStatuses(){
   const st=fetcherStale();
@@ -2494,7 +2603,7 @@ function renderAll(){
   computeSignals();
   renderGauge(); renderTiles(); renderRegime(); renderStack(); renderMomentum();
   renderVol(); renderCredit(); renderBreadth(); renderInsiders();
-  renderCrown(); renderNvda(); renderH100(); renderB200(); renderKalshiGpu(); renderValuations(); renderLeaps(); renderFundamentals(); renderMacro(); renderDepreciation(); renderBacklog(); renderAiCredit(); renderPower(); renderCrossVenue(); renderClaims();
+  renderCrown(); renderNvda(); renderH100(); renderB200(); renderKalshiGpu(); renderValuations(); renderLeaps(); renderFundamentals(); renderMacro(); renderDepreciation(); renderBacklog(); renderCot(); renderShortInterest(); renderAiCredit(); renderPower(); renderCrossVenue(); renderClaims();
   renderMainChart(); renderEquity(); renderLeadLag();
   for(const s of SIDES) renderTable(s);
   renderWhatChanged(); renderNavCards();
@@ -2532,10 +2641,12 @@ $("foot").innerHTML=`<p style="margin-top:8px"><strong>Composite.</strong> 100×
 <p style="margin-top:8px"><strong>Leading vs confirming.</strong> The five families are also split into a <em>leading</em> sub-score (prediction markets, options skew, credit – all priced before the fact) and a <em>confirming</em> sub-score (vol complex, equity drawdown – both move with or after prices). The headline gauge stays the mean of all five for continuity, but the split is the honest read: only the leading side can warn, and the lead-lag study below shows even that lead is unproven.</p>
 <p style="margin-top:8px"><strong>Bull split.</strong> Bull constituents are tagged TECH (model releases, benchmarks, hardware – technology-progress odds) or CAP (IPOs, valuation flips – capital-markets odds). Technology progress historically survives financial unwinds (railways, dot-com), so the capital-only sub-reading is the cleaner cycle signal; the tech side mostly tells you the release calendar is intact.</p>
 <p style="margin-top:8px"><strong>LEAPS tail.</strong> From the same CBOE chains: the expiry nearest 365d (min 250d), the listed put nearest each drawdown level, and P(S<sub>T</sub>&lt;K)=N(&minus;d2) at that strike&rsquo;s IV with r=4%. Risk-neutral, so it overstates real-world odds by the variance risk premium – use it as a deep-market ceiling to sanity-check the thin Polymarket bubble book, not as a forecast.</p>
+<p style="margin-top:8px"><strong>Speculator positioning.</strong> CFTC Commitments of Traders, legacy futures-only, weekly (Tuesday positions released the following Friday). Non-commercial = large speculators (hedge funds, CTAs); the signal is their net (long &minus; short) as a share of open interest, located by percentile and z-score inside its own ~3-year range, for E-mini Nasdaq-100, E-mini S&amp;P 500 and VIX futures. Filtered on the stable CFTC contract-market code, not the renamable display name. It is the one panel here that reads <em>leverage and crowding</em> rather than price or vol: a stretched net-long is fuel for a forced-selling unwind, and a VIX net-short in the bottom decile is the complacent short-vol trade whose cover accelerates a spike. Weekly and lagged by design &ndash; structural context, not a same-day trigger.</p>
+<p style="margin-top:8px"><strong>Short interest.</strong> FINRA consolidated short interest, the single-name companion to the futures positioning above &ndash; bi-monthly settlement-date figures (mid-month and month-end) for the levered AI-infra names (NVDA, CRWV, NBIS, IREN, SMCI). Days to cover = shares short &divide; average daily volume, the depth of the short and its squeeze fuel; the trend is the change since the prior settlement. Sourced through api.nasdaq.com because FINRA&rsquo;s own distribution (cdn.finra.org) and Nasdaq Trader are both WAF-blocked to a scripted client; the figures are the same FINRA-collected data, and coverage is Nasdaq-listed only, so NYSE-listed AI names (ORCL, VST) are absent.</p>
 <p style="margin-top:8px"><strong>Fundamentals.</strong> SEC XBRL companyconcept quarterlies for MSFT/GOOGL/AMZN/META/ORCL (cumulative cash-flow lines differenced into single quarters, fiscal periods mapped to calendar quarters by end date; AMZN&rsquo;s post-2017 capex tag handled). Capex/OCF is the metric that actually distinguishes &ldquo;bubble&rdquo; (price vs fundamentals) from &ldquo;popping&rdquo; (price vs price) – everything else on this page is market-priced and can be collectively wrong.</p>
 <p style="margin-top:8px"><strong>Kedrosky panels.</strong> Four non-price or real-economy signals from Paul Kedrosky&rsquo;s bubble thesis. <em>AI capex vs. the economy</em>: combined filer capex (SEC), annualized, over nominal GDP (FRED GDP, SAAR); &ldquo;share of GDP growth&rdquo; is Δ(annualized capex)/Δ(GDP), noisy but the scale argument. <em>GPU depreciation gap</em>: combined D&amp;A addback vs. cash capex; a falling ratio while capex climbs flags cost recognition lagging the spend (the extended-useful-life earnings flatter). <em>Contracted backlog</em>: remaining performance obligation (SEC XBRL instant facts) for the filers that tag it without dimensions (MSFT/GOOGL/ORCL/CRWV; AMZN stopped in 2020, META never has) &ndash; per filer at its own fiscal quarter end, never summed into an aligned series, with growth taken as the median across filers so a single mega-contract cannot read as sector-wide demand. It is the one panel that can falsify the bear case rather than support it. <em>AI &amp; private-credit stress</em>: BIZD (BDC/private-credit proxy) + CCC OAS + drawdown of the levered-AI names (CRWV/ORCL/NBIS/IREN) &ndash; no free issuer-level spread exists for neocloud debt, so equity stands in. <em>Power &amp; electricity</em>: residential electricity CPI (FRED) plus XLU and merchant-power equities (VST/CEG). All are slow-moving or proxied by design; read them as context, not triggers.</p>
 <p style="margin-top:8px"><strong>Lead-lag.</strong> Non-overlapping windows, 2,000-shuffle permutation test, recomputed on history refresh only. The bubble market is reflexive with NVDA/SOXX so the ex-bubble row is the cleaner read – treat all of it as descriptive.</p>
-<p style="margin-top:8px"><strong>Cadence &amp; sources.</strong> Live Polymarket data (Gamma + CLOB, incl. bubble-market order-book depth) refreshes every 60s; histories, market-data.json and cached studies every 10min; NVDA/H100 events re-discovered hourly. market-data.json is produced by <code>update-market-data.py</code> (GitHub Action, ~30min cadence): Yahoo Finance (equity/vol/credit proxies), CBOE delayed quotes (25Δ risk reversals, single-name IV term structure, LEAPS tail), FRED keyless CSV (HY OAS, CCC OAS, NFCI, nominal GDP, electricity CPI), SEC EDGAR Form 4 (open-market S/P only, recent-filings sample), SEC XBRL companyconcept (capex/OCF/depreciation fundamentals), vast.ai public asks (realized H100 $/GPU-hr), Kalshi public API (cross-venue themes <em>and</em> the GPU compute markets: H100/H200/B200/A100 weekly + monthly, quotes unauthenticated, settled on the Ornn index), Metaculus (optional token), Manifold public API (play-money). Constituents curated 2026-07-10; not investment advice.</p>
+<p style="margin-top:8px"><strong>Cadence &amp; sources.</strong> Live Polymarket data (Gamma + CLOB, incl. bubble-market order-book depth) refreshes every 60s; histories, market-data.json and cached studies every 10min; NVDA/H100 events re-discovered hourly. market-data.json is produced by <code>update-market-data.py</code> (GitHub Action, ~30min cadence): Yahoo Finance (equity/vol/credit proxies), CBOE delayed quotes (25Δ risk reversals, single-name IV term structure, LEAPS tail), FRED keyless CSV (HY OAS, CCC OAS, NFCI, nominal GDP, electricity CPI), SEC EDGAR Form 4 (open-market S/P only, recent-filings sample), CFTC Commitments of Traders (weekly non-commercial net positioning in E-mini Nasdaq-100 / S&amp;P 500 / VIX), FINRA consolidated short interest via api.nasdaq.com (bi-monthly, levered AI-infra names), SEC XBRL companyconcept (capex/OCF/depreciation fundamentals), vast.ai public asks (realized H100 $/GPU-hr), Kalshi public API (cross-venue themes <em>and</em> the GPU compute markets: H100/H200/B200/A100 weekly + monthly, quotes unauthenticated, settled on the Ornn index), Metaculus (optional token), Manifold public API (play-money). Constituents curated 2026-07-10; not investment advice.</p>
 <p style="margin-top:8px"><strong>Singularity claims watch.</strong> Five falsifiable claims from Raoul Pal&rsquo;s economic-singularity thesis (&ldquo;AI Revolution: How to Invest&rdquo;, Real Vision, Jul 2026), read against the tape. AGI-by-2027 and Chatbot-Arena odds reuse existing bull constituents; Optimus-release and California-robotaxi odds are pinned Polymarket markets tracked <em>outside</em> the indexes, so they move no composite; the quarterly US-GDP bracket event is re-discovered like the NVDA/H100 events. Core goods CPI (CUSR0000SACL1E), residential electricity CPI, unemployment (UNRATE), prime-age participation (LNS11300060) and realized real GDP growth (A191RL1Q225SBEA) come from FRED via the fetcher. Bands: market odds &ge;50% = the claim is priced, &ge;20% = live; goods CPI &le; &minus;0.5% YoY = deflation validating; unemployment +0.3pt/6mo while prime-age participation holds = displacement signature. The panel feeds no gauge family &ndash; it is context: euphoria broadening toward the narrative, or the labor/backlash channel arming, both of which the crash gauge would only see later.</p>
 <p style="margin-top:8px"><strong>GPU compute, two venues, two indices.</strong> Polymarket and Kalshi both price GPU rents, but they do not settle on the same underlying: Kalshi resolves on the <a href="https://dashboard.ornnai.com/" target="_blank" rel="noopener">Ornn</a> index, while this dashboard&rsquo;s realized tape is vast.ai&rsquo;s public asks &ndash; a decentralized marketplace of interruptible hosts that prints structurally below a curated index. The Ornn reference is read for free from each Kalshi weekly market&rsquo;s &ldquo;price to beat&rdquo; strike, which is set at the Ornn print when the market opens, so it dates to that week&rsquo;s open rather than to now. Implied medians come from the monthly ladder as the 50% crossing of the survival curve P(value &gt; strike), after dropping one-sided books (bid 0 / ask 1) and quotes wider than 15c and forcing survival to be non-increasing in strike; where the crossing falls outside the quoted strikes the panel shows no median rather than an invented one. Kalshi&rsquo;s Dec-31 GPU contracts resolve &ldquo;above $X <em>by</em> Dec 31&rdquo; &ndash; a running maximum, upward-biased vs. a terminal value &ndash; and are excluded on purpose. Only the weekly and monthly are true forward points, so no long-dated compute curve is claimed here.</p>`;
 
