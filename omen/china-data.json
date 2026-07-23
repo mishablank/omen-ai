@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-23T11:56:01Z",
+ "updated": "2026-07-23T14:24:00Z",
  "snapshot_date": "2026-07-23",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -38,15 +38,15 @@
   "best": [
    {
     "label": "Kimi",
-    "rank": 83,
+    "rank": 79,
     "store": "android",
     "country": "kr"
    },
    {
     "label": "MiniMax",
-    "rank": 159,
+    "rank": 166,
     "store": "android",
-    "country": "br"
+    "country": "us"
    }
   ],
   "markets": [
@@ -61,7 +61,7 @@
    "au",
    "kr"
   ],
-  "detail": "Kimi #83 (KR Play); basket-mean Western top-100 presence 4/100 across 10 markets",
+  "detail": "Kimi #79 (KR Play); basket-mean Western top-100 presence 4/100 across 10 markets",
   "note": "iOS Apple RSS top-100 + Android Play top-200 across 10 markets; presence = basket-mean of best top-100 chart rank (DeepSeek/Qwen/Doubao/Kimi/MiniMax), #1=100 #100=1; ranks past top-100 score 0."
  },
  "lmarena": {
@@ -142,40 +142,40 @@
  },
  "openrouter_week": {
   "week": "2026-07-20",
-  "cn_share": 0.5631,
-  "us_share": 0.3047,
-  "spi": 1.848,
-  "total_tokens": 29768204537583
+  "cn_share": 0.5625,
+  "us_share": 0.305,
+  "spi": 1.844,
+  "total_tokens": 30971505794170
  },
  "vercel_gateway": {
   "asof": "2026-07-23",
-  "cn_share": 41.94,
-  "us_share": 57.93,
-  "spi": 0.724,
+  "cn_share": 41.72,
+  "us_share": 58.15,
+  "spi": 0.717,
   "top_cn": [
    {
     "lab": "deepseek",
-    "share": 29.51
+    "share": 29.43
    },
    {
     "lab": "zai",
-    "share": 4.4
+    "share": 4.46
    },
    {
     "lab": "moonshotai",
-    "share": 3.01
+    "share": 2.96
    },
    {
     "lab": "minimax",
-    "share": 2.06
+    "share": 2.1
    },
    {
     "lab": "xiaomi",
-    "share": 1.95
+    "share": 1.78
    },
    {
     "lab": "alibaba",
-    "share": 0.99
+    "share": 0.97
    }
   ],
   "series": [
@@ -481,15 +481,15 @@
    },
    {
     "d": "2026-07-23",
-    "cn": 41.94,
-    "us": 57.93
+    "cn": 41.72,
+    "us": 58.15
    }
   ],
   "license": "AI Gateway Leaderboard Data (c) Vercel, CC BY 4.0"
  },
  "ollama": {
-  "cn": 271345300,
-  "us": 443876260,
+  "cn": 271352200,
+  "us": 443980075,
   "cn_top": [
    {
     "name": "deepseek-r1",
@@ -556,13 +556,13 @@
    },
    {
     "label": "Best AI at end of 2026: Qwen",
-    "p": 0.013,
+    "p": 0.012,
     "ticker": "KXLLM1-26DEC31-ALI",
     "series": "kxllm1"
    },
    {
     "label": "Best AI at end of 2026: Claude",
-    "p": 0.63,
+    "p": 0.629,
     "ticker": "KXLLM1-26DEC31-A",
     "series": "kxllm1"
    }
@@ -572,7 +572,7 @@
   "cn": [
    {
     "base": "Qwen/Qwen3-8B",
-    "n": 1963
+    "n": 1964
    },
    {
     "base": "deepseek-ai/DeepSeek-R1",
@@ -605,15 +605,15 @@
     "n": 101
    }
   ],
-  "cn_total": 2342,
+  "cn_total": 2343,
   "us_total": 2453,
   "asof": "2026-07-23"
  },
  "sdk": {
   "cn": [
    {
-    "pkg": "zai-sdk",
-    "wk": 25539
+    "pkg": "dashscope",
+    "wk": 913004
    }
   ],
   "us": [
