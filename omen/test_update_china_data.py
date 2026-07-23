@@ -158,6 +158,20 @@ def test_pick_apps_falls_back_to_manual():
     assert got == ucd.MANUAL["apps"]
 
 
+def test_pick_github_velocity_prefers_fresh_measurement():
+    assert ucd.pick_github_velocity(41.66, {"github_stars_per_day": 99.0}) == 41.7
+
+
+def test_pick_github_velocity_carries_forward_previous_value():
+    prev = {"github_stars_per_day": 32.3}
+    assert ucd.pick_github_velocity(None, prev) == 32.3
+
+
+def test_pick_github_velocity_none_when_never_measured():
+    assert ucd.pick_github_velocity(None, {}) is None
+    assert ucd.pick_github_velocity(None, None) is None
+
+
 # ---- new source families (2026-07-20) --------------------------------------------
 
 def test_parse_count_handles_suffixes_and_commas():

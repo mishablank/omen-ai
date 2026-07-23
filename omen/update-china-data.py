@@ -162,6 +162,16 @@ def github_velocity(hist):
     return per_day, stars
 
 
+def pick_github_velocity(per_day, prev):
+    """Fresh measured velocity, else the previous run's value. A measurement only
+    happens on the ~1 run/day where the baseline has aged past 20h; without the
+    carry, every other run drops the key and the page's GitHub gauge family goes
+    dark for most of the day."""
+    if per_day is not None:
+        return round(per_day, 1)
+    return (prev or {}).get("github_stars_per_day")
+
+
 def huggingface():
     """30-day download totals by lab. Returns the shape the page's renderHF expects."""
     def org_repos(org):
@@ -749,9 +759,13 @@ def run():
 
     print("github velocity ...")
     per_day, stars = github_velocity(hist)
+    vel = pick_github_velocity(per_day, prev)
+    if vel is not None:
+        out["github_stars_per_day"] = vel
     if per_day is not None:
-        out["github_stars_per_day"] = round(per_day, 1)
         print(f"  +{per_day:.0f} stars/day across basket")
+    elif vel is not None:
+        print(f"  baseline too fresh to remeasure - carrying previous +{vel:.0f}/day")
     else:
         print("  baseline stored; velocity available from next run (>20h apart)")
 
