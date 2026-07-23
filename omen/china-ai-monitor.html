@@ -280,7 +280,7 @@
 
 <footer id="foot">
   <h3>Methodology</h3>
-  <b>Chinese AI Adoption Index</b> = &Sigma;(w<sub>i</sub>&middot;s<sub>i</sub>)/&Sigma;w<sub>i</sub> over available signal families, each normalized 0&ndash;100 against fixed reference ranges: router Chinese token share 0&rarr;70% (w=30; mean of the OpenRouter and Vercel-AI-Gateway normalized shares when both are available, OpenRouter alone otherwise), Hugging Face Chinese share of open-weight downloads 0&rarr;70% (w=20), GitHub star velocity across the flagship basket 0&rarr;2,000/day (w=15), Ollama Chinese share of named-family pulls 0&rarr;70% (w=10), Western search/consumer interest share 0&rarr;50% (w=10), consumer-app Western top-chart presence 0&rarr;100 (basket-mean best top-100 rank, w=10), LMArena proximity 100&minus;Elo-gap, floored at 0 (w=5). Weights follow the source note's suggested scheme, extended with the local-adoption family; excluded families renormalize.
+  <b>Chinese AI Adoption Index</b> = &Sigma;(w<sub>i</sub>&middot;s<sub>i</sub>)/&Sigma;w<sub>i</sub> over available signal families, each normalized 0&ndash;100 against fixed reference ranges: router Chinese token share 0&rarr;70% (w=30; mean of the OpenRouter and Vercel-AI-Gateway normalized shares when both are available, OpenRouter alone otherwise), Hugging Face Chinese share of open-weight downloads 0&rarr;90% (w=20), GitHub star velocity across the flagship basket 0&rarr;300/day (w=15), Ollama Chinese share of named-family pulls 0&rarr;70% (w=10), Western search/consumer interest share 0&rarr;50% (w=10), consumer-app Western top-chart presence 0&rarr;100 (basket-mean best top-100 rank, w=10), LMArena proximity 100&minus;Elo-gap, floored at 0 (w=5). Weights follow the source note's suggested scheme, extended with the local-adoption family; excluded families renormalize.
   <b>SPI</b> = Chinese-lab &divide; US-lab routed tokens (named authors) on OpenRouter, trailing week.
   <b>Frontier price gap</b> = median output $/M of US flagships (GPT-5.6 family, Claude Opus/Sonnet, Gemini Pro/Flash) &divide; median of Chinese flagships (DeepSeek V4, GLM-5.x, Kimi K2.x/K3, Qwen Max, MiniMax M3).
   <h3>Caveats</h3>
@@ -570,7 +570,10 @@ function renderHF(){
   const mx = cnOrgs[0]?.dl||1;
   $("hfLabs").innerHTML = cnOrgs.slice(0,6).map(o =>
     `<div class="hbar"><span class="k"><a href="https://huggingface.co/${esc(o.org)}" target="_blank" rel="noopener">${esc(o.org)}</a></span><span class="track"><i style="width:${o.dl/mx*100}%"></i></span><span class="v">${fmtT(o.dl)}/30d</span></div>`).join("");
-  IDX.hf = { w:20, val: clamp01((cn/tot)/0.70)*100, detail: pct(cn/tot)+" of open-weight downloads" };
+  // 0->90%: CN share already sits near 70%, so a 70% ceiling kept this family pinned
+  // at ~100 with no headroom to signal further gains (unlike router/Ollama shares,
+  // which still trade well below their 70% reference ceiling).
+  IDX.hf = { w:20, val: clamp01((cn/tot)/0.90)*100, detail: pct(cn/tot)+" of open-weight downloads" };
 }
 function renderGH(){
   const tb = $("ghTable").querySelector("tbody");
@@ -578,7 +581,10 @@ function renderGH(){
   tb.innerHTML = S.gh.rows.map(r =>
     `<tr><td><a href="https://github.com/${esc(r.repo)}" target="_blank" rel="noopener">${esc(r.repo)}</a></td><td class="num">${fmtT(r.stars)}</td><td class="num">${fmtT(r.forks)}</td><td class="num">${r.vel!=null? "+"+r.vel.toFixed(0) : "…"}</td></tr>`).join("");
   const pd = S.gh.perDay ?? snap.github_stars_per_day;
-  if(pd != null){ IDX.github = { w:15, val: clamp01(pd/2000)*100, detail: "+"+pd.toFixed(0)+" stars/day across basket" }; }
+  // 0->300/day: the basket's steady state is tens of stars/day (2,000/day was a
+  // launch-spike anchor that pinned this 15%-weight family at ~0); 300/day marks a
+  // clear engagement surge and major launches saturate it, which is the intent.
+  if(pd != null){ IDX.github = { w:15, val: clamp01(pd/300)*100, detail: "+"+pd.toFixed(0)+" stars/day across basket" }; }
   else IDX.github = { w:15, val: null, detail: "calibrating (needs a second visit >20h apart)" };
 }
 function renderPM(){
