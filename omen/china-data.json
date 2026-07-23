@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-23T22:32:31Z",
+ "updated": "2026-07-23T23:04:32Z",
  "snapshot_date": "2026-07-23",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -38,7 +38,7 @@
   "best": [
    {
     "label": "Kimi",
-    "rank": 104,
+    "rank": 107,
     "store": "android",
     "country": "au"
    },
@@ -61,7 +61,7 @@
    "au",
    "kr"
   ],
-  "detail": "no Chinese AI app in any iOS or Play top-100 (nearest: Kimi #104 (AU Play)); basket-mean Western top-100 presence 0/100 across 10 markets",
+  "detail": "no Chinese AI app in any iOS or Play top-100 (nearest: Kimi #107 (AU Play)); basket-mean Western top-100 presence 0/100 across 10 markets",
   "note": "iOS Apple RSS top-100 + Android Play top-200 across 10 markets; presence = basket-mean of best top-100 chart rank (DeepSeek/Qwen/Doubao/Kimi/MiniMax), #1=100 #100=1; ranks past top-100 score 0."
  },
  "lmarena": {
@@ -488,8 +488,8 @@
   "license": "AI Gateway Leaderboard Data (c) Vercel, CC BY 4.0"
  },
  "ollama": {
-  "cn": 271763199,
-  "us": 444194938,
+  "cn": 271863599,
+  "us": 444195643,
   "cn_top": [
    {
     "name": "deepseek-r1",
@@ -501,7 +501,7 @@
    },
    {
     "name": "qwen3",
-    "pulls": 32600000
+    "pulls": 32700000
    },
    {
     "name": "qwen2.5-coder",
@@ -544,7 +544,7 @@
    },
    {
     "label": "Best AI at end of 2026: Kimi",
-    "p": 0.03,
+    "p": 0.02,
     "ticker": "KXLLM1-26DEC31-MOON",
     "series": "kxllm1"
    },
@@ -562,7 +562,7 @@
    },
    {
     "label": "Best AI at end of 2026: Claude",
-    "p": 0.633,
+    "p": 0.632,
     "ticker": "KXLLM1-26DEC31-A",
     "series": "kxllm1"
    }
