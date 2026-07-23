@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-23T18:21:59Z",
+ "updated": "2026-07-23T19:58:14Z",
  "tsmc": {
   "asof": "2026-06",
   "rev_ntd_b": 442.7,
@@ -136,10 +136,10 @@
   "latest_release": "2026-06-26"
  },
  "eia": {
-  "operating_gw": 1365.9,
+  "operating_gw": 1372.1,
   "planned_gw": 0.0,
   "under_construction_gw": 0.0,
-  "asof": "2026-04"
+  "asof": "2026-05"
  },
  "manual": {
   "korea": {
