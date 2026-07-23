@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-23T09:29:48Z",
+ "updated": "2026-07-23T11:56:01Z",
  "snapshot_date": "2026-07-23",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
@@ -44,7 +44,7 @@
    },
    {
     "label": "MiniMax",
-    "rank": 155,
+    "rank": 159,
     "store": "android",
     "country": "br"
    }
@@ -76,7 +76,6 @@
   "asof": "2026-07-21",
   "source": "lmarena-dataset"
  },
- "github_stars_per_day": 32.3,
  "hf": {
   "cnOrgs": [
    {
@@ -143,40 +142,40 @@
  },
  "openrouter_week": {
   "week": "2026-07-20",
-  "cn_share": 0.5633,
+  "cn_share": 0.5631,
   "us_share": 0.3047,
-  "spi": 1.849,
-  "total_tokens": 29184069238918
+  "spi": 1.848,
+  "total_tokens": 29768204537583
  },
  "vercel_gateway": {
   "asof": "2026-07-23",
-  "cn_share": 40.98,
-  "us_share": 58.89,
-  "spi": 0.696,
+  "cn_share": 41.94,
+  "us_share": 57.93,
+  "spi": 0.724,
   "top_cn": [
    {
     "lab": "deepseek",
-    "share": 28.68
+    "share": 29.51
    },
    {
     "lab": "zai",
-    "share": 4.49
+    "share": 4.4
    },
    {
     "lab": "moonshotai",
-    "share": 2.93
+    "share": 3.01
    },
    {
     "lab": "minimax",
-    "share": 2.02
+    "share": 2.06
    },
    {
     "lab": "xiaomi",
-    "share": 1.91
+    "share": 1.95
    },
    {
     "lab": "alibaba",
-    "share": 0.93
+    "share": 0.99
    }
   ],
   "series": [
@@ -482,15 +481,15 @@
    },
    {
     "d": "2026-07-23",
-    "cn": 40.98,
-    "us": 58.89
+    "cn": 41.94,
+    "us": 57.93
    }
   ],
   "license": "AI Gateway Leaderboard Data (c) Vercel, CC BY 4.0"
  },
  "ollama": {
-  "cn": 271241900,
-  "us": 443870835,
+  "cn": 271345300,
+  "us": 443876260,
   "cn_top": [
    {
     "name": "deepseek-r1",
@@ -532,16 +531,14 @@
    }
   ],
   "n_models": 233,
-  "asof": "2026-07-23",
-  "cn_per_day": 248328,
-  "us_per_day": 586832
+  "asof": "2026-07-23"
  },
  "kalshi": {
   "asof": "2026-07-23",
   "markets": [
    {
     "label": "Will a Chinese AI model be #1 this year?",
-    "p": 0.14,
+    "p": 0.12,
     "ticker": "KXBESTLLMCHINA-27",
     "series": "kxbestllmchina"
    },
@@ -559,7 +556,7 @@
    },
    {
     "label": "Best AI at end of 2026: Qwen",
-    "p": 0.012,
+    "p": 0.013,
     "ticker": "KXLLM1-26DEC31-ALI",
     "series": "kxllm1"
    },
@@ -614,14 +611,6 @@
  },
  "sdk": {
   "cn": [
-   {
-    "pkg": "dashscope",
-    "wk": 913004
-   },
-   {
-    "pkg": "zhipuai",
-    "wk": 64635
-   },
    {
     "pkg": "zai-sdk",
     "wk": 25539
