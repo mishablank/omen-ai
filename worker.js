@@ -1,7 +1,7 @@
 // OMEN Worker.
 //
 // Static assets (HTML, images, favicon) are served straight from ./omen by the
-// [assets] binding. The three *data* files, however, must never be the copy that
+// [assets] binding. The *data* files, however, must never be the copy that
 // was bundled at deploy time — they'd go stale between deploys. For those paths
 // (listed under assets.run_worker_first in wrangler.jsonc) this Worker runs first
 // and streams the object live from the R2 bucket the GitHub Action writes to, so
@@ -26,7 +26,6 @@ const DATA_FILES = {
   "/market-data.json": { key: "market-data.json", type: "application/json" },
   "/snapshots.csv":    { key: "snapshots.csv",    type: "text/csv" },
   "/influencers.json": { key: "influencers.json", type: "application/json" },
-  "/china-events.json": { key: "china-events.json", type: "application/json" },
   "/capex-data.json":  { key: "capex-data.json",  type: "application/json" },
 };
 
