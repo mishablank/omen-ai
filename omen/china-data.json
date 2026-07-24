@@ -1,6 +1,6 @@
 {
- "updated": "2026-07-23T23:04:32Z",
- "snapshot_date": "2026-07-23",
+ "updated": "2026-07-24T03:29:31Z",
+ "snapshot_date": "2026-07-24",
  "artificial_analysis": {
   "cn_best": "GLM-5.2",
   "cn_score": 51,
@@ -33,18 +33,18 @@
  },
  "apps": {
   "score": 0,
-  "asof": "2026-07-23",
+  "asof": "2026-07-24",
   "source": "app-charts",
   "best": [
    {
     "label": "Kimi",
-    "rank": 107,
+    "rank": 111,
     "store": "android",
     "country": "au"
    },
    {
     "label": "MiniMax",
-    "rank": 140,
+    "rank": 149,
     "store": "android",
     "country": "br"
    }
@@ -61,7 +61,7 @@
    "au",
    "kr"
   ],
-  "detail": "no Chinese AI app in any iOS or Play top-100 (nearest: Kimi #107 (AU Play)); basket-mean Western top-100 presence 0/100 across 10 markets",
+  "detail": "no Chinese AI app in any iOS or Play top-100 (nearest: Kimi #111 (AU Play)); basket-mean Western top-100 presence 0/100 across 10 markets",
   "note": "iOS Apple RSS top-100 + Android Play top-200 across 10 markets; presence = basket-mean of best top-100 chart rank (DeepSeek/Qwen/Doubao/Kimi/MiniMax), #1=100 #100=1; ranks past top-100 score 0."
  },
  "lmarena": {
@@ -142,48 +142,43 @@
  },
  "openrouter_week": {
   "week": "2026-07-20",
-  "cn_share": 0.5604,
-  "us_share": 0.3055,
-  "spi": 1.835,
-  "total_tokens": 34122809719426
+  "cn_share": 0.56,
+  "us_share": 0.3057,
+  "spi": 1.832,
+  "total_tokens": 35613891024944
  },
  "vercel_gateway": {
-  "asof": "2026-07-23",
-  "cn_share": 41.25,
-  "us_share": 58.64,
-  "spi": 0.703,
+  "asof": "2026-07-24",
+  "cn_share": 46.35,
+  "us_share": 53.3,
+  "spi": 0.87,
   "top_cn": [
    {
     "lab": "deepseek",
-    "share": 27.59
+    "share": 25.81
+   },
+   {
+    "lab": "stepfun",
+    "share": 7.91
    },
    {
     "lab": "zai",
-    "share": 4.78
+    "share": 4.48
    },
    {
     "lab": "moonshotai",
-    "share": 3.0
+    "share": 3.25
    },
    {
     "lab": "minimax",
-    "share": 1.96
+    "share": 2.41
    },
    {
-    "lab": "xiaomi",
-    "share": 1.43
-   },
-   {
-    "lab": "alibaba",
-    "share": 1.03
+    "lab": "inclusionai",
+    "share": 0.95
    }
   ],
   "series": [
-   {
-    "d": "2026-05-24",
-    "cn": 26.49,
-    "us": 70.35
-   },
    {
     "d": "2026-05-25",
     "cn": 25.73,
@@ -481,15 +476,20 @@
    },
    {
     "d": "2026-07-23",
-    "cn": 41.25,
-    "us": 58.64
+    "cn": 41.42,
+    "us": 58.47
+   },
+   {
+    "d": "2026-07-24",
+    "cn": 46.35,
+    "us": 53.3
    }
   ],
   "license": "AI Gateway Leaderboard Data (c) Vercel, CC BY 4.0"
  },
  "ollama": {
-  "cn": 271863599,
-  "us": 444195643,
+  "cn": 271867700,
+  "us": 444302480,
   "cn_top": [
    {
     "name": "deepseek-r1",
@@ -527,24 +527,24 @@
    },
    {
     "name": "gemma3",
-    "pulls": 38800000
+    "pulls": 38900000
    }
   ],
   "n_models": 233,
-  "asof": "2026-07-23"
+  "asof": "2026-07-24"
  },
  "kalshi": {
-  "asof": "2026-07-23",
+  "asof": "2026-07-24",
   "markets": [
    {
     "label": "Will a Chinese AI model be #1 this year?",
-    "p": 0.13,
+    "p": 0.18,
     "ticker": "KXBESTLLMCHINA-27",
     "series": "kxbestllmchina"
    },
    {
     "label": "Best AI at end of 2026: Kimi",
-    "p": 0.02,
+    "p": 0.03,
     "ticker": "KXLLM1-26DEC31-MOON",
     "series": "kxllm1"
    },
@@ -562,7 +562,7 @@
    },
    {
     "label": "Best AI at end of 2026: Claude",
-    "p": 0.632,
+    "p": 0.646,
     "ticker": "KXLLM1-26DEC31-A",
     "series": "kxllm1"
    }
@@ -572,7 +572,7 @@
   "cn": [
    {
     "base": "Qwen/Qwen3-8B",
-    "n": 1964
+    "n": 1965
    },
    {
     "base": "deepseek-ai/DeepSeek-R1",
@@ -605,27 +605,27 @@
     "n": 101
    }
   ],
-  "cn_total": 2343,
+  "cn_total": 2344,
   "us_total": 2455,
-  "asof": "2026-07-23"
+  "asof": "2026-07-24"
  },
  "sdk": {
   "cn": [
    {
+    "pkg": "dashscope",
+    "wk": 802158
+   },
+   {
     "pkg": "zhipuai",
-    "wk": 64635
+    "wk": 63291
    }
   ],
   "us": [
    {
-    "pkg": "anthropic",
-    "wk": 43266541
-   },
-   {
-    "pkg": "google-genai",
-    "wk": 67888670
+    "pkg": "openai",
+    "wk": 86689384
    }
   ],
-  "asof": "2026-07-23"
+  "asof": "2026-07-24"
  }
 }
